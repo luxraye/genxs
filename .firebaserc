@@ -1,27 +1,29 @@
 {
   "projects": {
-    "default": "gen-lang-client-0545872704"
+    "default": "genxs-staging",
+    "staging": "genxs-staging",
+    "production": "gen-lang-client-0545872704"
   },
   "targets": {
-    "gen-lang-client-0545872704": {
+    "genxs-staging": {
       "hosting": {
         "portal": [
-          "default-portal"
+          "genxs-portal"
         ],
         "scyther": [
-          "bloodchain-scyther"
+          "genxs-scyther"
         ],
         "rubric": [
-          "bloodchain-rubric"
+          "genxs-rubric"
         ],
         "aegis": [
-          "bloodchain-aegis"
+          "genxs-aegis"
         ],
         "crucible": [
-          "bloodchain-crucible"
+          "genxs-crucible"
         ],
         "torrent": [
-          "bloodchain-torrent"
+          "genxs-torrent"
         ]
       }
     }

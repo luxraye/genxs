@@ -143,28 +143,20 @@ Render's free tier restricts accounts to 1–2 active web services. When deployi
 
 ### Option A: Firebase Hosting Multi-Site (Recommended — 100% Free, Up to 36 Sites)
 
-Since Bloodchain already uses Firebase Auth and Cloud Storage (`gen-lang-client-0545872704`), you can use **Firebase Hosting Multi-Site**. A single Firebase project can host up to **36 separate websites**, each with its own custom domain and automatic Google SSL:
+For **Genxs**, deployment targets are isolated in the dedicated staging project **`genxs-staging`** to prevent overwriting production sites (`bloodchain.life` / `scyther` on `gen-lang-client-0545872704`).
 
-1. **Create Site Targets in Firebase Console**:
-   Under **Build -> Hosting**, click **"Add another site"** to create:
-   - `bloodchain-scyther`
-   - `bloodchain-rubric`
-   - `bloodchain-aegis`
-   - `bloodchain-crucible`
-   - `bloodchain-torrent`
-   - `bloodchain-portal`
+1. **Pre-configured Staging Sites (`genxs-staging`)**:
+   - `genxs-portal` (`https://genxs-portal.web.app`)
+   - `genxs-scyther` (`https://genxs-scyther.web.app`)
+   - `genxs-rubric` (`https://genxs-rubric.web.app`)
+   - `genxs-aegis` (`https://genxs-aegis.web.app`)
+   - `genxs-crucible` (`https://genxs-crucible.web.app`)
+   - `genxs-torrent` (`https://genxs-torrent.web.app`)
 
-2. **Deploy All Frontends at Once**:
-   The included [`firebase.json`](file:///c:/Users/Taylith/scyther/firebase.json) is already pre-configured:
+2. **Deploy All Staging Frontends**:
    ```bash
-   firebase target:apply hosting scyther bloodchain-scyther
-   firebase target:apply hosting rubric bloodchain-rubric
-   firebase target:apply hosting aegis bloodchain-aegis
-   firebase target:apply hosting crucible bloodchain-crucible
-   firebase target:apply hosting torrent bloodchain-torrent
-   firebase target:apply hosting portal bloodchain-portal
-
-   firebase deploy --only hosting
+   npm run deploy:staging
+   # or: npx firebase deploy --project genxs-staging --only hosting
    ```
 
 3. **Attach Custom Domains**:
