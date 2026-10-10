@@ -1,261 +1,213 @@
 import React, { useState } from 'react';
 import { useRubric } from '../context/RubricContext';
-import { 
-  ShieldAlert, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Clock, 
-  Building2, 
-  Layers, 
-  Filter, 
-  Flame, 
-  Check, 
-  X, 
-  ThermometerSnowflake, 
-  ShieldCheck, 
-  FlaskConical, 
-  Stethoscope 
-} from 'lucide-react';
-import { SystemIssue } from '@shared/types/bloodchain';
+import { AlertTriangle, CheckCircle2, ShieldAlert } from 'lucide-react';
+
+const CATEGORY_LABEL: Record<string, string> = {
+  COLD_CHAIN_ALERT: 'Cold-chain exception',
+  BEDSIDE_MISMATCH: 'Bedside mismatch',
+  LAB_QUARANTINE: 'Laboratory quarantine',
+  SUPPLY_DEFICIT: 'Supply deficit',
+  DONOR_APPEAL: 'Donor review'
+};
 
 export const IncidentCommand: React.FC = () => {
-  const { issuesList, resolveIssue, currentOperator } = useRubric();
+  const { issuesList, resolveIssue } = useRubric();
 
-  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [severityFilter, setSeverityFilter] = useState<string>('ALL');
+  const [category, setCategory] = useState('ALL');
+  const [status, setStatus] = useState('ALL');
+  const [severity, setSeverity] = useState('ALL');
   const [resolvingId, setResolvingId] = useState<string | null>(null);
-  const [resolutionNote, setResolutionNote] = useState('');
-  const [resolvedSuccess, setResolvedSuccess] = useState<string | null>(null);
+  const [note, setNote] = useState('');
+  const [done, setDone] = useState<string | null>(null);
 
-  const filteredIssues = issuesList.filter(issue => {
-    if (categoryFilter !== 'ALL' && issue.category !== categoryFilter) return false;
-    if (statusFilter !== 'ALL' && issue.status !== statusFilter) return false;
-    if (severityFilter !== 'ALL' && issue.severity !== severityFilter) return false;
+  const filtered = issuesList.filter(i => {
+    if (category !== 'ALL' && i.category !== category) return false;
+    if (status !== 'ALL' && i.status !== status) return false;
+    if (severity !== 'ALL' && i.severity !== severity) return false;
     return true;
   });
 
-  const openIssuesCount = issuesList.filter(i => i.status === 'OPEN').length;
-  const criticalIssuesCount = issuesList.filter(i => i.severity === 'CRITICAL' && i.status === 'OPEN').length;
+  const open = issuesList.filter(i => i.status === 'OPEN').length;
+  const critical = issuesList.filter(i => i.severity === 'CRITICAL' && i.status !== 'RESOLVED').length;
 
-  const handleResolve = async (issueId: string) => {
-    try {
-      const noteToSave = resolutionNote.trim() || 'Reviewed and confirmed compliant by National Operations Administrator.';
-      await resolveIssue(issueId, noteToSave);
-      setResolvedSuccess(`Incident ${issueId} successfully resolved and recorded in audit log.`);
-      setResolvingId(null);
-      setResolutionNote('');
-      setTimeout(() => setResolvedSuccess(null), 5000);
-    } catch (err: any) {
-      alert(`Failed to resolve incident: ${err.message}`);
-    }
+  const resolve = async (id: string) => {
+    await resolveIssue(id, note.trim() || 'Reviewed and closed by the operations desk.');
+    setDone(`${id} recorded as resolved.`);
+    setResolvingId(null);
+    setNote('');
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="text-xs font-mono font-bold text-rose-400 uppercase tracking-wider mb-1 flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4" />
-            <span>Crisis & Integrity Overwatch</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
-            Incident Command & Safety Overwatch
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Real-time cross-facility operational alerts, cold-chain temperature breaches, and laboratory serology quarantine logs.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-300">
-            Open Alarms: <strong className="text-rose-200">{openIssuesCount}</strong>
-          </span>
-          <span className="px-3 py-1.5 rounded-lg bg-red-950/60 border border-red-500/40 text-red-300">
-            Critical: <strong className="text-red-200">{criticalIssuesCount}</strong>
-          </span>
-        </div>
+    <div className="stack">
+      <div className="page-head">
+        <div className="eyebrow">Incidents</div>
+        <h1 className="page-title">Incident &amp; exception review</h1>
+        <p className="page-sub">
+          Cold-chain exceptions, laboratory quarantine holds, bedside discrepancies and supply deficits awaiting
+          review.
+        </p>
       </div>
 
-      {/* Success Notification Alert */}
-      {resolvedSuccess && (
-        <div className="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs flex items-center justify-between gap-3 animate-fade-in shadow-xl">
-          <div className="flex items-center gap-2 font-mono">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{resolvedSuccess}</span>
-          </div>
-          <button onClick={() => setResolvedSuccess(null)} className="text-emerald-400 hover:text-white text-xs">
-            Dismiss
-          </button>
+      {done && (
+        <div className="notice notice--safe">
+          <CheckCircle2 className="notice-icon" size={15} />
+          <span>{done}</span>
         </div>
       )}
 
-      {/* Critical Warning Banner if open critical alerts */}
-      {criticalIssuesCount > 0 && (
-        <div className="p-5 rounded-2xl bg-gradient-to-r from-red-950/80 via-rose-950/70 to-slate-900 border border-red-500/40 flex items-start gap-4">
-          <div className="p-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 shrink-0">
-            <AlertTriangle className="w-6 h-6 animate-pulse" />
-          </div>
-          <div className="space-y-1 text-xs">
-            <h3 className="font-bold text-white text-sm">
-              Urgent Incident Alert: Active Excursion or Quarantine
-            </h3>
-            <p className="text-slate-300 leading-relaxed">
-              {criticalIssuesCount} critical incident(s) require situation room review. Blood units involved are automatically locked on the ledger from clinical transfusion until authorized.
-            </p>
-          </div>
+      {critical > 0 && (
+        <div className="notice notice--stop">
+          <ShieldAlert className="notice-icon" size={16} />
+          <span>
+            <strong>{critical} critical incident{critical === 1 ? '' : 's'} open.</strong> Affected units should remain
+            held from issue until an authorised reviewer closes the incident.
+          </span>
         </div>
       )}
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={categoryFilter}
-          onChange={e => setCategoryFilter(e.target.value)}
-          className="bg-slate-900 border border-white/10 text-xs rounded-xl px-3 py-2 text-slate-300 focus:outline-none focus:ring-1 focus:ring-purple-500"
-        >
-          <option value="ALL">All Categories ({issuesList.length})</option>
-          <option value="COLD_CHAIN_ALERT">Cold-Chain Excursions</option>
-          <option value="BEDSIDE_MISMATCH">Bedside Scan Mismatches</option>
-          <option value="LAB_QUARANTINE">Lab Quarantines</option>
-          <option value="SUPPLY_DEFICIT">Supply Deficits</option>
-          <option value="DONOR_APPEAL">Donor Appeals</option>
-        </select>
-
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="bg-slate-900 border border-white/10 text-xs rounded-xl px-3 py-2 text-slate-300 focus:outline-none focus:ring-1 focus:ring-purple-500"
-        >
-          <option value="ALL">All Statuses</option>
-          <option value="OPEN">Open ({openIssuesCount})</option>
-          <option value="RESOLVED">Resolved ({issuesList.length - openIssuesCount})</option>
-        </select>
-
-        <select
-          value={severityFilter}
-          onChange={e => setSeverityFilter(e.target.value)}
-          className="bg-slate-900 border border-white/10 text-xs rounded-xl px-3 py-2 text-slate-300 focus:outline-none focus:ring-1 focus:ring-purple-500"
-        >
-          <option value="ALL">All Severities</option>
-          <option value="CRITICAL">Critical</option>
-          <option value="HIGH">High</option>
-          <option value="MEDIUM">Medium</option>
-        </select>
+      <div className="kpi-grid">
+        <div className="kpi">
+          <div className="kpi-k">Open</div>
+          <div className="kpi-v">{open}</div>
+          <div className="kpi-n">Awaiting review</div>
+        </div>
+        <div className={`kpi ${critical > 0 ? 'kpi--alert' : ''}`}>
+          <div className="kpi-k">Critical &amp; unresolved</div>
+          <div className="kpi-v">{critical}</div>
+          <div className="kpi-n">Require immediate attention</div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-k">Resolved</div>
+          <div className="kpi-v">{issuesList.length - open}</div>
+          <div className="kpi-n">Closed with a recorded note</div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-k">Total logged</div>
+          <div className="kpi-v">{issuesList.length}</div>
+          <div className="kpi-n">All categories</div>
+        </div>
       </div>
 
-      {/* Incident List */}
-      <div className="space-y-4">
-        {filteredIssues.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl border border-white/10 bg-slate-900/60 text-slate-400 font-sans italic text-xs">
-            No incident alarms match the selected criteria.
+      <div className="card">
+        <div className="card-hd">
+          <h3>Incident queue</h3>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <select className="select" style={{ width: 'auto' }} value={category} onChange={e => setCategory(e.target.value)}>
+              <option value="ALL">All categories</option>
+              {Object.keys(CATEGORY_LABEL).map(c => (
+                <option key={c} value={c}>
+                  {CATEGORY_LABEL[c]}
+                </option>
+              ))}
+            </select>
+            <select className="select" style={{ width: 'auto' }} value={status} onChange={e => setStatus(e.target.value)}>
+              <option value="ALL">All statuses</option>
+              <option value="OPEN">Open</option>
+              <option value="INVESTIGATING">Investigating</option>
+              <option value="RESOLVED">Resolved</option>
+            </select>
+            <select className="select" style={{ width: 'auto' }} value={severity} onChange={e => setSeverity(e.target.value)}>
+              <option value="ALL">All severities</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+            </select>
           </div>
-        ) : (
-          filteredIssues.map(issue => {
-            const isOpen = issue.status === 'OPEN';
-            const isResolving = resolvingId === issue.id;
+        </div>
 
-            return (
-              <div
-                key={issue.id}
-                className={`p-5 rounded-2xl border transition-all ${
-                  isOpen
-                    ? issue.severity === 'CRITICAL'
-                      ? 'bg-slate-900/90 border-red-500/40 shadow-lg shadow-red-950/30'
-                      : 'bg-slate-900/80 border-white/10 hover:border-white/20'
-                    : 'bg-slate-950/60 border-white/5 opacity-70'
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-                      issue.severity === 'CRITICAL'
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/40'
-                        : issue.severity === 'HIGH'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                        : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                    }`}>
-                      {issue.severity}
-                    </span>
-
-                    <span className="font-mono text-xs text-slate-500">{issue.id}</span>
-                    <h3 className="font-bold text-white text-sm">{issue.title}</h3>
-                  </div>
-
-                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold self-start sm:self-auto font-mono ${
-                    isOpen
-                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse'
-                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  }`}>
-                    {issue.status}
-                  </span>
-                </div>
-
-                <p className="text-xs text-slate-300 mt-2.5 leading-relaxed font-sans">
-                  {issue.description}
-                </p>
-
-                {/* Telemetry metadata footer */}
-                <div className="mt-4 flex flex-wrap items-center gap-4 text-[11px] text-slate-400 font-mono border-t border-white/5 pt-3">
-                  <span>Facility: <strong className="font-sans text-slate-200">{issue.facility}</strong></span>
-                  <span>·</span>
-                  <span>Affected: <strong className="text-purple-300">{issue.affectedEntity}</strong></span>
-                  <span>·</span>
-                  <span>Reported: {new Date(issue.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-
-                {/* Resolution note if already resolved */}
-                {issue.resolutionNotes && (
-                  <div className="mt-3 p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 font-mono">
-                    <span className="text-emerald-400 font-bold">Resolved Note:</span> {issue.resolutionNotes}
-                    {issue.resolvedBy && <span className="text-slate-400"> (by {issue.resolvedBy})</span>}
-                  </div>
-                )}
-
-                {/* Resolve Action Controls */}
-                {isOpen && (
-                  <div className="mt-4 pt-3 border-t border-white/5">
-                    {isResolving ? (
-                      <div className="space-y-3 font-sans">
-                        <input
-                          type="text"
-                          placeholder="Enter administrative resolution notes (e.g. Lab re-test negative, unit released)..."
-                          value={resolutionNote}
-                          onChange={e => setResolutionNote(e.target.value)}
-                          className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                        />
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => setResolvingId(null)}
-                            className="px-3 py-1.5 text-xs text-slate-400 hover:text-white cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => handleResolve(issue.id)}
-                            className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-md shadow-emerald-600/30"
-                          >
-                            Confirm Resolution
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex justify-end">
-                        <button
-                          onClick={() => setResolvingId(issue.id)}
-                          className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+        <div className="card-bd stack" style={{ gap: 12 }}>
+          {filtered.length === 0 ? (
+            <div className="tbl-empty">No incidents match the current filters.</div>
+          ) : (
+            filtered.map(issue => {
+              const resolved = issue.status === 'RESOLVED';
+              return (
+                <div
+                  key={issue.id}
+                  className="card"
+                  style={{ boxShadow: 'none', opacity: resolved ? 0.72 : 1 }}
+                >
+                  <div className="card-bd" style={{ padding: 15 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: 9, alignItems: 'center', minWidth: 0 }}>
+                        <span
+                          className={`sev ${
+                            issue.severity === 'CRITICAL' ? 'sev--critical' : issue.severity === 'HIGH' ? 'sev--high' : 'sev--medium'
+                          }`}
                         >
-                          Resolve Incident
-                        </button>
+                          {issue.severity}
+                        </span>
+                        <span className="mono dim" style={{ fontSize: 11.5 }}>
+                          {issue.id}
+                        </span>
+                        <span style={{ fontWeight: 600, fontSize: 13.5 }}>{issue.title}</span>
+                      </div>
+                      <span className={`status ${resolved ? 'status--safe' : 'status--watch'}`}>
+                        {issue.status}
+                      </span>
+                    </div>
+
+                    <p className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+                      {issue.description}
+                    </p>
+
+                    <div className="tile-foot" style={{ marginTop: 10, flexWrap: 'wrap', gap: 12 }}>
+                      <span>
+                        Facility: <strong style={{ color: 'var(--ink)' }}>{issue.facility}</strong>
+                      </span>
+                      <span>
+                        Affected: <strong style={{ color: 'var(--ink)' }}>{issue.affectedEntity}</strong>
+                      </span>
+                      <span>
+                        {CATEGORY_LABEL[issue.category] ?? issue.category} &middot;{' '}
+                        {new Date(issue.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </span>
+                    </div>
+
+                    {issue.resolutionNotes && (
+                      <div className="notice notice--safe" style={{ marginTop: 10 }}>
+                        <CheckCircle2 className="notice-icon" size={14} />
+                        <span style={{ fontSize: 12.5 }}>
+                          {issue.resolutionNotes}
+                          {issue.resolvedBy ? ` — ${issue.resolvedBy}` : ''}
+                        </span>
+                      </div>
+                    )}
+
+                    {!resolved && (
+                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                        {resolvingId === issue.id ? (
+                          <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
+                            <input
+                              className="input"
+                              style={{ flex: 1, minWidth: 240 }}
+                              placeholder="Resolution note (recorded against this closure)"
+                              value={note}
+                              onChange={e => setNote(e.target.value)}
+                            />
+                            <button className="btn btn--outline" onClick={() => setResolvingId(null)}>
+                              Cancel
+                            </button>
+                            <button className="btn btn--ok" onClick={() => resolve(issue.id)}>
+                              Confirm resolution
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button className="btn btn--outline" onClick={() => setResolvingId(issue.id)}>
+                              <AlertTriangle size={14} />
+                              Review &amp; resolve
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-            );
-          })
-        )}
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );

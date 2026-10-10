@@ -307,10 +307,10 @@ export const INITIAL_SYSTEM_ISSUES: SystemIssue[] = [
   },
   {
     id: 'ISSUE-2026-04',
-    title: 'Sekgoma Memorial Hospital Critical O- Deficit',
+    title: 'Example Regional Hospital Critical O- Deficit',
     category: 'SUPPLY_DEFICIT',
     severity: 'CRITICAL',
-    facility: 'Sekgoma Memorial Hospital',
+    facility: 'Example Regional Hospital',
     affectedEntity: 'Requisition REQ-ER-2026-109',
     description: 'Trauma ward reserve below 2 units of Universal O-. Recommended emergency rebalancing from Example Referral Centre depository.',
     status: 'OPEN',
