@@ -1126,3 +1126,88 @@ a {
     padding: 22px;
   }
 }
+
+/* ── Craft floor ──────────────────────────────────────────────────────────
+   Quality floor for every surface: visible keyboard focus, reduced motion
+   respected, balanced type, tabular figures in tables. Nothing decorative. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.btn:focus-visible,
+.navlink:focus-visible,
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible,
+.queue-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+h1, h2, h3 { text-wrap: balance; }
+p, li { text-wrap: pretty; }
+.tbl td, .tbl th { font-variant-numeric: tabular-nums; }
+
+/* ── Signature: the custody spine ─────────────────────────────────────────
+   One unit of blood has one journey. This rail is that journey, stated as
+   counts — structure that encodes the state machine rather than decorating
+   it. Each surface reuses it against its own stages. */
+.spine {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  margin: 2px 0;
+}
+.spine-stage {
+  position: relative;
+  padding: 14px 12px 10px 0;
+  border-top: 2px solid var(--border-2);
+}
+.spine-stage::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border-2);
+}
+.spine-stage[data-state="filled"] { border-top-color: var(--accent); }
+.spine-stage[data-state="filled"]::before { background: var(--accent); border-color: var(--accent); }
+.spine-stage[data-state="active"] { border-top-color: var(--watch); }
+.spine-stage[data-state="active"]::before { background: var(--watch); border-color: var(--watch); }
+.spine-count {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 19px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.spine-label {
+  font-size: 11px;
+  color: var(--ink-2);
+  margin-top: 3px;
+  letter-spacing: 0.01em;
+}
+.spine-note { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+@media (max-width: 720px) {
+  .spine { grid-auto-flow: row; }
+  .spine-stage {
+    border-top: 0;
+    border-left: 2px solid var(--border-2);
+    padding: 8px 0 8px 14px;
+  }
+  .spine-stage[data-state="filled"] { border-left-color: var(--accent); }
+  .spine-stage[data-state="active"] { border-left-color: var(--watch); }
+  .spine-stage::before { top: 12px; left: -6px; }
+}

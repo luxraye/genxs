@@ -13,6 +13,22 @@ export const DeficitMatrix: React.FC<{ onNavigateToRequisitions: () => void }> =
 
   const toneFor = (dos: number) => (dos < 3 ? 'crit' : dos <= 5 ? 'watch' : 'safe');
 
+  // The unit state machine, stated as stages. Order is information here.
+  const STAGES: { label: string; statuses: string[] }[] = [
+    { label: 'Collected', statuses: ['COLLECTED'] },
+    { label: 'In testing', statuses: ['IN_TESTING'] },
+    { label: 'Released', statuses: ['RELEASED'] },
+    { label: 'In transit', statuses: ['IN_TRANSIT'] },
+    { label: 'Held at ward', statuses: ['DELIVERED_TO_HOSPITAL'] },
+    { label: 'Transfused', statuses: ['BEDSIDE_CROSSMATCHED', 'TRANSFUSED'] }
+  ];
+  const lifecycle = STAGES.map(s => ({
+    label: s.label,
+    count: units.filter(u => s.statuses.includes(u.status)).length
+  }));
+  const mapped = STAGES.flatMap(s => s.statuses);
+  const unmappedCount = units.filter(u => !mapped.includes(u.status)).length;
+
   return (
     <div className="stack">
       <div className="page-head">
@@ -67,7 +83,7 @@ export const DeficitMatrix: React.FC<{ onNavigateToRequisitions: () => void }> =
                       {stat.count} <small>units</small>
                     </span>
                   </div>
-                  <div className="bar bar--{tone}">
+                  <div className={`bar bar--${tone}`} aria-hidden="true">
                     <span className={`bar--${tone}`} style={{ width: `${Math.min(100, (stat.daysOfSupply / 10) * 100)}%`, display: 'block', height: '100%' }} />
                   </div>
                   <div className="tile-foot">
@@ -94,6 +110,41 @@ export const DeficitMatrix: React.FC<{ onNavigateToRequisitions: () => void }> =
               consumption. Real burn rates must be derived from the national service&rsquo;s own issue history.
             </span>
           </div>
+        </div>
+      </div>
+
+
+      <div className="card">
+        <div className="card-hd">
+          <h3>Where the units are</h3>
+          <span className="dim" style={{ fontSize: 12 }}>
+            Each unit has one journey &middot; counted by stage
+          </span>
+        </div>
+        <div className="card-bd">
+          <div className="spine" role="list" aria-label="Units by custody stage">
+            {lifecycle.map((stage, i) => (
+              <div
+                key={stage.label}
+                className="spine-stage"
+                role="listitem"
+                data-state={stage.count > 0 ? (i === lifecycle.length - 1 ? 'active' : 'filled') : undefined}
+                aria-label={`${stage.label}: ${stage.count} units`}
+              >
+                <div className="spine-count">{stage.count}</div>
+                <div className="spine-label">{stage.label}</div>
+              </div>
+            ))}
+          </div>
+          {unmappedCount > 0 && (
+            <div className="spine-note">
+              {unmappedCount} unit{unmappedCount === 1 ? '' : 's'} in a stage this view does not classify yet.
+            </div>
+          )}
+          <p className="hint" style={{ marginTop: 10 }}>
+            Custody stages follow the unit state machine. A unit appears in exactly one stage, so the counts sum to the
+            total on the register.
+          </p>
         </div>
       </div>
 
