@@ -314,7 +314,7 @@ export const AppAuthGate: React.FC<AppAuthGateProps> = ({
 
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
         
-        {/* Left Column: App Mission & Sovereign Ecosystem Tagline */}
+        {/* Left Column: App Mission & Illustrative Ecosystem Tagline */}
         <div className="lg:col-span-6 space-y-6">
           
           {/* Tagline: Part of the Bloodchain Ecosystem with link to Main App */}
@@ -384,7 +384,7 @@ export const AppAuthGate: React.FC<AppAuthGateProps> = ({
               </div>
               <p className="text-xs text-slate-400 mt-1">
                 {isDonorApp
-                  ? 'Access your sovereign donor identity and donation history.'
+                  ? 'Access your audit donor identity and donation history.'
                   : 'Enter your official credentials or assigned staff badge ID.'}
               </p>
             </div>

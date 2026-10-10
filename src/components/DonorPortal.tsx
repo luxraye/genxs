@@ -85,7 +85,7 @@ export const DonorPortal: React.FC = () => {
         sizeKb,
         fileBlob: selectedFile || undefined
       });
-      setDocUploadSuccess(`Uploaded "${docName}" to sovereign vault. Account advanced to Level 2 (Pending Admin Verification).`);
+      setDocUploadSuccess(`Uploaded "${docName}" to secure vault. Account advanced to Level 2 (Pending Admin Verification).`);
       setSelectedFile(null);
       setTimeout(() => setDocUploadSuccess(null), 5000);
     } finally {
@@ -102,7 +102,7 @@ export const DonorPortal: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-red-600 tracking-wider uppercase mb-1">
-            <span>Scyther — Sovereign Donor Identity & Credentials</span>
+            <span>Scyther — Illustrative Donor Identity & Credentials</span>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
@@ -720,7 +720,7 @@ export const DonorPortal: React.FC = () => {
 
           {bookedSlot && (
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-800">
-              <strong>Appointment Confirmed:</strong> {bookedSlot}. A QR confirmation token has been synchronized with your sovereign bloodcard.
+              <strong>Appointment Confirmed:</strong> {bookedSlot}. A QR confirmation token has been synchronized with your digital blood card.
             </div>
           )}
         </div>

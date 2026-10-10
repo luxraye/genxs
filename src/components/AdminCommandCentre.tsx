@@ -332,7 +332,7 @@ export const AdminCommandCentre: React.FC = () => {
 
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-1">
               <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>sovereign audit service</span>
+                <span>audit log</span>
                 <Database className="w-4 h-4 text-purple-500" />
               </div>
               <div className="text-xl font-bold font-mono text-slate-900">

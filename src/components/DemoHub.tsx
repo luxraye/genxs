@@ -44,7 +44,7 @@ import { db } from '../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 // Mission-relevant HD visual assets
-const HERO_IMAGE = '/src/assets/images/hero_sovereign_blood_grid_1791309472035.jpg';
+const HERO_IMAGE = '/src/assets/images/hero_audit_blood_grid_1791309472035.jpg';
 const DONOR_IMAGE = '/src/assets/images/donor_blood_drive_1791309652490.jpg';
 const LAB_IMAGE = '/src/assets/images/laboratory_fractionation_serology_1791309504388.jpg';
 const LOGISTICS_IMAGE = '/src/assets/images/iot_cold_chain_transit_1791309495139.jpg';
@@ -88,7 +88,7 @@ export const DemoHub: React.FC = () => {
   // Executive deck download feedback state
   const [deckDownloaded, setDeckDownloaded] = useState(false);
 
-  // Load live Fabric stats and feed
+  // Load live audit stats and feed
   useEffect(() => {
     fetch('/public/stats')
       .then(r => r.ok ? r.json() : null)
@@ -182,7 +182,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
             {/* Left Content Column: Compelling Value Proposition & CTAs */}
             <div className="lg:col-span-7 space-y-6">
               
-              {/* Sovereign Trust & National Security Badge */}
+              {/* Illustrative Trust & National Security Badge */}
               <div className="inline-flex flex-wrap items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/15 text-xs font-mono text-slate-300 shadow-2xl">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 <span className="font-semibold text-white tracking-wide">Bloodchain demonstration environment</span>
@@ -447,7 +447,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                 Six Specialized Applications. One shared backbone.
               </h2>
               <p className="mt-1 text-sm text-slate-600 max-w-3xl">
-                From citizen smartphone registration to trauma bedside crossmatching, each persona operates a tailored interface synchronized with sovereign audit service and Firestore.
+                From citizen smartphone registration to trauma bedside crossmatching, each persona operates a tailored interface synchronized with audit log and Firestore.
               </p>
             </div>
 
@@ -714,10 +714,10 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-base font-bold text-slate-900">Rubric — Situation Room</h3>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
-                      MINISTRY OPS
+                      OPERATIONS
                     </span>
                   </div>
-                  <p className="text-xs font-semibold text-purple-600">Ministry Health Directors & Supply Leads</p>
+                  <p className="text-xs font-semibold text-purple-600">Health service directors & supply leads</p>
                   <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                     Simulated National Deficit Matrix across regional hubs (example sites), shortage alarms, and inter-hospital rebalancing.
                   </p>
@@ -817,7 +817,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                 <span>The Transparency Backbone</span>
               </div>
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                sovereign audit service Public Event Feed
+                audit log Public Event Feed
               </h2>
               <p className="mt-1 text-sm text-slate-600">
                 Served from the demo backend <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono">services/fabric-node</code>. Every record is cryptographically committed with pseudonymous donor and operator hashes.
@@ -985,7 +985,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                 {
                   id: 'roi',
                   q: 'What is the deployment model for national blood transfusion services?',
-                  a: 'Bloodchain deploys as a hybrid consortium: hospital wards and testing centers operate role-based progressive web applications, while the ledger nodes run on sovereign government cloud or partner nodes (sovereign audit service / Ethereum L2). It integrates with existing EHRs via HL7/FHIR.'
+                  a: 'Bloodchain deploys as a hybrid consortium: hospital wards and testing centers operate role-based progressive web applications, while the ledger nodes run on government cloud or partner nodes (audit log / Ethereum L2). It integrates with existing EHRs via HL7/FHIR.'
                 },
                 {
                   id: 'offline',
@@ -1194,11 +1194,11 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 font-medium mb-1">Organization / Ministry / Firm</label>
+                    <label className="block text-slate-300 font-medium mb-1">Organization or firm</label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Health Ministry, hospital group, or health fund"
+                      placeholder="e.g. hospital group or health fund, or health fund"
                       value={accessForm.organization}
                       onChange={e => setAccessForm(prev => ({ ...prev, organization: e.target.value }))}
                       className="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -1215,7 +1215,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                       >
                         <option value="National Blood Service">National Blood Service</option>
                         <option value="Hospital Network / Transfusion Medicine">Hospital Network / Transfusion</option>
-                        <option value="Venture / institutional investor">Venture Investor / Sovereign Fund</option>
+                        <option value="Venture / institutional investor">Venture Investor / Illustrative Fund</option>
                         <option value="Global Health Development Body">Global Health Development Body</option>
                         <option value="Medical Logistics / Cold-Chain Carrier">Cold-Chain Carrier</option>
                       </select>
@@ -1265,7 +1265,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                 <div className="space-y-1">
                   <h3 className="text-xl font-bold text-white">Access Credentials Issued</h3>
                   <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
-                    Thank you, <strong>{accessForm.fullName}</strong>. Your institutional request for <strong>{accessForm.organization}</strong> has been logged in the sovereign audit ledger.
+                    Thank you, <strong>{accessForm.fullName}</strong>. Your institutional request for <strong>{accessForm.organization}</strong> has been logged in the audit log.
                   </p>
                 </div>
 

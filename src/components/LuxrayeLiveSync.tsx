@@ -44,7 +44,7 @@ export const LuxrayeLiveSync: React.FC = () => {
   const [submittingTx, setSubmittingTx] = useState(false);
   const [submitSuccessMsg, setSubmitSuccessMsg] = useState<string | null>(null);
 
-  // Fetch live Fabric stats & feed from our Express backend
+  // Fetch live audit stats & feed from our Express backend
   const fetchFabricData = async () => {
     setLoading(true);
     try {
@@ -62,7 +62,7 @@ export const LuxrayeLiveSync: React.FC = () => {
         setRecords(feedData.records || []);
       }
     } catch (err) {
-      console.error('Failed to load Fabric feed:', err);
+      console.error('Failed to load audit feed:', err);
     } finally {
       setLoading(false);
     }
@@ -118,7 +118,7 @@ export const LuxrayeLiveSync: React.FC = () => {
         console.warn('Firestore sync note:', fsErr);
       }
 
-      setSubmitSuccessMsg(`Transaction committed to sovereign audit service Block #${data.blockHeight}! TX ID: ${txId}`);
+      setSubmitSuccessMsg(`Transaction committed to audit log Block #${data.blockHeight}! TX ID: ${txId}`);
       await fetchFabricData();
     } catch (err: any) {
       alert(`Error: ${err.message}`);
@@ -174,7 +174,7 @@ export const LuxrayeLiveSync: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Cards from sovereign audit service Stats */}
+      {/* KPI Cards from audit log Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
           <p className="text-xs font-medium text-slate-500">Recorded donations</p>
@@ -288,7 +288,7 @@ export const LuxrayeLiveSync: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Grid: Submit Donation & Public sovereign audit service Feed */}
+      {/* Main Grid: Submit Donation & Public audit log Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Submit to audit log */}
