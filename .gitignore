@@ -34,3 +34,6 @@ _luxraye_repo/
 .gemini/
 .idea/
 .vscode/
+
+# Shared-state service runtime data
+.spine-data/

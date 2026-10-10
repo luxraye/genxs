@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+
+      # 1. The domain rules and the audit chain. Pure functions, no network.
+      - name: Unit tests (clinical rules + audit chain)
+        run: npm run test
+
+      # 2. Type-check. vite builds with esbuild and does NOT type-check, which is
+      #    how a missing context property and a literal class string reached main.
+      - name: Type-check
+        run: npm run typecheck
+
+      # 3. Every surface must build.
+      - name: Build all surfaces
+        run: npm run build:all
+
+      # 4. The API service must start and answer, and must refuse an illegal
+      #    unit transition. This is the contract the surfaces depend on.
+      - name: Spine smoke test
+        run: |
+          npx tsx services/spine/smoke.mts &
+          SPINE_PID=$!
+          sleep 3
+          curl -fsS http://localhost:3100/api/spine/health > /dev/null
+          kill $SPINE_PID
