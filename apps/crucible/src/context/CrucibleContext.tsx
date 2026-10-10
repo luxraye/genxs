@@ -30,20 +30,24 @@ import {
 } from '@shared/data/seedData';
 import { calculateBlockHash } from '@shared/lib/crypto';
 
+const SCIENTIST_KEY = 'crucible_active_scientist';
+
+/** Statuses that mean a unit is still awaiting screening or release. */
+export const AWAITING_STATUSES: BloodUnit['status'][] = ['COLLECTED', 'IN_TESTING'];
+
 interface CrucibleContextType {
   currentUser: FirebaseUser | null;
+  /** Null when no laboratory user is signed in. */
   currentScientist: StaffAccount | null;
   isAuthenticated: boolean;
   units: BloodUnit[];
   issuesList: SystemIssue[];
-  blockchain: BlockchainBlock[];
+  auditLog: BlockchainBlock[];
 
-  // Scientist Authentication
   loginScientist: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   quickDemoScientistLogin: () => void;
   logoutScientist: () => Promise<void>;
 
-  // Lab Testing & QC Operations
   recordLabTests: (unitDIN: string, testUpdates: Partial<BloodUnit['labTests']>) => Promise<void>;
   fractionateUnit: (unitDIN: string, newComponent: ComponentType, volumeMl: number) => Promise<void>;
   authorizeLabRelease: (unitDIN: string, techName: string) => Promise<{ success: boolean; error?: string }>;
@@ -52,60 +56,60 @@ interface CrucibleContextType {
 
 const CrucibleContext = createContext<CrucibleContextType | null>(null);
 
+const DEMO_SCIENTIST = INITIAL_STAFF_ACCOUNTS.find(s => s.role === 'LAB_TECH') ?? null;
+
+const readStoredScientist = (): StaffAccount | null => {
+  try {
+    const saved = localStorage.getItem(SCIENTIST_KEY);
+    return saved ? (JSON.parse(saved) as StaffAccount) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-
-  // Default to Dr. Sarah Lin (QC Lead)
-  const defaultScientist = INITIAL_STAFF_ACCOUNTS.find(s => s.role === 'LAB_TECH') || {
-    id: 'STF-LAB-409',
-    fullName: 'Dr. Sarah Lin (QC-Lead-409)',
-    email: 'sarah.lin@health.gov.bw',
-    role: 'LAB_TECH' as const,
-    facility: 'Botswana Central Serology Depository (Gaborone)',
-    badgeNumber: 'BW-QC-409',
-    status: 'ACTIVE' as const,
-    mustChangePassword: false,
-    createdAt: new Date().toISOString()
-  };
-
-  const [currentScientist, setCurrentScientist] = useState<StaffAccount | null>(() => {
-    const saved = localStorage.getItem('crucible_active_scientist');
-    return saved ? JSON.parse(saved) : defaultScientist;
-  });
+  // A visitor starts signed out. Only a successful sign-in sets a laboratory user.
+  const [currentScientist, setCurrentScientist] = useState<StaffAccount | null>(readStoredScientist);
 
   const [units, setUnits] = useState<BloodUnit[]>(INITIAL_UNITS);
   const [issuesList, setIssuesList] = useState<SystemIssue[]>(INITIAL_SYSTEM_ISSUES);
-  const [blockchain, setBlockchain] = useState<BlockchainBlock[]>(INITIAL_BLOCKS);
+  const [auditLog, setAuditLog] = useState<BlockchainBlock[]>(INITIAL_BLOCKS);
 
-  // 1. Firebase Auth listener
+  const persistScientist = (s: StaffAccount | null) => {
+    if (s) localStorage.setItem(SCIENTIST_KEY, JSON.stringify(s));
+    else localStorage.removeItem(SCIENTIST_KEY);
+    setCurrentScientist(s);
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
+    const unsub = onAuthStateChanged(auth, user => setCurrentUser(user));
+    return () => unsub();
   }, []);
 
-  // 2. Real-time Firestore Subscriptions
   useEffect(() => {
-    const unsubUnits = onSnapshot(collection(db, 'bloodUnits'), snap => {
-      if (!snap.empty) {
-        setUnits(snap.docs.map(d => d.data() as BloodUnit));
-      }
-    }, err => console.warn('Crucible units sync:', err.message));
-
-    const unsubIssues = onSnapshot(collection(db, 'systemIssues'), snap => {
-      if (!snap.empty) {
-        setIssuesList(snap.docs.map(d => d.data() as SystemIssue));
-      }
-    }, err => console.warn('Crucible issues sync:', err.message));
-
+    const unsubUnits = onSnapshot(
+      collection(db, 'bloodUnits'),
+      snap => {
+        if (!snap.empty) setUnits(snap.docs.map(d => d.data() as BloodUnit));
+      },
+      err => console.warn('Laboratory units sync:', err.message)
+    );
+    const unsubIssues = onSnapshot(
+      collection(db, 'systemIssues'),
+      snap => {
+        if (!snap.empty) setIssuesList(snap.docs.map(d => d.data() as SystemIssue));
+      },
+      err => console.warn('Laboratory issues sync:', err.message)
+    );
     const qBlocks = query(collection(db, 'blockchainBlocks'), orderBy('index', 'asc'));
-    const unsubBlocks = onSnapshot(qBlocks, snap => {
-      if (!snap.empty) {
-        setBlockchain(snap.docs.map(d => d.data() as BlockchainBlock));
-      }
-    }, err => console.warn('Crucible blocks sync:', err.message));
-
+    const unsubBlocks = onSnapshot(
+      qBlocks,
+      snap => {
+        if (!snap.empty) setAuditLog(snap.docs.map(d => d.data() as BlockchainBlock));
+      },
+      err => console.warn('Laboratory audit log sync:', err.message)
+    );
     return () => {
       unsubUnits();
       unsubIssues();
@@ -113,12 +117,11 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, []);
 
-  // Firestore Persistence Helpers
   const persistUnit = async (u: BloodUnit) => {
     try {
       await setDoc(doc(db, 'bloodUnits', u.din), u, { merge: true });
     } catch (err: any) {
-      console.warn('Firestore persistUnit sync:', err.message);
+      console.warn('Persist unit:', err.message);
     }
   };
 
@@ -126,29 +129,28 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       await setDoc(doc(db, 'systemIssues', iss.id), iss, { merge: true });
     } catch (err: any) {
-      console.warn('Firestore persistIssue sync:', err.message);
+      console.warn('Persist issue:', err.message);
     }
   };
 
+  /**
+   * Append an entry to the hash-chained audit log.
+   * The chain is local and self-consistent; it is not a distributed ledger.
+   */
   const appendBlock = async (
     unitDIN: string,
     eventType: BlockchainBlock['eventType'],
     actor: BlockchainBlock['actor'],
     payload: Record<string, any>
   ): Promise<BlockchainBlock> => {
-    const nextIndex = blockchain.length;
-    const prevHash = blockchain.length > 0 ? blockchain[blockchain.length - 1].hash : '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const nextIndex = auditLog.length;
+    const prevHash =
+      auditLog.length > 0
+        ? auditLog[auditLog.length - 1].hash
+        : '0x0000000000000000000000000000000000000000000000000000000000000000';
     const timestamp = new Date().toISOString();
 
-    const blockHash = await calculateBlockHash(
-      nextIndex,
-      timestamp,
-      unitDIN,
-      eventType,
-      actor,
-      payload,
-      prevHash
-    );
+    const blockHash = await calculateBlockHash(nextIndex, timestamp, unitDIN, eventType, actor, payload, prevHash);
 
     const newBlock: BlockchainBlock = {
       index: nextIndex,
@@ -161,12 +163,11 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       hash: blockHash
     };
 
-    setBlockchain(prev => [...prev, newBlock]);
-
+    setAuditLog(prev => [...prev, newBlock]);
     try {
       await setDoc(doc(db, 'blockchainBlocks', `block-${newBlock.index}`), newBlock);
     } catch (err: any) {
-      console.warn('Firestore block sync:', err.message);
+      console.warn('Audit log write:', err.message);
     }
 
     try {
@@ -182,131 +183,126 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           payload
         })
       });
-    } catch (err) {}
+    } catch {
+      /* non-blocking */
+    }
 
     return newBlock;
   };
 
-  // ─── Authentication Handlers ──────────────────────────────────────────────
-
-  const loginScientist = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
+  const loginScientist = async (
+    email: string,
+    pass: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
     try {
       let user: FirebaseUser | null = null;
       try {
-        const userCred = await signInWithEmailAndPassword(auth, email, pass);
-        user = userCred.user;
+        const cred = await signInWithEmailAndPassword(auth, cleanEmail, pass);
+        user = cred.user;
       } catch (authErr: any) {
         if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential') {
-          const newCred = await createUserWithEmailAndPassword(auth, email, pass);
-          user = newCred.user;
+          const cred = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
+          user = cred.user;
         } else {
           throw authErr;
         }
       }
-
       setCurrentUser(user);
 
-      const matchedStaff = INITIAL_STAFF_ACCOUNTS.find(s => s.email.toLowerCase() === email.toLowerCase()) || {
-        id: `STF-LAB-${Date.now().toString(36).toUpperCase()}`,
-        fullName: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase()),
-        email,
-        role: 'LAB_TECH' as const,
-        facility: 'Botswana Central Serology Depository (Gaborone)',
-        badgeNumber: 'BW-QC-9182',
-        status: 'ACTIVE' as const,
-        mustChangePassword: false,
-        createdAt: new Date().toISOString()
-      };
+      const existing = INITIAL_STAFF_ACCOUNTS.find(s => s.email.toLowerCase() === cleanEmail);
+      const matched: StaffAccount =
+        existing ??
+        ({
+          id: `STAFF-LAB-${Date.now().toString(36).toUpperCase()}`,
+          fullName: cleanEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          email: cleanEmail,
+          role: 'LAB_TECH',
+          facility: 'National blood laboratory',
+          badgeNumber: 'Not assigned',
+          status: 'ACTIVE',
+          mustChangePassword: false,
+          createdAt: new Date().toISOString(),
+          provisionedBy: 'Self-registered (demonstration)'
+        } as StaffAccount);
 
-      setCurrentScientist(matchedStaff as StaffAccount);
-      localStorage.setItem('crucible_active_scientist', JSON.stringify(matchedStaff));
+      persistScientist(matched);
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Lab authentication failed' };
+      return { success: false, error: err.message || 'Sign in failed.' };
     }
   };
 
   const quickDemoScientistLogin = () => {
-    setCurrentScientist(defaultScientist as StaffAccount);
-    localStorage.setItem('crucible_active_scientist', JSON.stringify(defaultScientist));
+    if (DEMO_SCIENTIST) persistScientist(DEMO_SCIENTIST);
   };
 
   const logoutScientist = async () => {
     try {
       await fbSignOut(auth);
-    } catch (e) {}
-    setCurrentScientist(null);
+    } catch {
+      /* non-blocking */
+    }
     setCurrentUser(null);
-    localStorage.removeItem('crucible_active_scientist');
+    persistScientist(null);
   };
-
-  // ─── Laboratory Testing & QC Operations ───────────────────────────────────
 
   const recordLabTests = async (unitDIN: string, testUpdates: Partial<BloodUnit['labTests']>) => {
     const unit = units.find(u => u.din === unitDIN);
     if (!unit) return;
-
-    const updatedUnit: BloodUnit = {
-      ...unit,
-      labTests: {
-        ...unit.labTests,
-        ...testUpdates
-      }
-    };
-
-    setUnits(prev => prev.map(u => u.din === unitDIN ? updatedUnit : u));
+    const updatedUnit: BloodUnit = { ...unit, labTests: { ...unit.labTests, ...testUpdates } };
+    setUnits(prev => prev.map(u => (u.din === unitDIN ? updatedUnit : u)));
     await persistUnit(updatedUnit);
   };
 
   const fractionateUnit = async (unitDIN: string, newComponent: ComponentType, volumeMl: number) => {
     const unit = units.find(u => u.din === unitDIN);
     if (!unit) return;
-
-    const updatedUnit: BloodUnit = {
-      ...unit,
-      componentType: newComponent,
-      volumeMl
-    };
-
-    setUnits(prev => prev.map(u => u.din === unitDIN ? updatedUnit : u));
+    const updatedUnit: BloodUnit = { ...unit, componentType: newComponent, volumeMl };
+    setUnits(prev => prev.map(u => (u.din === unitDIN ? updatedUnit : u)));
     await persistUnit(updatedUnit);
   };
 
+  /**
+   * Quality release gate. A unit can only be released when every screening
+   * panel is non-reactive and the blood group has been confirmed by testing.
+   */
   const authorizeLabRelease = async (
     unitDIN: string,
     techName: string
   ): Promise<{ success: boolean; error?: string }> => {
     const unit = units.find(u => u.din === unitDIN);
-    if (!unit) return { success: false, error: 'Unit not found in registry.' };
+    if (!unit) return { success: false, error: 'Unit not found.' };
 
     const { hiv, hbv, hcv, syphilis, westNile, aboRhConfirmatory } = unit.labTests;
-    const allNegative = hiv === 'NEGATIVE' && hbv === 'NEGATIVE' && hcv === 'NEGATIVE' && syphilis === 'NEGATIVE' && westNile === 'NEGATIVE';
+    const allNegative =
+      hiv === 'NEGATIVE' &&
+      hbv === 'NEGATIVE' &&
+      hcv === 'NEGATIVE' &&
+      syphilis === 'NEGATIVE' &&
+      westNile === 'NEGATIVE';
 
     if (!allNegative) {
       return {
         success: false,
-        error: 'RELEASE REJECTED: All 5 mandatory infectious disease panels (HIV, HBV, HCV, Syphilis, West Nile) must be confirmed Non-Reactive (-).'
+        error:
+          'Release blocked. Every screening panel must be non-reactive before a unit can be released.'
       };
     }
-
     if (aboRhConfirmatory === 'PENDING') {
-      return {
-        success: false,
-        error: 'RELEASE REJECTED: Confirmatory ABO/RhD serology typing cannot be PENDING.'
-      };
+      return { success: false, error: 'Release blocked. The blood group has not been confirmed by testing.' };
     }
 
     const nowIso = new Date().toISOString();
     const updatedUnit: BloodUnit = {
       ...unit,
       status: 'RELEASED',
-      bloodType: (aboRhConfirmatory as any) !== 'PENDING' ? (aboRhConfirmatory as BloodType) : unit.bloodType
+      bloodType: aboRhConfirmatory as BloodType
     };
 
-    setUnits(prev => prev.map(u => u.din === unitDIN ? updatedUnit : u));
+    setUnits(prev => prev.map(u => (u.din === unitDIN ? updatedUnit : u)));
     await persistUnit(updatedUnit);
 
-    const sig = `0x${Math.random().toString(16).slice(2, 10)}${Math.random().toString(16).slice(2, 10)}`;
     await appendBlock(
       unitDIN,
       'TESTS_PASSED_AND_RELEASED',
@@ -314,7 +310,7 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         id: techName,
         role: 'LAB_TECH',
         facility: currentScientist?.facility || unit.currentFacility,
-        signature: sig
+        signature: 'hash-chained-audit'
       },
       {
         donorBloodType: updatedUnit.bloodType,
@@ -331,24 +327,15 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return { success: true };
   };
 
-  const quarantineUnitInLab = async (
-    unitDIN: string,
-    techName: string,
-    reason: string
-  ): Promise<void> => {
+  const quarantineUnitInLab = async (unitDIN: string, techName: string, reason: string): Promise<void> => {
     const unit = units.find(u => u.din === unitDIN);
     if (!unit) return;
 
     const nowIso = new Date().toISOString();
-    const updatedUnit: BloodUnit = {
-      ...unit,
-      status: 'QUARANTINED'
-    };
-
-    setUnits(prev => prev.map(u => u.din === unitDIN ? updatedUnit : u));
+    const updatedUnit: BloodUnit = { ...unit, status: 'QUARANTINED' };
+    setUnits(prev => prev.map(u => (u.din === unitDIN ? updatedUnit : u)));
     await persistUnit(updatedUnit);
 
-    const sig = `0x${Math.random().toString(16).slice(2, 10)}${Math.random().toString(16).slice(2, 10)}`;
     await appendBlock(
       unitDIN,
       'TESTS_FAILED_QUARANTINED',
@@ -356,25 +343,21 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         id: techName,
         role: 'LAB_TECH',
         facility: currentScientist?.facility || unit.currentFacility,
-        signature: sig
+        signature: 'hash-chained-audit'
       },
-      {
-        quarantineReason: reason,
-        quarantinedAt: nowIso
-      }
+      { quarantineReason: reason, quarantinedAt: nowIso }
     );
 
-    // Create incident issue in Firestore that automatically appears in Rubric!
     const incidentId = `INC-LAB-${Date.now().toString(36).toUpperCase()}`;
     const newIssue: SystemIssue = {
       id: incidentId,
-      title: `Biohazard Lab Quarantine: Reactive Serology on DIN ${unitDIN}`,
+      title: `Laboratory hold raised for unit ${unitDIN}`,
       category: 'LAB_QUARANTINE',
       severity: 'CRITICAL',
       status: 'OPEN',
       facility: currentScientist?.facility || unit.currentFacility,
       affectedEntity: `Unit DIN: ${unitDIN}`,
-      description: `Serology screening detected positive/reactive pathogen marker. Unit isolated to biohazard vault. Reason: ${reason}. Certified by ${techName}.`,
+      description: `Screening returned a reactive marker. The unit is held and excluded from issue. Reason: ${reason}. Recorded by ${techName}.`,
       timestamp: nowIso
     };
 
@@ -386,10 +369,10 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value={{
         currentUser,
         currentScientist,
-        isAuthenticated: !!currentScientist,
+        isAuthenticated: currentScientist !== null,
         units,
         issuesList,
-        blockchain,
+        auditLog,
         loginScientist,
         quickDemoScientistLogin,
         logoutScientist,

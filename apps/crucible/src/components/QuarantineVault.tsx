@@ -1,98 +1,59 @@
 import React from 'react';
 import { useCrucible } from '../context/CrucibleContext';
-import { 
-  XCircle, 
-  AlertTriangle, 
-  ShieldAlert, 
-  Lock, 
-  Clock, 
-  Building2, 
-  CheckCircle2,
-  Biohazard
-} from 'lucide-react';
+import { ShieldAlert, Info, PackageX } from 'lucide-react';
 
 export const QuarantineVault: React.FC = () => {
   const { units, issuesList } = useCrucible();
 
-  const quarantinedUnits = units.filter(u => u.status === 'QUARANTINED');
-  const labQuarantineIssues = issuesList.filter(i => i.category === 'LAB_QUARANTINE');
+  const held = units.filter(u => u.status === 'QUARANTINED');
+  const holdIssues = issuesList.filter(i => i.category === 'LAB_QUARANTINE');
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="text-xs font-mono font-bold text-rose-400 uppercase tracking-wider mb-1 flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4" />
-            <span>Strict Biohazard Containment Facility</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
-            Biohazard Quarantine Vault & Disposal Registry
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Physical and cryptographic containment for blood units exhibiting reactive infectious disease markers or failed quality controls.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-300">
-            Quarantined Units: <strong className="text-rose-200">{quarantinedUnits.length}</strong>
-          </span>
-          <span className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300">
-            Audit Records: <strong className="text-white">{labQuarantineIssues.length}</strong>
-          </span>
-        </div>
+    <div className="stack">
+      <div className="page-head">
+        <div className="eyebrow">Held units</div>
+        <h1 className="page-title">Units on hold &amp; hold history</h1>
+        <p className="page-sub">
+          Units held from issue, and the record of why. Held units must not be released to a ward.
+        </p>
       </div>
 
-      {/* Biohazard Alert Strip */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-rose-950/80 via-red-950/70 to-slate-900 border border-rose-500/40 flex items-start gap-4">
-        <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-400 shrink-0">
-          <AlertTriangle className="w-6 h-6 animate-pulse" />
-        </div>
-        <div className="space-y-1 text-xs">
-          <h3 className="font-bold text-white text-sm">
-            Biohazard Lockout Protocol Active
-          </h3>
-          <p className="text-slate-300 leading-relaxed font-sans">
-            Units isolated in this registry are cryptographically blacklisted on the Hyperledger Fabric ledger. Clinical bedside terminals (Aegis) will automatically trigger a hard interlock if any of these barcodes are scanned.
-          </p>
-        </div>
+      <div className="notice notice--stop">
+        <ShieldAlert className="notice-icon" size={16} />
+        <span>
+          <strong>Held units are excluded from issue.</strong> A unit in this state must not be dispatched to a ward
+          until an authorised reviewer clears it.
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Left Column: Quarantined Blood Units */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <h3 className="text-base font-bold text-white">Quarantined Specimen Bags</h3>
-            <span className="text-xs font-mono text-rose-400">{quarantinedUnits.length} Units</span>
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-hd">
+            <h3>Units on hold</h3>
+            <span className="badge">{held.length}</span>
           </div>
-
-          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-            {quarantinedUnits.length === 0 ? (
-              <div className="p-12 text-center text-slate-500 text-xs italic">
-                Zero units currently in biohazard quarantine.
+          <div className="card-bd stack" style={{ gap: 10, maxHeight: 520, overflowY: 'auto' }}>
+            {held.length === 0 ? (
+              <div className="empty">
+                <PackageX className="empty-icon" size={24} />
+                <div style={{ fontWeight: 600, color: 'var(--ink)' }}>No units currently on hold</div>
+                <p style={{ fontSize: 12.5, marginTop: 6 }}>Units placed on hold will be listed here.</p>
               </div>
             ) : (
-              quarantinedUnits.map(unit => (
-                <div
-                  key={unit.din}
-                  className="p-4 rounded-xl border border-rose-500/30 bg-rose-950/20 space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-white">{unit.din}</span>
-                    <span className="font-mono text-xs font-black text-rose-400 px-2 py-0.5 rounded bg-rose-950 border border-rose-500/40">
-                      {unit.bloodType}
-                    </span>
-                  </div>
-
-                  <div className="text-xs text-slate-300">
-                    Component: <strong className="text-white">{unit.componentType.replace(/_/g, ' ')}</strong> · Facility: <strong className="text-white">{unit.currentFacility}</strong>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-rose-500/20 text-[11px] font-mono text-rose-300">
-                    <span>STATUS: HARD BIOHAZARD LOCK</span>
-                    <span>Volume: {unit.volumeMl} ml</span>
+              held.map(u => (
+                <div key={u.din} className="card" style={{ boxShadow: 'none', borderColor: '#eec3bf' }}>
+                  <div className="card-bd" style={{ padding: 13 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                      <span className="mono" style={{ fontWeight: 600 }}>{u.din}</span>
+                      <span className="strong-group">{u.bloodType}</span>
+                    </div>
+                    <div className="cell-sub" style={{ marginTop: 5 }}>
+                      {u.componentType.replace(/_/g, ' ').toLowerCase()} &middot; {u.volumeMl} mL
+                    </div>
+                    <div className="cell-sub">{u.currentFacility}</div>
+                    <div style={{ marginTop: 9 }}>
+                      <span className="status status--stop">Held from issue</span>
+                    </div>
                   </div>
                 </div>
               ))
@@ -100,44 +61,41 @@ export const QuarantineVault: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Lab Quarantine Incident Log */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <h3 className="text-base font-bold text-white">National Incident Audit Log</h3>
-            <span className="text-xs font-mono text-slate-400">{labQuarantineIssues.length} Incidents</span>
+        <div className="card">
+          <div className="card-hd">
+            <h3>Hold history</h3>
+            <span className="badge">{holdIssues.length}</span>
           </div>
-
-          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-            {labQuarantineIssues.length === 0 ? (
-              <div className="p-12 text-center text-slate-500 text-xs italic">
-                No biohazard quarantine incidents recorded.
+          <div className="card-bd stack" style={{ gap: 10, maxHeight: 520, overflowY: 'auto' }}>
+            {holdIssues.length === 0 ? (
+              <div className="empty">
+                <Info className="empty-icon" size={22} />
+                <div style={{ fontWeight: 600, color: 'var(--ink)' }}>No holds recorded</div>
               </div>
             ) : (
-              labQuarantineIssues.map(issue => (
-                <div
-                  key={issue.id}
-                  className="p-4 rounded-xl border border-white/5 bg-slate-950/70 space-y-2 text-xs"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-rose-400">{issue.id}</span>
-                    <span className="font-mono text-[10px] text-slate-500">
-                      {new Date(issue.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-
-                  <h4 className="font-bold text-white">{issue.title}</h4>
-                  <p className="text-slate-300 leading-relaxed font-sans">{issue.description}</p>
-
-                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                    <span>Target: <strong className="text-purple-300">{issue.affectedEntity}</strong></span>
-                    <span>Facility: {issue.facility}</span>
+              holdIssues.map(i => (
+                <div key={i.id} className="card" style={{ boxShadow: 'none' }}>
+                  <div className="card-bd" style={{ padding: 13 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                      <span className="mono dim" style={{ fontSize: 11.5 }}>{i.id}</span>
+                      <span className={`sev ${i.severity === 'CRITICAL' ? 'sev--critical' : 'sev--high'}`}>
+                        {i.severity}
+                      </span>
+                    </div>
+                    <div style={{ fontWeight: 600, fontSize: 13, marginTop: 6 }}>{i.title}</div>
+                    <p className="muted" style={{ fontSize: 12.5, marginTop: 5 }}>{i.description}</p>
+                    <div className="tile-foot" style={{ marginTop: 9, flexWrap: 'wrap', gap: 10 }}>
+                      <span>{i.affectedEntity}</span>
+                      <span>
+                        {new Date(i.timestamp).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
