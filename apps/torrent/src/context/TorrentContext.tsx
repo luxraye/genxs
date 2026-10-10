@@ -275,6 +275,7 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const demoAccount: StaffAccount = {
       id: 'DEMO-COURIER',
       fullName: 'Demonstration courier (cold-chain logistics)',
+      passwordHash: 'DEMO-ACCOUNT',
       email: 'courier@example-logistics.example',
       role: 'LOGISTICS_COURIER',
       facility: 'National blood logistics hub',

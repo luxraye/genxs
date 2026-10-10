@@ -5,7 +5,7 @@ import type { DonorDocument } from '@shared/types/bloodchain';
 
 const CONSENT_KEY = 'scyther_consent_v1';
 
-const maskId = (id: string) => (!id ? 'Not provided' : id.length <= 4 ? id : '•••• ' + id.slice(-4));
+const maskId = (id: string | undefined) => (!id ? 'Not provided' : id.length <= 4 ? id : '•••• ' + id.slice(-4));
 
 export const Profile: React.FC<{ onSignIn?: () => void }> = () => {
   const { donor, uploadDocument, logoutDonor } = useScyther();

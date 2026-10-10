@@ -2,7 +2,7 @@ import React from 'react';
 import { useScyther } from '../context/ScytherContext';
 import { QrCode, Calendar, CheckCircle2 } from 'lucide-react';
 
-const maskId = (id: string) => {
+const maskId = (id: string | undefined) => {
   if (!id) return 'Not provided';
   if (id.length <= 4) return id;
   return '•••• ' + id.slice(-4);

@@ -17,7 +17,7 @@ import { Router, type Request, type Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import { store, type SpineEvent } from './store.js';
 import { isUnitStatus } from '../../packages/domain/stateMachine.js';
-import type { BloodUnit, BloodchainBlockAlias } from '../../src/types/bloodchain.js';
+import type { BloodUnit, UserRole } from '../../src/types/bloodchain.js';
 
 export const spineRouter = Router();
 
@@ -191,7 +191,7 @@ spineRouter.post('/staff', (req, res) => {
     id: body.id || `STF-${Date.now().toString(36).toUpperCase()}`,
     email: String(body.email).toLowerCase(),
     fullName: body.fullName || String(body.email).split('@')[0],
-    role: body.role,
+    role: body.role as UserRole,
     facility: body.facility || 'unspecified',
     badgeNumber: body.badgeNumber || 'Not assigned',
     mustChangePassword: true,

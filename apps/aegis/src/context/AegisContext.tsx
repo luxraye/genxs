@@ -321,6 +321,7 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const demoAccount: StaffAccount = {
       id: `DEMO-${role}`,
       fullName: id.fullName,
+      passwordHash: 'DEMO-ACCOUNT',
       email: role === 'DOCTOR' ? 'physician@example-hospital.example' : 'nurse@example-hospital.example',
       role: 'CLINICAL_STAFF',
       facility: 'Example Referral Hospital',

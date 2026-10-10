@@ -10,7 +10,7 @@
  * See docs/CONSTITUTION.md CS-13.
  */
 
-export * from './blood.ts';
-export * from './stateMachine.ts';
-export * from './telemetry.ts';
-export * from './chain.ts';
+export * from './blood';
+export * from './stateMachine';
+export * from './telemetry';
+export * from './chain';
