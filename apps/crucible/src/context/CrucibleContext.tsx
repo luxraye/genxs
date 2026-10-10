@@ -43,6 +43,8 @@ interface CrucibleContextType {
   units: BloodUnit[];
   issuesList: SystemIssue[];
   auditLog: BlockchainBlock[];
+  /** Laboratory staff accounts available on this console (sample data). */
+  staffList: StaffAccount[];
 
   loginScientist: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   quickDemoScientistLogin: () => void;
@@ -373,6 +375,7 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         units,
         issuesList,
         auditLog,
+        staffList: INITIAL_STAFF_ACCOUNTS,
         loginScientist,
         quickDemoScientistLogin,
         logoutScientist,

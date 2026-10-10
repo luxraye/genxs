@@ -9,12 +9,17 @@ export default defineConfig({
   server: {
     port: 3005,
     host: true,
+    allowedHosts: true,
     proxy: {
       '/api': 'http://localhost:3000',
       '/public': 'http://localhost:3000',
       '/donations': 'http://localhost:3000',
       '/healthz': 'http://localhost:3000'
     }
+  },
+  preview: {
+    host: true,
+    allowedHosts: true
   },
   resolve: {
     alias: {
