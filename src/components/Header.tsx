@@ -44,7 +44,7 @@ export const Header: React.FC = () => {
   const navItems = [
     { id: 'DEMO_HUB', label: 'Demo Hub', icon: Globe },
     { id: 'ARCHITECTURE', label: 'Architecture', icon: Layers },
-    { id: 'BOTSWANA_LIVE', label: 'luxraye/live', icon: GitBranch },
+    { id: 'BOTSWANA_LIVE', label: 'audit log', icon: GitBranch },
     { id: 'DONOR', label: 'Donor Portal', icon: Heart },
     { id: 'LAB', label: 'Lab & Release', icon: FlaskConical },
     { id: 'TRANSIT', label: 'Cold-Chain Transit', icon: Truck },

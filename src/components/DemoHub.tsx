@@ -78,7 +78,7 @@ export const DemoHub: React.FC = () => {
     email: '',
     organization: '',
     roleCategory: 'National Blood Service',
-    interestTier: 'Full Sovereign Deployment Pilot',
+    interestTier: 'Full deployment pilot',
     notes: ''
   });
   const [accessSubmitted, setAccessSubmitted] = useState(false);
@@ -185,7 +185,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
               {/* Sovereign Trust & National Security Badge */}
               <div className="inline-flex flex-wrap items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/15 text-xs font-mono text-slate-300 shadow-2xl">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="font-semibold text-white tracking-wide">Sovereign Blood Infrastructure</span>
+                <span className="font-semibold text-white tracking-wide">Bloodchain demonstration environment</span>
                 <span aria-hidden="true" className="text-slate-500">·</span>
                 <span className="text-red-400 font-bold">Demonstration Environment</span>
                 <span aria-hidden="true" className="text-slate-500">·</span>
@@ -342,7 +342,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
             <div className="space-y-1">
               <p className="text-xs font-mono uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-blue-400" />
-                <span>Fabric Block Height</span>
+                <span>Audit entries</span>
               </p>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl lg:text-4xl font-mono font-bold text-white tabular-nums">
@@ -413,7 +413,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
             { id: 'SUITE', label: '1. The Vein-to-Vein Application Suite', icon: Layers },
             { id: 'LEDGER_FEED', label: '2. Public Assurance Feed', icon: Activity },
             { id: 'INVESTOR_BRIEF', label: '3. Investor & Partner Briefing', icon: BarChart3 },
-            { id: 'PILOT', label: '4. Botswana National Pilot Architecture', icon: Globe2 }
+            { id: 'PILOT', label: '4. Illustrative architecture', icon: Globe2 }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -444,7 +444,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                 <span>Full Operational Ecosystem</span>
               </div>
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                Six Specialized Applications. One Sovereign Backbone.
+                Six Specialized Applications. One shared backbone.
               </h2>
               <p className="mt-1 text-sm text-slate-600 max-w-3xl">
                 From citizen smartphone registration to trauma bedside crossmatching, each persona operates a tailored interface synchronized with sovereign audit service and Firestore.
@@ -880,7 +880,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
               <span>Investment Thesis & National Value Drivers</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-              Why Sovereign Blood Provenance Matters
+              Why blood provenance matters
             </h2>
             <p className="mt-1 text-sm text-slate-600 max-w-3xl">
               Blood supply chains suffer from 18%–35% systemic wastage due to thermal excursion, expiration from lack of cross-hospital rotation, and catastrophic bedside transfusion mismatches. Bloodchain solves this at institutional scale.
@@ -920,7 +920,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
               <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
                 <Globe2 className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Sovereign Cloud & Zero-PII</h3>
+              <h3 className="text-base font-bold text-slate-900">Self-hosted, no PII to external services</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Designed for data-protection compliance and in-country residency. Personal patient and donor details are stored separately from the audit log. The ledger records only unforgeable cryptographic hashes.
               </p>
@@ -1031,7 +1031,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
-              <span>National Pilot Implementation</span>
+              <span>Illustrative implementation plan</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
               Botswana Health Corridor Corridor
@@ -1215,7 +1215,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                       >
                         <option value="National Blood Service">National Blood Service</option>
                         <option value="Hospital Network / Transfusion Medicine">Hospital Network / Transfusion</option>
-                        <option value="Venture Investor / Sovereign Wealth Fund">Venture Investor / Sovereign Fund</option>
+                        <option value="Venture / institutional investor">Venture Investor / Sovereign Fund</option>
                         <option value="Global Health Development Body">Global Health Development Body</option>
                         <option value="Medical Logistics / Cold-Chain Carrier">Cold-Chain Carrier</option>
                       </select>
@@ -1228,7 +1228,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                         onChange={e => setAccessForm(prev => ({ ...prev, interestTier: e.target.value }))}
                         className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-red-500"
                       >
-                        <option value="Full Sovereign Deployment Pilot">Full Deployment Pilot</option>
+                        <option value="Full deployment pilot">Full Deployment Pilot</option>
                         <option value="Investment / Capital Participation">Investment Round</option>
                         <option value="Technical Security & Ledger Audit">Technical Audit</option>
                         <option value="EHR / HL7 Integration Partnership">EHR Integration</option>

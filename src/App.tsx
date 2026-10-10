@@ -99,7 +99,7 @@ function BloodchainAppContent() {
             targetApp="OPERATIONS"
             allowedRoles={['NATIONAL_OPERATOR']}
             appName="Admin Command Centre"
-            appSubtitle="Sovereign Supply Matrix, Account Provisioning & Issue Resolution"
+            appSubtitle="Supply matrix, Account Provisioning & Issue Resolution"
             description="Unified national administration hub managing nationwide deficit matrices, specialized personnel account provisioning (with temporary passwords), multi-tier donor verification, and cross-app issue resolution."
             icon={Shield}
             accentColor="red"

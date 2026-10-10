@@ -203,11 +203,11 @@ export const AdminCommandCentre: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span className="font-bold">National Operations Command Centre</span>
             <span aria-hidden="true" className="text-slate-500">·</span>
-            <span>Republic of Botswana</span>
+            <span>Demonstration build</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-            Administrative Overwatch & Sovereign Control
+            Administrative oversight
           </h1>
           <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
             Multi-app governance across clinical wards, serology labs, cold-chain transport, staff account provisioning, and multi-tier donor verification.

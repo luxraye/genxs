@@ -320,7 +320,7 @@ export const AppAuthGate: React.FC<AppAuthGateProps> = ({
           {/* Tagline: Part of the Bloodchain Ecosystem with link to Main App */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] backdrop-blur-md border border-white/15 text-xs font-mono text-slate-300 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="font-semibold text-white">Part of the Bloodchain Sovereign Ecosystem</span>
+            <span className="font-semibold text-white">Part of the Bloodchain ecosystem</span>
           </div>
 
           <div className="space-y-3">
@@ -343,7 +343,7 @@ export const AppAuthGate: React.FC<AppAuthGateProps> = ({
           <div className="p-4 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10 space-y-2 text-xs">
             <div className="flex items-center gap-2 font-bold text-white">
               <Lock className="w-4 h-4 text-amber-400" />
-              <span>{isDonorApp ? 'Citizen Self-Service Access' : 'Sovereign Role-Restricted Access'}</span>
+              <span>{isDonorApp ? 'Citizen Self-Service Access' : 'Role-restricted access'}</span>
             </div>
             <p className="text-slate-300 leading-relaxed text-[11px]">
               {isDonorApp

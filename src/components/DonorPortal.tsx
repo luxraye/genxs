@@ -228,7 +228,7 @@ export const DonorPortal: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Droplets className="w-5 h-5 text-red-500" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Sovereign Blood Pass</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Blood Pass</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-black text-red-400 font-mono">{donor.bloodType}</span>
