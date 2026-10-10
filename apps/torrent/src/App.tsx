@@ -1,80 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTorrent } from './context/TorrentContext';
-import { Header, TorrentTab } from './components/Header';
+import { Header, type TorrentTab } from './components/Header';
 import { TelemetryConsole } from './components/TelemetryConsole';
 import { DispatchConsole } from './components/DispatchConsole';
 import { HospitalHandover } from './components/HospitalHandover';
 import { FleetManifest } from './components/FleetManifest';
-import { CourierAuthModal } from './components/CourierAuthModal';
+import { SignIn } from './components/SignIn';
+import { Info } from 'lucide-react';
 
-export const App: React.FC = () => {
-  const { currentCourier } = useTorrent();
+const hashToTab = (): TorrentTab => {
+  const h = (window.location.hash || '').replace(/^#\/?/, '').toLowerCase();
+  if (h === 'dispatch') return 'DISPATCH';
+  if (h === 'handover') return 'HANDOVER';
+  if (h === 'corridors') return 'MANIFEST';
+  return 'TELEMETRY';
+};
 
-  const [activeTab, setActiveTab] = useState<TorrentTab>('TELEMETRY');
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [selectedHandoverDin, setSelectedHandoverDin] = useState<string | undefined>(undefined);
+const tabToHash = (t: TorrentTab) => t.toLowerCase();
+
+const Footer: React.FC = () => (
+  <footer className="footer">
+    <div className="container footer-inner">
+      <span>Bloodchain &middot; cold-chain logistics console</span>
+      <span>Demonstration build &middot; all records illustrative</span>
+    </div>
+  </footer>
+);
+
+const Shell: React.FC = () => {
+  const { isAuthenticated } = useTorrent();
+  const [tab, setTab] = useState<TorrentTab>(hashToTab);
+  const [handoverDin, setHandoverDin] = useState<string | undefined>(undefined);
+
+  const view: TorrentTab = isAuthenticated ? tab : 'TELEMETRY';
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const h = tabToHash(view);
+    const cur = window.location.hash.replace(/^#\/?/, '');
+    if (cur !== h) window.history.replaceState(null, '', `#${h}`);
+  }, [view, isAuthenticated]);
+
+  useEffect(() => {
+    const onHash = () => setTab(hashToTab());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="shell">
+        <main className="main">
+          <div className="container">
+            <SignIn onSuccess={() => setTab('TELEMETRY')} />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-amber-600 selection:text-white">
-      {/* Header Navigation */}
-      <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onOpenAuthModal={() => setIsAuthModalOpen(true)}
-      />
+    <div className="shell">
+      <Header activeTab={view} setActiveTab={setTab} />
 
-      {/* Main Viewport */}
-      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'TELEMETRY' && (
-          <TelemetryConsole
-            onNavigateToHandover={(din) => {
-              setSelectedHandoverDin(din);
-              setActiveTab('HANDOVER');
-            }}
-          />
-        )}
+      <main className="main">
+        <div className="container stack">
+          <div className="notice notice--demo">
+            <Info className="notice-icon" size={15} />
+            <span>
+              <strong>Demonstration environment.</strong> Units, temperatures and routes shown here are illustrative
+              sample data. Temperature readings can be simulated from the telemetry console.
+            </span>
+          </div>
 
-        {activeTab === 'DISPATCH' && (
-          <DispatchConsole />
-        )}
-
-        {activeTab === 'HANDOVER' && (
-          <HospitalHandover
-            initialUnitDin={selectedHandoverDin}
-          />
-        )}
-
-        {activeTab === 'MANIFEST' && (
-          <FleetManifest />
-        )}
+          {view === 'TELEMETRY' && (
+            <TelemetryConsole
+              onNavigateToHandover={din => {
+                setHandoverDin(din);
+                setTab('HANDOVER');
+              }}
+            />
+          )}
+          {view === 'DISPATCH' && <DispatchConsole />}
+          {view === 'HANDOVER' && <HospitalHandover initialUnitDin={handoverDin} />}
+          {view === 'MANIFEST' && <FleetManifest />}
+        </div>
       </main>
 
-      {/* Courier Authentication Modal */}
-      <CourierAuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
-
-      {/* Sovereign Footer */}
-      <footer className="mt-auto border-t border-white/5 bg-slate-950 py-6 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-slate-400">Torrent Cold-Chain Fleet</span>
-            <span>·</span>
-            <span>Botswana Central Transit Corridors</span>
-            <span>·</span>
-            <span className="font-mono text-amber-400">v2.0-SOVEREIGN</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-[11px] font-mono text-slate-500">
-            <span>SENSITECH 2°C–6°C ACTIVE</span>
-            <span>·</span>
-            <span>FABRIC GATEWAY: PROXIED</span>
-            <span>·</span>
-            <span className="text-emerald-400">FLEET NOMINAL</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
+
+export default function App() {
+  return <Shell />;
+}

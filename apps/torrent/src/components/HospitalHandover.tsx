@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
-import { useTorrent } from '../context/TorrentContext';
-import { 
-  Building2, 
-  CheckCircle2, 
-  ShieldCheck, 
-  UserCheck, 
-  Thermometer, 
-  AlertTriangle, 
-  Truck 
-} from 'lucide-react';
-import { BloodUnit } from '@shared/types/bloodchain';
+import { useTorrent, TRANSIT_STATUSES } from '../context/TorrentContext';
+import { Building2, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface HospitalHandoverProps {
   initialUnitDin?: string;
@@ -18,225 +9,191 @@ interface HospitalHandoverProps {
 export const HospitalHandover: React.FC<HospitalHandoverProps> = ({ initialUnitDin }) => {
   const { units, confirmHospitalReceipt } = useTorrent();
 
-  const inTransitUnits = units.filter(u => u.status === 'IN_TRANSIT');
-  const [selectedDin, setSelectedDin] = useState<string>(
-    initialUnitDin || inTransitUnits[0]?.din || ''
-  );
-  const [receivingStaff, setReceivingStaff] = useState('Nurse Specialist R. Vance (Trauma Intake)');
+  const inTransit = units.filter(u => TRANSIT_STATUSES.includes(u.status));
+  const [selectedDin, setSelectedDin] = useState<string>(initialUnitDin || inTransit[0]?.din || '');
+  const [receivingStaff, setReceivingStaff] = useState('');
   const [sealsIntact, setSealsIntact] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
-  const [handoverSuccess, setHandoverSuccess] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
-  const selectedUnit = units.find(u => u.din === selectedDin) || inTransitUnits[0];
+  const selectedUnit = units.find(u => u.din === selectedDin) || inTransit[0];
+  const latestTemp = selectedUnit?.telemetryLogs[selectedUnit.telemetryLogs.length - 1]?.temperatureCelsius;
+  const isBreached =
+    selectedUnit && latestTemp !== undefined
+      ? latestTemp < selectedUnit.storageTempRange.min || latestTemp > selectedUnit.storageTempRange.max
+      : false;
 
-  const handleConfirmHandover = async () => {
+  const confirm = async () => {
     if (!selectedUnit) return;
+    setErr(null);
     if (!sealsIntact) {
-      alert('Physical tamper-evident seals must be intact to accept clinical hospital custody.');
+      setErr('Seals must be attested intact before custody can be accepted.');
       return;
     }
-
+    if (!receivingStaff.trim()) {
+      setErr('A receiving staff name is required.');
+      return;
+    }
     setIsConfirming(true);
     try {
-      const facility = selectedUnit.destinationHospital || 'Princess Marina Hospital (Gaborone)';
+      const facility = selectedUnit.destinationHospital || 'Receiving facility';
       await confirmHospitalReceipt(selectedUnit.din, facility, receivingStaff);
-      setHandoverSuccess(`Custody of DIN ${selectedUnit.din} successfully transferred to ${facility}. Unit is now available for bedside crossmatch in Aegis.`);
-      setTimeout(() => setHandoverSuccess(null), 8000);
-    } catch (err: any) {
-      alert(`Handover failed: ${err.message}`);
+      setMsg(`Custody of unit ${selectedUnit.din} transferred to ${facility}. It is now available to the ward.`);
+      setTimeout(() => setMsg(null), 8000);
     } finally {
       setIsConfirming(false);
     }
   };
 
-  const latestTemp = selectedUnit?.telemetryLogs[selectedUnit.telemetryLogs.length - 1]?.temperatureCelsius;
-  const isTempBreached = selectedUnit && latestTemp !== undefined
-    ? latestTemp < selectedUnit.storageTempRange.min || latestTemp > selectedUnit.storageTempRange.max
-    : false;
-
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="stack">
+      <div className="page-head">
         <div>
-          <div className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-2">
-            <Building2 className="w-4 h-4" />
-            <span>Hospital Intake Receiving Protocol</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
-            Hospital Intake Custody Handover Interlock
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Mutual counter-signature at hospital loading dock: clinician inspects cold-box telemetry logs and physically intact seals before accepting custody.
+          <div className="eyebrow">Handover</div>
+          <h1 className="page-title">Hospital handover</h1>
+          <p className="page-sub">
+            Inspect the arrival reading and attest the seals before accepting the unit into hospital custody.
           </p>
         </div>
-
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300">
-            Awaiting Handover: <strong className="text-amber-200">{inTransitUnits.length}</strong>
-          </span>
-          <span className="px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
-            Delivered to Wards: <strong className="text-emerald-200">{units.filter(u => u.status === 'DELIVERED_TO_HOSPITAL').length}</strong>
-          </span>
+        <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(120px, 1fr))' }}>
+          <div className="kpi">
+            <div className="kpi-k">Awaiting handover</div>
+            <div className="kpi-v">{inTransit.length}</div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-k">Delivered to ward</div>
+            <div className="kpi-v">{units.filter(u => u.status === 'DELIVERED_TO_HOSPITAL').length}</div>
+          </div>
         </div>
       </div>
 
-      {/* Success Notification Alert */}
-      {handoverSuccess && (
-        <div className="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs flex items-center justify-between gap-3 animate-fade-in shadow-xl font-mono">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{handoverSuccess}</span>
-          </div>
-          <button onClick={() => setHandoverSuccess(null)} className="text-emerald-400 hover:text-white text-xs">
-            Dismiss
-          </button>
+      {msg && (
+        <div className="notice notice--safe">
+          <CheckCircle2 className="notice-icon" size={15} />
+          <span>{msg}</span>
+        </div>
+      )}
+      {err && (
+        <div className="notice notice--stop">
+          <AlertTriangle className="notice-icon" size={15} />
+          <span>{err}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column: Arriving Shipments */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-xl space-y-4">
-          <div>
-            <h3 className="text-sm font-bold text-white">Arriving Transit Shipments</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Select a unit arriving at hospital receiving bay.</p>
+      <div className="ward-grid">
+        <div className="card">
+          <div className="card-hd">
+            <strong>Awaiting handover</strong>
+            <span className="mono dim">{inTransit.length}</span>
           </div>
-
-          <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
-            {inTransitUnits.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 text-xs italic">
-                Zero shipments currently awaiting intake handover.
-              </div>
+          <div className="card-bd">
+            {inTransit.length === 0 ? (
+              <div className="tbl-empty">No units awaiting handover.</div>
             ) : (
-              inTransitUnits.map(unit => {
-                const isSelected = unit.din === selectedDin;
-                const temp = unit.telemetryLogs[unit.telemetryLogs.length - 1]?.temperatureCelsius;
-
-                return (
-                  <button
-                    key={unit.din}
-                    onClick={() => setSelectedDin(unit.din)}
-                    className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-amber-500 bg-amber-950/30 ring-1 ring-amber-500/50 shadow-md'
-                        : 'border-white/5 bg-slate-950/50 hover:border-white/15 hover:bg-slate-950'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-bold text-white">{unit.din}</span>
-                      <span className="font-mono text-xs font-bold text-red-400 px-2 py-0.5 rounded bg-red-950/50 border border-red-500/30">
-                        {unit.bloodType}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-2 text-[11px] text-slate-400">
-                      <span className="truncate max-w-[150px]">{unit.destinationHospital?.split(' ')[0]} Hospital</span>
-                      <span className="font-mono text-xs font-bold text-emerald-400">
-                        {temp ?? '--'}°C
-                      </span>
-                    </div>
-                  </button>
-                );
-              })
+              <div className="wide-list">
+                {inTransit.map(u => {
+                  const on = u.din === selectedDin;
+                  const t = u.telemetryLogs[u.telemetryLogs.length - 1]?.temperatureCelsius;
+                  return (
+                    <button key={u.din} className="queue-item" aria-pressed={on} onClick={() => setSelectedDin(u.din)}>
+                      <div className="queue-top">
+                        <span className="mono" style={{ fontWeight: 600 }}>{u.din}</span>
+                        <span className="cell-strong mono">{u.bloodType}</span>
+                      </div>
+                      <div className="queue-foot">
+                        <span>{u.destinationHospital || 'in transit'}</span>
+                        <span className="mono dim">{t !== undefined ? `${t}\u00b0C` : 'no reading'}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Right Column: Handover Inspection & Signature Console */}
         {selectedUnit ? (
-          <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-xl space-y-6">
-              
-              <div className="pb-4 border-b border-white/10">
-                <h3 className="text-base font-bold text-white">Intake Inspection: {selectedUnit.din}</h3>
-                <p className="text-xs text-slate-400">
-                  Verify physical temperature, seal hashes, and complete counter-signature.
-                </p>
-              </div>
-
-              {/* Transit Chain Verification Strip */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-white/10">
-                  <span className="text-slate-500 text-[10px] uppercase">Destination</span>
-                  <div className="font-sans font-bold text-white mt-0.5 truncate">{selectedUnit.destinationHospital}</div>
+          <div className="card">
+            <div className="card-hd">
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Building2 size={16} /> Intake inspection
+              </span>
+              <span className="mono dim">{selectedUnit.din}</span>
+            </div>
+            <div className="card-bd stack">
+              <div className="spec-grid">
+                <div className="spec">
+                  <div className="spec-k">Destination</div>
+                  <div className="spec-v">{selectedUnit.destinationHospital || 'not set'}</div>
                 </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-white/10">
-                  <span className="text-slate-500 text-[10px] uppercase">Arrival Temp</span>
-                  <div className={`font-bold mt-0.5 text-sm ${isTempBreached ? 'text-red-400' : 'text-emerald-400'}`}>
-                    {latestTemp ?? '--'}°C
+                <div className="spec">
+                  <div className="spec-k">Arrival reading</div>
+                  <div className="spec-v mono" style={{ color: isBreached ? 'var(--stop)' : 'var(--safe)' }}>
+                    {latestTemp !== undefined ? `${latestTemp}\u00b0C` : '\u2014'}
                   </div>
                 </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-white/10">
-                  <span className="text-slate-500 text-[10px] uppercase">Allowed Range</span>
-                  <div className="font-bold text-white mt-0.5">
-                    {selectedUnit.storageTempRange.min}°C to {selectedUnit.storageTempRange.max}°C
+                <div className="spec">
+                  <div className="spec-k">Stored range</div>
+                  <div className="spec-v mono">
+                    {selectedUnit.storageTempRange.min}&deg;C to {selectedUnit.storageTempRange.max}&deg;C
                   </div>
                 </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-white/10">
-                  <span className="text-slate-500 text-[10px] uppercase">Component</span>
-                  <div className="font-sans font-semibold text-slate-300 mt-0.5 truncate">
-                    {selectedUnit.componentType.replace(/_/g, ' ')}
-                  </div>
+                <div className="spec">
+                  <div className="spec-k">Component</div>
+                  <div className="spec-v">{selectedUnit.componentType.replace(/_/g, ' ').toLowerCase()}</div>
                 </div>
               </div>
 
-              {/* Physical Seal Attestation */}
-              <div className="p-4 rounded-xl bg-slate-950/80 border border-white/10 space-y-3">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="sealCheck"
-                    checked={sealsIntact}
-                    onChange={e => setSealsIntact(e.target.checked)}
-                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-white/20 bg-slate-900 cursor-pointer"
-                  />
-                  <label htmlFor="sealCheck" className="text-xs text-white font-medium cursor-pointer">
-                    I certify that physical tamper-evident zip seals on Cold-Box #{selectedUnit.din.slice(-4)} are undamaged and intact upon arrival.
-                  </label>
+              {isBreached && (
+                <div className="notice notice--stop">
+                  <AlertTriangle className="notice-icon" size={15} />
+                  <span>
+                    The latest reading is outside the stored range. Review this unit before accepting it into
+                    clinical use.
+                  </span>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-slate-400 mb-1 text-[11px]">
-                    Receiving Hospital Intake Clinician / Staff Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={receivingStaff}
-                    onChange={e => setReceivingStaff(e.target.value)}
-                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
-                  />
-                </div>
+              <div className="checkline">
+                <input
+                  id="seal"
+                  type="checkbox"
+                  checked={sealsIntact}
+                  onChange={e => setSealsIntact(e.target.checked)}
+                />
+                <label htmlFor="seal">
+                  I attest that the tamper-evident seals on the transport box arrived undamaged.
+                </label>
               </div>
 
-              {/* Handover CTA */}
-              <div className="flex items-center justify-between pt-2">
-                <div className="text-[11px] font-mono text-slate-400">
-                  Handover mints permanent block on Hyperledger Fabric
-                </div>
+              <div className="field">
+                <label className="label" htmlFor="h-staff">Receiving staff name</label>
+                <input
+                  id="h-staff"
+                  className="input"
+                  value={receivingStaff}
+                  placeholder="Name and role"
+                  onChange={e => setReceivingStaff(e.target.value)}
+                />
+              </div>
 
-                <button
-                  onClick={handleConfirmHandover}
-                  disabled={isConfirming || !sealsIntact}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{isConfirming ? 'Notarizing Handover...' : 'Confirm Hospital Receipt & Mint Block'}</span>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button className="btn btn--primary" onClick={confirm} disabled={isConfirming || !sealsIntact}>
+                  <CheckCircle2 size={15} />
+                  {isConfirming ? 'Recording\u2026' : 'Confirm receipt'}
                 </button>
+                <span className="hint" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <ShieldCheck size={14} /> The handover is written to the hash-chained audit log.
+                </span>
               </div>
-
             </div>
           </div>
         ) : (
-          <div className="lg:col-span-2 p-12 text-center rounded-2xl border border-white/10 bg-slate-900/60 text-slate-400 text-xs italic">
-            Select an in-transit unit from the left panel to complete hospital intake.
+          <div className="card">
+            <div className="card-bd tbl-empty">Select an in-transit unit from the left to complete intake.</div>
           </div>
         )}
-
       </div>
     </div>
   );

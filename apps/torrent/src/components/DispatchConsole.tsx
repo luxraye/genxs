@@ -1,232 +1,167 @@
 import React, { useState } from 'react';
-import { useTorrent } from '../context/TorrentContext';
-import { 
-  Truck, 
-  Send, 
-  Building2, 
-  Thermometer, 
-  CheckCircle2, 
-  Radio, 
-  ShieldCheck, 
-  Clock 
-} from 'lucide-react';
-import { BloodUnit } from '@shared/types/bloodchain';
+import { useTorrent, DISPATCHABLE_STATUSES } from '../context/TorrentContext';
+import { Truck, Send, CheckCircle2 } from 'lucide-react';
 
 export const DispatchConsole: React.FC = () => {
   const { units, dispatchUnitToTransit, currentCourier } = useTorrent();
 
-  const releasedUnits = units.filter(u => u.status === 'RELEASED');
-  const [selectedDin, setSelectedDin] = useState<string>(releasedUnits[0]?.din || '');
+  const released = units.filter(u => DISPATCHABLE_STATUSES.includes(u.status));
+  const [selectedDin, setSelectedDin] = useState<string>(released[0]?.din || '');
   const [courierName, setCourierName] = useState(
-    currentCourier?.fullName || 'SwiftMed Courier #14 (ColdVan-Beta)'
+    currentCourier ? `${currentCourier.fullName} (${currentCourier.badgeNumber})` : 'Cold-chain courier'
   );
-  const [destinationHospital, setDestinationHospital] = useState('Princess Marina Hospital (Gaborone)');
+  const [destinationHospital, setDestinationHospital] = useState('Example Referral Hospital');
   const [initialTemp, setInitialTemp] = useState<number>(3.8);
 
   const [isDispatching, setIsDispatching] = useState(false);
-  const [dispatchSuccessMsg, setDispatchSuccessMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
 
-  const selectedUnit = units.find(u => u.din === selectedDin) || releasedUnits[0];
+  const selectedUnit = units.find(u => u.din === selectedDin) || released[0];
 
-  const handleDispatch = async (e: React.FormEvent) => {
+  const dispatch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUnit) return;
     setIsDispatching(true);
     try {
       await dispatchUnitToTransit(selectedUnit.din, courierName, destinationHospital, initialTemp);
-      setDispatchSuccessMsg(`Dispatched DIN ${selectedUnit.din} into transit to ${destinationHospital}. Sensitech sensor calibrated at ${initialTemp}°C.`);
-      setTimeout(() => setDispatchSuccessMsg(null), 6000);
-    } catch (err: any) {
-      alert(`Dispatch failed: ${err.message}`);
+      setMsg(`Unit ${selectedUnit.din} dispatched to ${destinationHospital} with a recorded departure temperature of ${initialTemp}\u00b0C.`);
+      setTimeout(() => setMsg(null), 6000);
     } finally {
       setIsDispatching(false);
     }
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="stack">
+      <div className="page-head">
         <div>
-          <div className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-2">
-            <Truck className="w-4 h-4" />
-            <span>Vault Departure & Beacon Binding</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
-            Central Depository Fleet Dispatch
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Dispatch laboratory-released blood units from central cold vaults into climate-controlled mobile transit units.
+          <div className="eyebrow">Dispatch</div>
+          <h1 className="page-title">Dispatch to transit</h1>
+          <p className="page-sub">
+            Move a released unit from the cold vault into a temperature-controlled transport box and record the
+            departure reading.
           </p>
         </div>
-
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
-            Vault Ready: <strong className="text-emerald-200">{releasedUnits.length} Units</strong>
-          </span>
+        <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(1, minmax(120px, 1fr))' }}>
+          <div className="kpi">
+            <div className="kpi-k">Ready in vault</div>
+            <div className="kpi-v">{released.length}</div>
+          </div>
         </div>
       </div>
 
-      {/* Success Notification Alert */}
-      {dispatchSuccessMsg && (
-        <div className="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs flex items-center justify-between gap-3 animate-fade-in shadow-xl font-mono">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{dispatchSuccessMsg}</span>
-          </div>
-          <button onClick={() => setDispatchSuccessMsg(null)} className="text-emerald-400 hover:text-white text-xs">
-            Dismiss
-          </button>
+      {msg && (
+        <div className="notice notice--safe">
+          <CheckCircle2 className="notice-icon" size={15} />
+          <span>{msg}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column: Released Units Queue */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-xl space-y-4">
-          <div>
-            <h3 className="text-sm font-bold text-white">Released Vault Units</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Select a cleared unit to bind for shipment.</p>
+      <div className="ward-grid">
+        <div className="card">
+          <div className="card-hd">
+            <strong>Released units</strong>
+            <span className="mono dim">{released.length}</span>
           </div>
-
-          <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
-            {releasedUnits.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 text-xs italic">
-                Zero units awaiting dispatch in central vault. Release units via Crucible (Port 3005).
-              </div>
+          <div className="card-bd">
+            {released.length === 0 ? (
+              <div className="tbl-empty">No released units awaiting dispatch. Release units in the laboratory console.</div>
             ) : (
-              releasedUnits.map(unit => {
-                const isSelected = unit.din === selectedDin;
-
-                return (
-                  <button
-                    key={unit.din}
-                    onClick={() => setSelectedDin(unit.din)}
-                    className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-amber-500 bg-amber-950/30 ring-1 ring-amber-500/50 shadow-md'
-                        : 'border-white/5 bg-slate-950/50 hover:border-white/15 hover:bg-slate-950'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-bold text-white">{unit.din}</span>
-                      <span className="font-mono text-xs font-bold text-red-400 px-2 py-0.5 rounded bg-red-950/50 border border-red-500/30">
-                        {unit.bloodType}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-2 text-[11px] text-slate-400">
-                      <span>{unit.componentType.replace(/_/g, ' ')}</span>
-                      <span className="font-mono text-[10px] text-emerald-400 font-bold">
-                        QC Released
-                      </span>
-                    </div>
-                  </button>
-                );
-              })
+              <div className="wide-list">
+                {released.map(u => {
+                  const on = u.din === selectedDin;
+                  return (
+                    <button
+                      key={u.din}
+                      className="queue-item"
+                      aria-pressed={on}
+                      onClick={() => setSelectedDin(u.din)}
+                    >
+                      <div className="queue-top">
+                        <span className="mono" style={{ fontWeight: 600 }}>{u.din}</span>
+                        <span className="cell-strong mono">{u.bloodType}</span>
+                      </div>
+                      <div className="queue-foot">
+                        <span>{u.componentType.replace(/_/g, ' ').toLowerCase()}</span>
+                        <span className="status status--safe">released</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Right Column: Dispatch & Sensor Binding Deck */}
         {selectedUnit ? (
-          <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-xl space-y-6">
-              
-              <div className="pb-4 border-b border-white/10">
-                <h3 className="text-base font-bold text-white">Cold-Chain Dispatch Manifest</h3>
-                <p className="text-xs text-slate-400">
-                  Bind mobile Bluetooth Sensitech hardware to blood bag ISBT-128 barcode before loading.
-                </p>
-              </div>
-
-              {/* Selected Specimen Preview */}
-              <div className="p-4 rounded-xl bg-slate-950/80 border border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                <div>
-                  <span className="text-slate-500 text-[10px] uppercase">Bag DIN</span>
-                  <div className="font-bold text-white mt-0.5">{selectedUnit.din}</div>
+          <div className="card">
+            <div className="card-hd">
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Truck size={16} /> Dispatch manifest
+              </span>
+              <span className="mono dim">{selectedUnit.din}</span>
+            </div>
+            <div className="card-bd stack">
+              <div className="spec-grid">
+                <div className="spec">
+                  <div className="spec-k">Unit</div>
+                  <div className="spec-v mono">{selectedUnit.din}</div>
                 </div>
-                <div>
-                  <span className="text-slate-500 text-[10px] uppercase">Blood Group</span>
-                  <div className="font-bold text-red-400 mt-0.5">{selectedUnit.bloodType}</div>
+                <div className="spec">
+                  <div className="spec-k">Blood group</div>
+                  <div className="spec-v mono">{selectedUnit.bloodType}</div>
                 </div>
-                <div>
-                  <span className="text-slate-500 text-[10px] uppercase">Component</span>
-                  <div className="font-semibold text-slate-300 mt-0.5 truncate">{selectedUnit.componentType.replace(/_/g, ' ')}</div>
+                <div className="spec">
+                  <div className="spec-k">Component</div>
+                  <div className="spec-v">{selectedUnit.componentType.replace(/_/g, ' ').toLowerCase()}</div>
                 </div>
-                <div>
-                  <span className="text-slate-500 text-[10px] uppercase">Safe Range</span>
-                  <div className="font-bold text-emerald-400 mt-0.5">
-                    {selectedUnit.storageTempRange.min}°C to {selectedUnit.storageTempRange.max}°C
+                <div className="spec">
+                  <div className="spec-k">Stored range</div>
+                  <div className="spec-v mono">
+                    {selectedUnit.storageTempRange.min}&deg;C to {selectedUnit.storageTempRange.max}&deg;C
                   </div>
                 </div>
               </div>
 
-              <form onSubmit={handleDispatch} className="space-y-4 text-xs font-sans">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-300 font-medium mb-1">
-                      Assigned Vehicle & Courier
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={courierName}
-                      onChange={e => setCourierName(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-300 font-medium mb-1">
-                      Destination Hospital Facility
-                    </label>
-                    <select
-                      value={destinationHospital}
-                      onChange={e => setDestinationHospital(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    >
-                      <option value="Princess Marina Hospital (Gaborone)">Princess Marina Hospital (Gaborone)</option>
-                      <option value="Nyangabgwe Hospital (Francistown)">Nyangabgwe Hospital (Francistown)</option>
-                      <option value="Scottish Livingstone Hospital (Molepolole)">Scottish Livingstone Hospital (Molepolole)</option>
-                      <option value="Letsholathebe II Memorial Hospital (Maun)">Letsholathebe II Memorial Hospital (Maun)</option>
-                    </select>
-                  </div>
+              <form onSubmit={dispatch} className="stack">
+                <div className="field">
+                  <label className="label" htmlFor="d-courier">Assigned vehicle and courier</label>
+                  <input id="d-courier" className="input" required value={courierName} onChange={e => setCourierName(e.target.value)} />
                 </div>
-
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Pre-Departure Cold-Box Calibration (°C)
-                  </label>
+                <div className="field">
+                  <label className="label" htmlFor="d-dest">Destination facility</label>
+                  <select id="d-dest" className="select" value={destinationHospital} onChange={e => setDestinationHospital(e.target.value)}>
+                    <option value="Example Referral Hospital">Example Referral Hospital</option>
+                    <option value="Example District Hospital">Example District Hospital</option>
+                    <option value="Example Regional Hospital">Example Regional Hospital</option>
+                    <option value="Example Rural Clinic">Example Rural Clinic</option>
+                  </select>
+                </div>
+                <div className="field">
+                  <label className="label" htmlFor="d-temp">Departure temperature (&deg;C)</label>
                   <input
+                    id="d-temp"
+                    className="input"
                     type="number"
                     step="0.1"
-                    min="1.0"
-                    max="10.0"
+                    min="1"
+                    max="10"
                     value={initialTemp}
                     onChange={e => setInitialTemp(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={isDispatching}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-lg shadow-amber-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>{isDispatching ? 'Binding Hardware & Dispatching...' : 'Dispatch into Transit & Bind Sensor'}</span>
+                <button className="btn btn--primary btn--block" type="submit" disabled={isDispatching}>
+                  <Send size={15} />
+                  {isDispatching ? 'Dispatching\u2026' : 'Dispatch into transit'}
                 </button>
               </form>
-
             </div>
           </div>
         ) : (
-          <div className="lg:col-span-2 p-12 text-center rounded-2xl border border-white/10 bg-slate-900/60 text-slate-400 text-xs italic">
-            Select a released unit from the left panel to begin dispatch.
+          <div className="card">
+            <div className="card-bd tbl-empty">Select a released unit from the left to dispatch.</div>
           </div>
         )}
-
       </div>
     </div>
   );

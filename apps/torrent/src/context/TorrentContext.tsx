@@ -14,19 +14,15 @@ import {
   orderBy,
   type FirebaseUser
 } from '@shared/lib/firebase';
-import {
-  BloodUnit,
-  StaffAccount,
-  SystemIssue,
-  BlockchainBlock
-} from '@shared/types/bloodchain';
-import {
-  INITIAL_UNITS,
-  INITIAL_STAFF_ACCOUNTS,
-  INITIAL_SYSTEM_ISSUES,
-  INITIAL_BLOCKS
-} from '@shared/data/seedData';
+import { BloodUnit, StaffAccount, SystemIssue, BlockchainBlock } from '@shared/types/bloodchain';
+import { INITIAL_UNITS, INITIAL_STAFF_ACCOUNTS, INITIAL_SYSTEM_ISSUES, INITIAL_BLOCKS } from '@shared/data/seedData';
 import { calculateBlockHash } from '@shared/lib/crypto';
+
+const COURIER_KEY = 'torrent_active_courier';
+
+/** Units a logistics courier can act on. */
+export const DISPATCHABLE_STATUSES: BloodUnit['status'][] = ['RELEASED'];
+export const TRANSIT_STATUSES: BloodUnit['status'][] = ['IN_TRANSIT'];
 
 interface OfflineTelemetryPing {
   din: string;
@@ -37,24 +33,24 @@ interface OfflineTelemetryPing {
 
 interface TorrentContextType {
   currentUser: FirebaseUser | null;
+  /** Null when no courier is signed in. */
   currentCourier: StaffAccount | null;
   isAuthenticated: boolean;
   units: BloodUnit[];
   issuesList: SystemIssue[];
   blockchain: BlockchainBlock[];
+  /** Logistics staff accounts available on this console (sample data). */
+  staffList: StaffAccount[];
 
-  // Offline Mesh Buffer
   isOffline: boolean;
   offlineQueue: OfflineTelemetryPing[];
   setIsOffline: (offline: boolean) => void;
   syncOfflineQueue: () => Promise<void>;
 
-  // Courier Authentication
   loginCourier: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   quickDemoCourierLogin: () => void;
   logoutCourier: () => Promise<void>;
 
-  // Cold-Chain Logistics Operations
   dispatchUnitToTransit: (
     unitDIN: string,
     courierName: string,
@@ -77,64 +73,55 @@ interface TorrentContextType {
 
 const TorrentContext = createContext<TorrentContextType | null>(null);
 
+const readStoredCourier = (): StaffAccount | null => {
+  try {
+    const saved = localStorage.getItem(COURIER_KEY);
+    return saved ? (JSON.parse(saved) as StaffAccount) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-
-  // Default to SwiftMed Courier #14 / Kago Sechele
-  const defaultCourier = INITIAL_STAFF_ACCOUNTS.find(s => s.role === 'LOGISTICS_COURIER') || {
-    id: 'STF-COURIER-014',
-    fullName: 'SwiftMed Courier #14 (ColdVan-Beta)',
-    email: 'kago.sechele@logistics.health.gov.bw',
-    role: 'LOGISTICS_COURIER' as const,
-    facility: 'Botswana Central Transit Hub (Gaborone)',
-    badgeNumber: 'BW-LOG-014',
-    status: 'ACTIVE' as const,
-    mustChangePassword: false,
-    createdAt: new Date().toISOString()
-  };
-
-  const [currentCourier, setCurrentCourier] = useState<StaffAccount | null>(() => {
-    const saved = localStorage.getItem('torrent_active_courier');
-    return saved ? JSON.parse(saved) : defaultCourier;
-  });
+  // A visitor starts signed out. Only a successful sign-in sets a courier.
+  const [currentCourier, setCurrentCourier] = useState<StaffAccount | null>(readStoredCourier);
 
   const [units, setUnits] = useState<BloodUnit[]>(INITIAL_UNITS);
   const [issuesList, setIssuesList] = useState<SystemIssue[]>(INITIAL_SYSTEM_ISSUES);
   const [blockchain, setBlockchain] = useState<BlockchainBlock[]>(INITIAL_BLOCKS);
 
-  // Offline buffer state
   const [isOffline, setIsOffline] = useState(false);
   const [offlineQueue, setOfflineQueue] = useState<OfflineTelemetryPing[]>([]);
 
-  // 1. Firebase Auth listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
+    const unsub = onAuthStateChanged(auth, user => setCurrentUser(user));
+    return () => unsub();
   }, []);
 
-  // 2. Real-time Firestore Subscriptions
   useEffect(() => {
-    const unsubUnits = onSnapshot(collection(db, 'bloodUnits'), snap => {
-      if (!snap.empty) {
-        setUnits(snap.docs.map(d => d.data() as BloodUnit));
-      }
-    }, err => console.warn('Torrent units sync:', err.message));
-
-    const unsubIssues = onSnapshot(collection(db, 'systemIssues'), snap => {
-      if (!snap.empty) {
-        setIssuesList(snap.docs.map(d => d.data() as SystemIssue));
-      }
-    }, err => console.warn('Torrent issues sync:', err.message));
-
+    const unsubUnits = onSnapshot(
+      collection(db, 'bloodUnits'),
+      snap => {
+        if (!snap.empty) setUnits(snap.docs.map(d => d.data() as BloodUnit));
+      },
+      err => console.warn('Cold-chain units sync:', err.message)
+    );
+    const unsubIssues = onSnapshot(
+      collection(db, 'systemIssues'),
+      snap => {
+        if (!snap.empty) setIssuesList(snap.docs.map(d => d.data() as SystemIssue));
+      },
+      err => console.warn('Cold-chain issues sync:', err.message)
+    );
     const qBlocks = query(collection(db, 'blockchainBlocks'), orderBy('index', 'asc'));
-    const unsubBlocks = onSnapshot(qBlocks, snap => {
-      if (!snap.empty) {
-        setBlockchain(snap.docs.map(d => d.data() as BlockchainBlock));
-      }
-    }, err => console.warn('Torrent blocks sync:', err.message));
-
+    const unsubBlocks = onSnapshot(
+      qBlocks,
+      snap => {
+        if (!snap.empty) setBlockchain(snap.docs.map(d => d.data() as BlockchainBlock));
+      },
+      err => console.warn('Cold-chain audit log sync:', err.message)
+    );
     return () => {
       unsubUnits();
       unsubIssues();
@@ -142,12 +129,17 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, []);
 
-  // Firestore Persistence Helpers
+  const persistCourier = (c: StaffAccount | null) => {
+    if (c) localStorage.setItem(COURIER_KEY, JSON.stringify(c));
+    else localStorage.removeItem(COURIER_KEY);
+    setCurrentCourier(c);
+  };
+
   const persistUnit = async (u: BloodUnit) => {
     try {
       await setDoc(doc(db, 'bloodUnits', u.din), u, { merge: true });
     } catch (err: any) {
-      console.warn('Firestore persistUnit sync:', err.message);
+      console.warn('Persist unit:', err.message);
     }
   };
 
@@ -155,10 +147,14 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       await setDoc(doc(db, 'systemIssues', iss.id), iss, { merge: true });
     } catch (err: any) {
-      console.warn('Firestore persistIssue sync:', err.message);
+      console.warn('Persist issue:', err.message);
     }
   };
 
+  /**
+   * Append to the local, hash-chained audit log. The chain is self-consistent
+   * for demonstration purposes; it is not a distributed ledger.
+   */
   const appendBlock = async (
     unitDIN: string,
     eventType: BlockchainBlock['eventType'],
@@ -166,18 +162,13 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     payload: Record<string, any>
   ): Promise<BlockchainBlock> => {
     const nextIndex = blockchain.length;
-    const prevHash = blockchain.length > 0 ? blockchain[blockchain.length - 1].hash : '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const prevHash =
+      blockchain.length > 0
+        ? blockchain[blockchain.length - 1].hash
+        : '0x0000000000000000000000000000000000000000000000000000000000000000';
     const timestamp = new Date().toISOString();
 
-    const blockHash = await calculateBlockHash(
-      nextIndex,
-      timestamp,
-      unitDIN,
-      eventType,
-      actor,
-      payload,
-      prevHash
-    );
+    const blockHash = await calculateBlockHash(nextIndex, timestamp, unitDIN, eventType, actor, payload, prevHash);
 
     const newBlock: BlockchainBlock = {
       index: nextIndex,
@@ -191,11 +182,10 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     setBlockchain(prev => [...prev, newBlock]);
-
     try {
       await setDoc(doc(db, 'blockchainBlocks', `block-${newBlock.index}`), newBlock);
     } catch (err: any) {
-      console.warn('Firestore block sync:', err.message);
+      console.warn('Audit log write:', err.message);
     }
 
     try {
@@ -211,81 +201,90 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           payload
         })
       });
-    } catch (err) {}
+    } catch {
+      /* non-blocking */
+    }
 
     return newBlock;
   };
 
-  // ─── Authentication Handlers ──────────────────────────────────────────────
-
   const loginCourier = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
     try {
       let user: FirebaseUser | null = null;
       try {
-        const userCred = await signInWithEmailAndPassword(auth, email, pass);
-        user = userCred.user;
+        const cred = await signInWithEmailAndPassword(auth, cleanEmail, pass);
+        user = cred.user;
       } catch (authErr: any) {
         if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential') {
-          const newCred = await createUserWithEmailAndPassword(auth, email, pass);
-          user = newCred.user;
+          const cred = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
+          user = cred.user;
         } else {
           throw authErr;
         }
       }
-
       setCurrentUser(user);
 
-      const matchedStaff = INITIAL_STAFF_ACCOUNTS.find(s => s.email.toLowerCase() === email.toLowerCase()) || {
-        id: `STF-LOG-${Date.now().toString(36).toUpperCase()}`,
-        fullName: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase()),
-        email,
-        role: 'LOGISTICS_COURIER' as const,
-        facility: 'Botswana Central Transit Hub (Gaborone)',
-        badgeNumber: 'BW-LOG-4091',
-        status: 'ACTIVE' as const,
-        mustChangePassword: false,
-        createdAt: new Date().toISOString()
-      };
+      const existing = INITIAL_STAFF_ACCOUNTS.find(s => s.email.toLowerCase() === cleanEmail);
+      const matched: StaffAccount =
+        existing ??
+        ({
+          id: `STF-COURIER-${Date.now().toString(36).toUpperCase()}`,
+          fullName: cleanEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          email: cleanEmail,
+          role: 'LOGISTICS_COURIER',
+          facility: 'National blood logistics hub',
+          badgeNumber: 'Not assigned',
+          status: 'ACTIVE',
+          mustChangePassword: false,
+          createdAt: new Date().toISOString(),
+          provisionedBy: 'Self-registered (demonstration)'
+        } as StaffAccount);
 
-      setCurrentCourier(matchedStaff as StaffAccount);
-      localStorage.setItem('torrent_active_courier', JSON.stringify(matchedStaff));
+      persistCourier(matched);
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Courier authentication failed' };
+      return { success: false, error: err.message || 'Sign in failed.' };
     }
   };
 
   const quickDemoCourierLogin = () => {
-    setCurrentCourier(defaultCourier as StaffAccount);
-    localStorage.setItem('torrent_active_courier', JSON.stringify(defaultCourier));
+    const demoAccount: StaffAccount = {
+      id: 'DEMO-COURIER',
+      fullName: 'Demonstration courier (cold-chain logistics)',
+      email: 'courier@example-logistics.example',
+      role: 'LOGISTICS_COURIER',
+      facility: 'National blood logistics hub',
+      badgeNumber: 'DEMO-LOG',
+      status: 'ACTIVE',
+      mustChangePassword: false,
+      createdAt: new Date().toISOString(),
+      provisionedBy: 'Demonstration account'
+    };
+    persistCourier(demoAccount);
   };
 
   const logoutCourier = async () => {
     try {
       await fbSignOut(auth);
-    } catch (e) {}
-    setCurrentCourier(null);
+    } catch {
+      /* non-blocking */
+    }
     setCurrentUser(null);
-    localStorage.removeItem('torrent_active_courier');
+    persistCourier(null);
   };
-
-  // ─── Offline Mesh Buffer Synchronization ──────────────────────────────────
 
   const syncOfflineQueue = async () => {
     if (offlineQueue.length === 0) {
       setIsOffline(false);
       return;
     }
-
     for (const item of offlineQueue) {
       await logTelemetryReading(item.din, item.temp, item.location);
     }
-
     setOfflineQueue([]);
     setIsOffline(false);
   };
-
-  // ─── Cold-Chain Operations ────────────────────────────────────────────────
 
   const dispatchUnitToTransit = async (
     unitDIN: string,
@@ -306,13 +305,13 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         {
           timestamp: nowIso,
           temperatureCelsius: initialTemp,
-          locationName: `${unit.currentFacility} Loading Bay (Departure)`,
+          locationName: `${unit.currentFacility} loading bay (departure)`,
           breachDetected: false
         }
       ]
     };
 
-    setUnits(prev => prev.map(u => u.din === unitDIN ? updatedUnit : u));
+    setUnits(prev => prev.map(u => (u.din === unitDIN ? updatedUnit : u)));
     await persistUnit(updatedUnit);
 
     const sig = `0x${Math.random().toString(16).slice(2, 10)}${Math.random().toString(16).slice(2, 10)}`;
@@ -329,7 +328,6 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         courier: courierName,
         destinationHospital,
         initialTempCelsius: initialTemp,
-        sensitechSensorBound: `SENSITECH-BW-${Math.floor(100 + Math.random() * 900)}`,
         dispatchedAt: nowIso
       }
     );
@@ -344,10 +342,14 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!unit) return { breachDetected: false };
 
     const nowIso = new Date().toISOString();
-    const isBreach = temperatureCelsius < unit.storageTempRange.min || temperatureCelsius > unit.storageTempRange.max;
+    const isBreach =
+      temperatureCelsius < unit.storageTempRange.min || temperatureCelsius > unit.storageTempRange.max;
 
     if (isOffline) {
-      setOfflineQueue(prev => [...prev, { din: unitDIN, temp: temperatureCelsius, location: locationName, timestamp: nowIso }]);
+      setOfflineQueue(prev => [
+        ...prev,
+        { din: unitDIN, temp: temperatureCelsius, location: locationName, timestamp: nowIso }
+      ]);
       return { breachDetected: isBreach };
     }
 
@@ -355,16 +357,11 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...unit,
       telemetryLogs: [
         ...unit.telemetryLogs,
-        {
-          timestamp: nowIso,
-          temperatureCelsius,
-          locationName,
-          breachDetected: isBreach
-        }
+        { timestamp: nowIso, temperatureCelsius, locationName, breachDetected: isBreach }
       ]
     };
 
-    setUnits(prev => prev.map(u => u.din === unitDIN ? updatedUnit : u));
+    setUnits(prev => prev.map(u => (u.din === unitDIN ? updatedUnit : u)));
     await persistUnit(updatedUnit);
 
     if (isBreach) {
@@ -373,9 +370,9 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         unitDIN,
         'COLD_CHAIN_BREACH_DETECTED',
         {
-          id: currentCourier ? currentCourier.fullName : 'SwiftMed Fleet Sensor',
+          id: currentCourier ? currentCourier.fullName : 'Cold-chain sensor',
           role: 'LOGISTICS_COURIER',
-          facility: unit.destinationHospital || 'Transit Corridor',
+          facility: unit.destinationHospital || 'In transit',
           signature: sig
         },
         {
@@ -387,20 +384,18 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       );
 
-      // Instantly dispatch to Rubric Situation Room via Firestore!
       const incidentId = `INC-TEMP-${Date.now().toString(36).toUpperCase()}`;
       const newIssue: SystemIssue = {
         id: incidentId,
-        title: `COLD-CHAIN EXCURSION: ${temperatureCelsius}°C on DIN ${unitDIN}`,
+        title: `Cold-chain excursion: ${temperatureCelsius}\u00b0C on ${unitDIN}`,
         category: 'COLD_CHAIN_ALERT',
         severity: 'CRITICAL',
         status: 'OPEN',
-        facility: `${unit.destinationHospital || 'Express Corridor'} (En Route)`,
+        facility: `${unit.destinationHospital || 'In transit'} (en route)`,
         affectedEntity: `Unit DIN: ${unitDIN}`,
-        description: `Sensitech continuous IoT telemetry detected temperature breach: ${temperatureCelsius}°C (Allowed range: ${unit.storageTempRange.min}°C to ${unit.storageTempRange.max}°C). Location: ${locationName}. Hard lockout on hospital infusion.`,
+        description: `Cold-chain telemetry recorded a temperature outside the stored range: ${temperatureCelsius}\u00b0C (allowed ${unit.storageTempRange.min}\u00b0C to ${unit.storageTempRange.max}\u00b0C). Location: ${locationName}. Flagged for review before issue.`,
         timestamp: nowIso
       };
-
       await persistIssue(newIssue);
     }
 
@@ -422,7 +417,7 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       currentFacility: receivingFacility
     };
 
-    setUnits(prev => prev.map(u => u.din === unitDIN ? updatedUnit : u));
+    setUnits(prev => prev.map(u => (u.din === unitDIN ? updatedUnit : u)));
     await persistUnit(updatedUnit);
 
     const sig = `0x${Math.random().toString(16).slice(2, 10)}${Math.random().toString(16).slice(2, 10)}`;
@@ -438,7 +433,7 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       {
         receivedBy: receivingStaff,
         receivingFacility,
-        physicalSealsIntact: true,
+        sealsAttestedIntact: true,
         deliveredAt: nowIso
       }
     );
@@ -449,10 +444,11 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       value={{
         currentUser,
         currentCourier,
-        isAuthenticated: !!currentCourier,
+        isAuthenticated: currentCourier !== null,
         units,
         issuesList,
         blockchain,
+        staffList: INITIAL_STAFF_ACCOUNTS,
         isOffline,
         offlineQueue,
         setIsOffline,
