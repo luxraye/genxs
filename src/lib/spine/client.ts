@@ -130,6 +130,31 @@ export class SpineClient {
     return this.request<{ issue: any }>('/issues', { method: 'POST', body: JSON.stringify(payload) });
   }
 
+  async updateRequest(id: string, patch: Record<string, unknown>) {
+    return this.request<{ request: any }>(`/requests/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch)
+    });
+  }
+
+  async updateIssue(id: string, patch: Record<string, unknown>) {
+    return this.request<{ issue: any }>(`/issues/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch)
+    });
+  }
+
+  async addStaff(payload: Record<string, unknown>) {
+    return this.request<{ staff: any }>('/staff', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async updateStaff(id: string, patch: Record<string, unknown>) {
+    return this.request<{ staff: any }>(`/staff/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch)
+    });
+  }
+
   async login(email: string) {
     return this.request<{ staff: any }>('/auth/login', { method: 'POST', body: JSON.stringify({ email }) });
   }

@@ -127,10 +127,14 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (spine.mode !== 'shared') return;
     return spine.onSnapshot(snap => {
       if (Array.isArray(snap.units) && snap.units.length > 0) setUnits(snap.units as BloodUnit[]);
+      if (Array.isArray(snap.requests) && snap.requests.length > 0) setRequests(snap.requests as any[]);
+      if (Array.isArray(snap.issues) && snap.issues.length > 0) setIssuesList(snap.issues as any[]);
+      if (Array.isArray(snap.staff) && snap.staff.length > 0) setStaffList(snap.staff as any[]);
     });
   }, [spine.mode]);
   const [requests, setRequests] = useState<HospitalRequest[]>(INITIAL_HOSPITAL_REQUESTS);
   const [issuesList, setIssuesList] = useState<SystemIssue[]>(INITIAL_SYSTEM_ISSUES);
+  const [staffList, setStaffList] = useState<StaffAccount[]>(INITIAL_STAFF_ACCOUNTS);
   const [blockchain, setBlockchain] = useState<BlockchainBlock[]>(INITIAL_BLOCKS);
 
   useEffect(() => {
@@ -293,7 +297,7 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       setCurrentUser(user);
 
-      const existing = INITIAL_STAFF_ACCOUNTS.find(s => s.email.toLowerCase() === cleanEmail);
+      const existing = staffList.find(s => s.email.toLowerCase() === cleanEmail);
       const matched: StaffAccount =
         existing ??
         ({
@@ -569,6 +573,7 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setRequests(prev => [newReq, ...prev]);
+    if (spine.mode === 'shared') spine.client.createRequest(newReq as any).catch(() => {});
     await persistRequest(newReq);
 
     try {
@@ -602,7 +607,7 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         requests,
         issuesList,
         blockchain,
-        staffList: INITIAL_STAFF_ACCOUNTS,
+        staffList,
         loginClinician,
         quickDemoClinicianLogin,
         logoutClinician,

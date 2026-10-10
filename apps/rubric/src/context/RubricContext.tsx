@@ -115,6 +115,9 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (spine.mode !== 'shared') return;
     return spine.onSnapshot(snap => {
       if (Array.isArray(snap.units) && snap.units.length > 0) setUnits(snap.units as BloodUnit[]);
+      if (Array.isArray(snap.requests) && snap.requests.length > 0) setRequests(snap.requests as any[]);
+      if (Array.isArray(snap.issues) && snap.issues.length > 0) setIssuesList(snap.issues as any[]);
+      if (Array.isArray(snap.staff) && snap.staff.length > 0) setStaffList(snap.staff as any[]);
     });
   }, [spine.mode]);
   const [requests, setRequests] = useState<HospitalRequest[]>(INITIAL_HOSPITAL_REQUESTS);
@@ -250,6 +253,7 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!req) return;
     const updatedReq: HospitalRequest = { ...req, status: 'DISPATCHED', fulfilledUnitDins: unitDins };
     setRequests(prev => prev.map(r => (r.id === requestId ? updatedReq : r)));
+    if (spine.mode === 'shared') spine.client.updateRequest(requestId, { status: 'DISPATCHED', fulfilledUnitDins: unitDins }).catch(() => {});
     try {
       await setDoc(doc(db, 'hospitalRequests', requestId), updatedReq, { merge: true });
     } catch (err: any) {
@@ -294,6 +298,7 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     setStaffList(prev => [newAccount, ...prev]);
+    if (spine.mode === 'shared') spine.client.addStaff(newAccount as any).catch(() => {});
     try {
       await setDoc(doc(db, 'staffAccounts', newAccount.id), newAccount, { merge: true });
     } catch (err: any) {
@@ -304,6 +309,7 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const toggleStaffStatus = async (id: string, status: 'ACTIVE' | 'SUSPENDED'): Promise<void> => {
     setStaffList(prev => prev.map(s => (s.id === id ? { ...s, status } : s)));
+    if (spine.mode === 'shared') spine.client.updateStaff(id, { status }).catch(() => {});
     const target = staffList.find(s => s.id === id);
     if (target) {
       try {
@@ -425,6 +431,7 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       timestamp: new Date().toISOString()
     };
     setIssuesList(prev => [newAppeal, ...prev]);
+    if (spine.mode === 'shared') spine.client.createIssue(newAppeal as any).catch(() => {});
     try {
       await setDoc(doc(db, 'systemIssues', issueId), newAppeal, { merge: true });
     } catch (err: any) {

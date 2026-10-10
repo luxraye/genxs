@@ -97,9 +97,12 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (spine.mode !== 'shared') return;
     return spine.onSnapshot(snap => {
       if (Array.isArray(snap.units) && snap.units.length > 0) setUnits(snap.units as BloodUnit[]);
+      if (Array.isArray(snap.issues) && snap.issues.length > 0) setIssuesList(snap.issues as any[]);
+      if (Array.isArray(snap.staff) && snap.staff.length > 0) setStaffList(snap.staff as any[]);
     });
   }, [spine.mode]);
   const [issuesList, setIssuesList] = useState<SystemIssue[]>(INITIAL_SYSTEM_ISSUES);
+  const [staffList, setStaffList] = useState<StaffAccount[]>(INITIAL_STAFF_ACCOUNTS);
   const [blockchain, setBlockchain] = useState<BlockchainBlock[]>(INITIAL_BLOCKS);
 
   const [isOffline, setIsOffline] = useState(false);
@@ -248,7 +251,7 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       setCurrentUser(user);
 
-      const existing = INITIAL_STAFF_ACCOUNTS.find(s => s.email.toLowerCase() === cleanEmail);
+      const existing = staffList.find(s => s.email.toLowerCase() === cleanEmail);
       const matched: StaffAccount =
         existing ??
         ({
@@ -472,7 +475,7 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         units,
         issuesList,
         blockchain,
-        staffList: INITIAL_STAFF_ACCOUNTS,
+        staffList,
         isOffline,
         offlineQueue,
         setIsOffline,

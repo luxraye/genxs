@@ -203,6 +203,12 @@ spineRouter.post('/staff', (req, res) => {
   res.status(201).json({ staff: account });
 });
 
+spineRouter.patch('/staff/:id', (req, res) => {
+  const updated = store.updateStaff(req.params.id, req.body || {});
+  if (!updated) return res.status(404).json({ error: `No account ${req.params.id}.` });
+  res.json({ staff: updated });
+});
+
 /**
  * Sign-in. There is deliberately NO account creation here — an account exists
  * only if the operations console provisioned it. Self-registration into a

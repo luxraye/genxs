@@ -84,9 +84,12 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (spine.mode !== 'shared') return;
     return spine.onSnapshot(snap => {
       if (Array.isArray(snap.units) && snap.units.length > 0) setUnits(snap.units as BloodUnit[]);
+      if (Array.isArray(snap.issues) && snap.issues.length > 0) setIssuesList(snap.issues as any[]);
+      if (Array.isArray(snap.staff) && snap.staff.length > 0) setStaffList(snap.staff as any[]);
     });
   }, [spine.mode]);
   const [issuesList, setIssuesList] = useState<SystemIssue[]>(INITIAL_SYSTEM_ISSUES);
+  const [staffList, setStaffList] = useState<StaffAccount[]>(INITIAL_STAFF_ACCOUNTS);
   const [auditLog, setAuditLog] = useState<BlockchainBlock[]>(INITIAL_BLOCKS);
 
   const persistScientist = (s: StaffAccount | null) => {
@@ -235,7 +238,7 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       setCurrentUser(user);
 
-      const existing = INITIAL_STAFF_ACCOUNTS.find(s => s.email.toLowerCase() === cleanEmail);
+      const existing = staffList.find(s => s.email.toLowerCase() === cleanEmail);
       const matched: StaffAccount =
         existing ??
         ({
@@ -398,7 +401,7 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         units,
         issuesList,
         auditLog,
-        staffList: INITIAL_STAFF_ACCOUNTS,
+        staffList,
         loginScientist,
         quickDemoScientistLogin,
         logoutScientist,
