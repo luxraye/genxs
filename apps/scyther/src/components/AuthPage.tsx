@@ -23,6 +23,8 @@ const POINTS = [
 export const AuthPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
   const { loginDonor, registerDonor, quickDemoLogin, donorsList, donor, logoutDonor } = useScyther();
 
+  const DEMO_ENABLED = import.meta.env.VITE_DEMO_ACCOUNTS !== 'false';
+
   const [mode, setMode] = useState<'SIGNIN' | 'REGISTER'>('SIGNIN');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -337,6 +339,7 @@ export const AuthPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
                 </form>
               )}
 
+              {DEMO_ENABLED && (
               <div style={{ borderTop: '1px solid var(--border)', marginTop: 22, paddingTop: 16 }}>
                 <div className="meta-k" style={{ marginBottom: 8 }}>
                   Sample accounts (demonstration)
@@ -360,6 +363,7 @@ export const AuthPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
                   ))}
                 </div>
               </div>
+              )}
 
               <p className="muted" style={{ fontSize: 12, marginTop: 16 }}>
                 This is a demonstration environment. No live donor records are used or displayed.

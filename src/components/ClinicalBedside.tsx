@@ -35,11 +35,11 @@ export const ClinicalBedside: React.FC = () => {
   const [patientId, setPatientId] = useState<string>('PT-4820-TRAUMA');
   const [patientBloodType, setPatientBloodType] = useState<BloodType>('O-');
   const [nurse1, setNurse1] = useState<string>('Nurse Specialist J. Doe (RN-402)');
-  const [nurse2, setNurse2] = useState<string>('Dr. Marcus Vance (Trauma Attending)');
+  const [nurse2, setNurse2] = useState<string>('Marcus Vance (Trauma Attending)');
   const [crossmatchResult, setCrossmatchResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Requisition form state
-  const [reqHospital, setReqHospital] = useState('Saint Jude Memorial Trauma Hospital');
+  const [reqHospital, setReqHospital] = useState('Example Referral Hospital');
   const [reqDept, setReqDept] = useState('Emergency Department (Resus Bay 1)');
   const [reqUrgency, setReqUrgency] = useState<'EMERGENCY_CODE_CRIMSON' | 'URGENT' | 'ROUTINE'>('EMERGENCY_CODE_CRIMSON');
   const [reqBloodType, setReqBloodType] = useState<BloodType>('O-');

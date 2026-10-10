@@ -30,8 +30,8 @@ export const TransitLogistics: React.FC = () => {
   const [selectedDin, setSelectedDin] = useState<string>(
     units.find(u => u.status === 'IN_TRANSIT')?.din || units.find(u => u.status === 'RELEASED')?.din || units[0]?.din || ''
   );
-  const [courierName, setCourierName] = useState('SwiftMed Courier #14 (ColdVan-Beta)');
-  const [targetHospital, setTargetHospital] = useState('Saint Jude Memorial Trauma Hospital');
+  const [courierName, setCourierName] = useState('Cold-chain courier Courier #14 (ColdVan-Beta)');
+  const [targetHospital, setTargetHospital] = useState('Example Referral Hospital');
   const [handoffStaff, setHandoffStaff] = useState('Nurse Specialist R. Vance (Trauma Intake)');
   const [simulatedTemp, setSimulatedTemp] = useState<number>(3.8);
 
@@ -47,9 +47,9 @@ export const TransitLogistics: React.FC = () => {
     // Log a new IoT reading
     const locations = [
       'Motorway M4 Junction 8 Express Lane',
-      'Saint Jude Medical Quarter West Approach',
+      'Example Referral Hospital Medical Quarter West Approach',
       'Emergency Ambulance Intake Bay 2',
-      'Metro Central Transfer Depot'
+      'National Blood Service Transfer Depot'
     ];
     const randLoc = locations[Math.floor(Math.random() * locations.length)];
     logTelemetryReading(selectedUnit.din, Number(simulatedTemp.toFixed(1)), randLoc);
@@ -362,8 +362,8 @@ export const TransitLogistics: React.FC = () => {
                         onChange={e => setTargetHospital(e.target.value)}
                         className="w-full text-xs bg-white border border-slate-300 rounded px-3 py-2 text-slate-800"
                       >
-                        <option value="Saint Jude Memorial Trauma Hospital">Saint Jude Memorial Trauma Hospital</option>
-                        <option value="Queen Victoria University Hospital">Queen Victoria University Hospital</option>
+                        <option value="Example Referral Hospital">Example Referral Hospital</option>
+                        <option value="Example Regional Hospital">Example Regional Hospital</option>
                         <option value="Northfield Regional Cancer Centre">Northfield Regional Cancer Centre</option>
                       </select>
                     </div>

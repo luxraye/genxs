@@ -11,6 +11,8 @@ const POINTS = [
 export const SignIn: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
   const { loginOperator, quickDemoOperatorLogin, staffList, currentOperator, logoutOperator } = useRubric();
 
+  const DEMO_ENABLED = import.meta.env.VITE_DEMO_ACCOUNTS !== 'false';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -161,6 +163,7 @@ export const SignIn: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
                   </button>
                 </form>
 
+                {DEMO_ENABLED && (
                 <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 14 }}>
                   <div className="eyebrow" style={{ marginBottom: 8 }}>
                     Demonstration access
@@ -180,6 +183,7 @@ export const SignIn: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
                       : 'No sample operator account configured.'}
                   </p>
                 </div>
+                )}
 
                 <p className="hint" style={{ marginTop: 16 }}>
                   Demonstration environment. All records shown are illustrative sample data.

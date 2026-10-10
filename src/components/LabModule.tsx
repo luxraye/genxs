@@ -17,7 +17,7 @@ import {
 export const LabModule: React.FC = () => {
   const { units, recordLabTests, authorizeLabRelease, quarantineUnitInLab } = useBloodchain();
   const [selectedDin, setSelectedDin] = useState<string>(units[0]?.din || '');
-  const [techName, setTechName] = useState<string>('Dr. Sarah Lin (QC-Lead-409)');
+  const [techName, setTechName] = useState<string>('Sarah Lin (QC-Lead-409)');
   const [releaseFeedback, setReleaseFeedback] = useState<{ type: 'SUCCESS' | 'ERROR'; msg: string } | null>(null);
 
   const selectedUnit = units.find(u => u.din === selectedDin) || units[0];

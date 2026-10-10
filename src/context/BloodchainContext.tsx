@@ -562,7 +562,7 @@ export const BloodchainProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       mustChangePassword: true,
       status: 'ACTIVE',
       createdAt: new Date().toISOString(),
-      provisionedBy: currentStaff ? currentStaff.fullName : 'Director Neo Molefe'
+      provisionedBy: currentStaff ? currentStaff.fullName : 'Sample Operations Lead'
     };
     setStaffAccounts(prev => [newAccount, ...prev]);
     await persistStaff(newAccount);
@@ -852,7 +852,7 @@ export const BloodchainProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       volumeMl,
       collectedAt: nowIso,
       expiresAt: expiryIso,
-      currentFacility: 'Metro Central Blood Center - Phlebotomy Bay 3',
+      currentFacility: 'National Blood Service - Phlebotomy Bay 3',
       status: 'COLLECTED',
       labTests: {
         hiv: 'PENDING',
@@ -918,7 +918,7 @@ export const BloodchainProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       {
         id: donorId,
         role: 'DONOR',
-        facility: 'Metro Central Blood Center',
+        facility: 'National Blood Service',
         signature: `0x${actorSig.slice(0, 48)}`
       },
       {
@@ -1089,7 +1089,7 @@ export const BloodchainProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         {
           id: courierName,
           role: 'LOGISTICS_COURIER',
-          facility: `SwiftMed Transit Fleet`,
+          facility: `Cold-chain courier Transit Fleet`,
           signature: `0x${sig.slice(0, 48)}`
         },
         {
@@ -1371,7 +1371,7 @@ export const BloodchainProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           {
             id: courierName,
             role: 'LOGISTICS_COURIER',
-            facility: 'SwiftMed Fleet (Reconciled from Offline Queue)',
+            facility: 'Cold-chain courier Fleet (Reconciled from Offline Queue)',
             signature: `0x${sig.slice(0, 48)}`
           },
           {

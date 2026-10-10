@@ -199,7 +199,7 @@ export const NationalOps: React.FC = () => {
 
             <div className="space-y-3 text-xs">
               {[
-                { name: 'Metro Central Blood Center', units: 142, status: 'Optimal' },
+                { name: 'National Blood Service', units: 142, status: 'Optimal' },
                 { name: 'Northern Regional Hub', units: 89, status: 'Balanced' },
                 { name: 'West Midlands Transfusion Center', units: 41, status: 'Low O-' },
                 { name: 'Southern Maritime Depository', units: 67, status: 'Optimal' }

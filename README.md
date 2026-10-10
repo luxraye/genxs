@@ -1,115 +1,98 @@
-# 🩸 Bloodchain — Sovereign Health & Closed-Custody Blood Provenance Suite
-### Republic of Botswana Ministry of Health National Pilot
+# Bloodchain — blood supply provenance & safety suite
 
-> A decentralized, closed-custody blood tracking, serology verification, and hemovigilance suite integrating **Hyperledger Fabric**, real-time **IoT Cold-Chain telemetry**, **Firebase Authentication & Cloud Storage**, and dual-clinician bedside verification.
+A connected set of web applications for a national blood service: donor engagement, laboratory
+screening and release, cold-chain logistics, hospital transfusion safety, and operations oversight.
+
+> **Demonstration build.** Every record shown anywhere in these applications is illustrative sample
+> data. The suite is **not** connected to any live national system, and no claim is made of regulatory
+> approval, ministry endorsement, or integration with any named institution. Figures that are not
+> sourced are marked as assumptions in the accompanying documents.
 
 ---
 
-## 🏛️ Suite Overview & Port Mapping
+## Surfaces
 
-Bloodchain is organized into **5 standalone decoupled web applications** communicating in real time through a central **API Gateway & Event Bus**:
+Five standalone Vite applications, each behind its own sign-in, plus a small gateway that serves the
+project portal. They share one design system ("Vessel") and one data layer.
 
-| Application | Role & Primary Persona | Port | Core Capabilities |
+| Surface | Role | Dev port | What it does |
 | :--- | :--- | :--- | :--- |
-| **`API Gateway`** | Suite Infrastructure & Bus | `3000` | Server-Sent Events (SSE) broadcast bus, IoT telemetry ingestion, Hyperledger Fabric proxy (`github.com/luxraye/live`), Google Gemini intelligence. |
-| **`Scyther`** | Citizen Donor Portal | `3002` | Omang National ID verification (Cloud Storage), live digital Bloodcard, 6-stage donation journey, centre locator, emergency deficit alerts. |
-| **`Rubric`** | National Operations Command | `3003` | 8-group National Deficit Matrix, Hospital Requisition Conductor, 5-role Personnel Registry, Omang document verification desk, Incident Command. |
-| **`Aegis`** | Bedside Transfusion Safety | `3004` | Dual-clinician barcode scanner (ISBT-128 DIN vs EHR wristband), biological RBC compatibility check, ABO lockout, Code Crimson ward orders. |
-| **`Crucible`** | Serology Lab & Fractionation | `3005` | 5-panel mandatory infectious disease testing (HIV, HBV, HCV, Syphilis, West Nile), ABO/Rh confirmatory typing, component fractionation, QC release gate. |
-| **`Torrent`** | IoT Cold-Chain Logistics | `3006` | Sensitech BLE 5.4 real-time temperature logs, GPS corridor waypoints, thermal excursion alarms (<2°C or >6°C), hospital custody counter-signature. |
+| **Donor** (`beacon`) | Donor-facing | `3002` | Eligibility quiz, appointment booking, centre locator (map), donation history, digital blood card. |
+| **Command** (`rubric`) | Operations oversight | `3003` | Supply/deficit view, hospital requisitions, staff provisioning, donor verification desk, incident registry. |
+| **Laboratory** (`crucible`) | Screening & release | `3005` | Screening-panel entry, blood-group confirmation, component preparation, safety-gated quality release. |
+| **Ward** (`aegis`) | Bedside transfusion | `3004` | Two-clinician bedside verification, ABO/Rh compatibility rule, infusion observations, reaction reporting. |
+| **Cold** (`torrent`) | Cold-chain logistics | `3006` | Dispatch, in-transit temperature telemetry with excursion flagging, hospital handover. |
+
+The gateway (`server.ts`) serves the project portal and the small set of internal endpoints the
+surfaces call. Each surface keeps a local, **hash-chained audit log** — a self-consistent record of
+events for demonstration purposes. It is not a distributed ledger, and nothing is written to an
+external network.
 
 ---
 
-## ⚡ Quickstart
+## Status of claims
 
-### 1. Installation
+Two rules apply throughout this repository:
+
+1. **No unsourced figures.** Numbers that are not attributable to a published source are labelled as
+   assumptions, not presented as fact.
+2. **No unverified capability.** A surface states only what its own code does. Where a real-world
+   number would be needed (facility names, staff names, temperatures, GPS positions), the build uses
+   clearly illustrative sample values.
+
+---
+
+## Quickstart
+
 ```bash
-git clone https://github.com/luxraye/scyther.git
-cd scyther
+git clone https://github.com/luxraye/genxs.git
+cd genxs
 npm install
+cp .env.example .env      # set your own values
 ```
 
-### 2. Configure Environment
-Copy `.env.example` to `.env` and set your configuration:
-```bash
-cp .env.example .env
-```
-Key variables:
-- `PORT=3000` (API Gateway)
-- `FABRIC_NODE_URL=http://localhost:3001` (Target Hyperledger Fabric node)
-- `GEMINI_API_KEY=your_key` (Google AI Studio key)
+Run the gateway, then any surface in a separate terminal:
 
-### 3. Launch Applications
-
-Start the **Central API Gateway & Event Bus**:
 ```bash
-npm run dev
+npm run dev               # gateway / portal (port 3000)
+npm run dev:scyther       # Donor       (3002)
+npm run dev:rubric       # Command     (3003)
+npm run dev:aegis         # Ward        (3004)
+npm run dev:crucible      # Laboratory  (3005)
+npm run dev:torrent       # Cold        (3006)
 ```
 
-In separate terminals, start any of the 5 standalone applications:
-```bash
-npm run dev:scyther    # Port 3002 — Citizen Donor Portal
-npm run dev:rubric     # Port 3003 — National Operations Command
-npm run dev:aegis      # Port 3004 — Clinical Bedside Safety Tablet
-npm run dev:crucible   # Port 3005 — Reference Serology Lab
-npm run dev:torrent    # Port 3006 — IoT Cold-Chain Logistics Hub
-```
+### Environment
 
-### 4. Build for Production
-All 5 standalone applications compile with Vite in under 250ms:
+| Variable | Purpose |
+| :--- | :--- |
+| `PORT` | Gateway port (default `3000`). |
+| `VITE_DEMO_ACCOUNTS` | Set to `false` to **hide the sample-account buttons** on every sign-in page. Leave unset to show them for a demonstration. |
+
+### Build
+
 ```bash
-npm run build:scyther
-npm run build:rubric
-npm run build:aegis
-npm run build:crucible
-npm run build:torrent
+npm run build:scyther  && npm run build:rubric   && npm run build:aegis \
+  && npm run build:crucible && npm run build:torrent
 ```
 
 ---
 
-## 🐳 Docker Compose (One-Command Deployment)
+## Data & privacy
 
-Run the entire sovereign stack in isolated Alpine microservices:
-
-```bash
-docker compose up -d --build
-```
-
-Access points:
-- API Gateway & Health Probe: `http://localhost:3000/healthz`
-- Scyther Donor Portal: `http://localhost:3002`
-- Rubric Situation Room: `http://localhost:3003`
-- Aegis Bedside Tablet: `http://localhost:3004`
-- Crucible Serology Lab: `http://localhost:3005`
-- Torrent Logistics Fleet: `http://localhost:3006`
+- The applications use Firebase Authentication and Firestore. Point them at your own project.
+- The demonstration build ships with **sample records only**. Do not enter real patient or donor data
+  into this build.
+- Before any real use, review the Botswana Data Protection Act, 2024 (in force 14 January 2025) and
+  the requirements of the Information and Data Protection Commission.
 
 ---
 
-## 📡 Real-Time Inter-App Event Bus
+## Project documents
 
-The suite uses a unified **Server-Sent Events (SSE)** broadcast bus allowing all 5 applications to react synchronously to lifecycle events:
+Design, assumptions, partnerships and pilot planning live alongside the build brief and phase prompts
+in the project workspace. Those documents carry the assumptions register and the correction log.
 
-- `GET /api/events/stream`: Real-time SSE stream with auto-reconnection and event replay.
-- `POST /api/events/publish`: Publish events (`DONATION_INTAKE`, `QC_RELEASE`, `REQUISITION_DISPATCHED`, `THERMAL_EXCURSION`, `TRANSFUSION_COMPLETED`, `DEFICIT_APPEAL`).
-- `POST /api/telemetry/pings`: Continuous IoT sensory ingestion. An out-of-range temperature automatically triggers a `THERMAL_EXCURSION` alert on Rubric's incident board.
+## License
 
----
-
-## 🔗 Hyperledger Fabric Integration
-
-The Gateway seamlessly interfaces with the live Fabric microservice at [`github.com/luxraye/live`](https://github.com/luxraye/live):
-- `GET /public/ledger`: Paginated blockchain transaction history.
-- `GET /public/stats`: Verified donor count, units processed, and chain integrity stats.
-- `POST /donations/record`: Cryptographic transaction submission.
-- *Automatic Failover*: If the live Fabric node is offline, the gateway falls back to its internal cryptographic ledger emulator with zero downtime.
-
----
-
-## 📖 Deployment Documentation
-
-For detailed deployment topologies (Google Cloud Run, Firebase Multi-Site Hosting, and Nginx reverse proxies), see [DEPLOYMENT.md](DEPLOYMENT.md).
-
----
-
-## 📄 License
-Republic of Botswana Ministry of Health & Bloodchain Sovereign Health Initiative.
+No license is granted by this repository. All rights reserved by the project owner.

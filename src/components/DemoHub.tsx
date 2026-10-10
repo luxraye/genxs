@@ -1174,7 +1174,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Dr. Alex Mercer"
+                      placeholder="e.g. Alex Mercer"
                       value={accessForm.fullName}
                       onChange={e => setAccessForm(prev => ({ ...prev, fullName: e.target.value }))}
                       className="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-red-500"

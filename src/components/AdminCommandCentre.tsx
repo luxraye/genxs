@@ -185,7 +185,7 @@ export const AdminCommandCentre: React.FC = () => {
     resolveSystemIssue(
       issueId,
       resolutionNote.trim() || 'Reviewed and confirmed compliant by National Operations Administrator.',
-      currentStaff ? currentStaff.fullName : 'Director Neo Molefe'
+      currentStaff ? currentStaff.fullName : 'Sample Operations Lead'
     );
     setResolvingIssueId(null);
     setResolutionNote('');
@@ -220,7 +220,7 @@ export const AdminCommandCentre: React.FC = () => {
             <div className="text-[10px] font-mono text-slate-400 uppercase">Supervisor Active</div>
             <div className="font-bold text-white flex items-center gap-1.5">
               <BadgeCheck className="w-4 h-4 text-emerald-400" />
-              <span>{currentStaff ? currentStaff.fullName : 'Director Neo Molefe'}</span>
+              <span>{currentStaff ? currentStaff.fullName : 'Sample Operations Lead'}</span>
             </div>
             <div className="text-[10px] text-slate-400 font-mono">ADM-EXEC-0001 · Gaborone</div>
           </div>
@@ -996,7 +996,7 @@ export const AdminCommandCentre: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Dr. Keitumetse Molapo"
+                  placeholder="e.g. Keitumetse Molapo"
                   value={provisionForm.fullName}
                   onChange={e => setProvisionForm(prev => ({ ...prev, fullName: e.target.value }))}
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-red-500"

@@ -504,7 +504,7 @@ export const AppAuthGate: React.FC<AppAuthGateProps> = ({
                     <input
                       type="text"
                       required
-                      placeholder={isDonorApp ? 'elena.rostova@nationaldonor.org' : 'dr.nkomo@botswanahealth.gov or MD-GAB-8491'}
+                      placeholder={isDonorApp ? 'donor1@example-donor.example' : 'clinician1@example-health.example or MD-GAB-8491'}
                       value={emailOrBadge}
                       onChange={e => setEmailOrBadge(e.target.value)}
                       className="w-full bg-slate-800/80 border border-slate-700 rounded-lg pl-9 pr-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-red-500"

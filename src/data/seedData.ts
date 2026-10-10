@@ -3,8 +3,8 @@ import { BloodUnit, BlockchainBlock, DonorProfile, HospitalRequest, StaffAccount
 export const INITIAL_DONOR: DonorProfile = {
   id: 'DONOR-88219',
   anonymizedHash: '9e7b23c91d4e082a5c34f19b023e98f21908abde03810f',
-  fullName: 'Elena Rostova',
-  email: 'elena.rostova@nationaldonor.org',
+  fullName: 'Sample Donor 1',
+  email: 'donor1@example-donor.example',
   phone: '+267 71 894 102',
   nationalIdNumber: 'BW-ID-9821-440',
   cityDistrict: 'Gaborone Central',
@@ -23,7 +23,7 @@ export const INITIAL_DONOR: DonorProfile = {
       sizeKb: 1420,
       uploadedAt: '2026-01-10T09:15:00Z',
       status: 'APPROVED',
-      reviewedBy: 'Director Neo Molefe',
+      reviewedBy: 'Sample Operations Lead',
       reviewNotes: 'Verified against national civil identity database.'
     },
     {
@@ -33,7 +33,7 @@ export const INITIAL_DONOR: DonorProfile = {
       sizeKb: 890,
       uploadedAt: '2026-01-10T09:20:00Z',
       status: 'APPROVED',
-      reviewedBy: 'Director Neo Molefe',
+      reviewedBy: 'Sample Operations Lead',
       reviewNotes: 'Standard clinical clearance confirmed.'
     }
   ],
@@ -45,8 +45,8 @@ export const INITIAL_DONORS: DonorProfile[] = [
   {
     id: 'DONOR-10492',
     anonymizedHash: 'a38f9021dcba98114400234eefa1029384729103940182',
-    fullName: 'Tebogo Kgosi',
-    email: 'tebogo.kgosi@donor.bw',
+    fullName: 'Sample Donor 2',
+    email: 'donor2@example-donor.example',
     phone: '+267 72 341 908',
     nationalIdNumber: 'BW-ID-7819-201',
     cityDistrict: 'Francistown North',
@@ -60,13 +60,13 @@ export const INITIAL_DONORS: DonorProfile[] = [
     uploadedDocuments: [
       {
         id: 'DOC-881',
-        name: 'national ID_ID_Card_Tebogo.jpg',
+        name: 'National_ID_Tebogo.jpg',
         type: 'NATIONAL_ID',
         sizeKb: 2100,
         uploadedAt: '2026-08-01T11:00:00Z',
         status: 'APPROVED',
         reviewedBy: 'Admin Verification Desk',
-        reviewNotes: 'Valid national national ID card approved.'
+        reviewNotes: 'Valid national ID card approved.'
       }
     ],
     tierUpdatedAt: '2026-08-02T09:30:00Z'
@@ -74,8 +74,8 @@ export const INITIAL_DONORS: DonorProfile[] = [
   {
     id: 'DONOR-29381',
     anonymizedHash: 'e719283746192837461928374619283746192837461928',
-    fullName: 'Mpho Dlamini',
-    email: 'mpho.dlamini@donor.bw',
+    fullName: 'Sample Donor 3',
+    email: 'donor3@example-donor.example',
     phone: '+267 74 819 033',
     nationalIdNumber: 'BW-ID-4491-019',
     cityDistrict: 'Molepolole Kweneng',
@@ -111,8 +111,8 @@ export const INITIAL_DONORS: DonorProfile[] = [
   {
     id: 'DONOR-48192',
     anonymizedHash: 'bb83746192837461928374619283746192837461928374',
-    fullName: 'David Modise',
-    email: 'david.modise@donor.bw',
+    fullName: 'Sample Donor 4',
+    email: 'donor4@example-donor.example',
     phone: '+267 75 901 234',
     nationalIdNumber: 'BW-ID-1102-399',
     cityDistrict: 'Gaborone West',
@@ -129,8 +129,8 @@ export const INITIAL_DONORS: DonorProfile[] = [
   {
     id: 'DONOR-60192',
     anonymizedHash: 'cd19283746192837461928374619283746192837461928',
-    fullName: 'Lesedi Tau',
-    email: 'lesedi.tau@donor.bw',
+    fullName: 'Sample Donor 5',
+    email: 'donor5@example-donor.example',
     phone: '+267 76 112 455',
     nationalIdNumber: 'BW-ID-8823-901',
     cityDistrict: 'Gaborone North',
@@ -144,7 +144,7 @@ export const INITIAL_DONORS: DonorProfile[] = [
     uploadedDocuments: [
       {
         id: 'DOC-551',
-        name: 'national ID_Passport_Lesedi.pdf',
+        name: 'National_ID_Lesedi.pdf',
         type: 'NATIONAL_ID',
         sizeKb: 1350,
         uploadedAt: '2026-02-14T10:00:00Z',
@@ -159,8 +159,8 @@ export const INITIAL_DONORS: DonorProfile[] = [
 export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
   {
     id: 'STAFF-CLIN-01',
-    email: 'dr.nkomo@botswanahealth.gov',
-    fullName: 'Thabo Nkomo',
+    email: 'clinician1@example-health.example',
+    fullName: 'Sample Clinician 1',
     role: 'CLINICAL_STAFF',
     facility: 'Example Referral Hospital',
     badgeNumber: 'MD-GAB-8491',
@@ -169,12 +169,12 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
     status: 'ACTIVE',
     createdAt: '2026-01-15T08:00:00Z',
     lastLoginAt: '2026-10-06T07:15:00Z',
-    provisionedBy: 'Director Neo Molefe'
+    provisionedBy: 'Sample Operations Lead'
   },
   {
     id: 'STAFF-CLIN-02',
-    email: 'dr.sharma@hospital.org',
-    fullName: 'Ananya Sharma',
+    email: 'clinician2@example-health.example',
+    fullName: 'Sample Clinician 2',
     role: 'CLINICAL_STAFF',
     facility: 'Example Referral Centre Trauma Ward',
     badgeNumber: 'MD-GAB-9102',
@@ -183,70 +183,70 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
     mustChangePassword: true, // Requires first-login password change!
     status: 'ACTIVE',
     createdAt: '2026-10-05T16:00:00Z',
-    provisionedBy: 'Director Neo Molefe'
+    provisionedBy: 'Sample Operations Lead'
   },
   {
     id: 'STAFF-LAB-01',
-    email: 's.jenkins@lab.bloodchain.gov',
-    fullName: 'Sarah Jenkins, MLS',
+    email: 'labtech1@example-health.example',
+    fullName: 'Sample Lab Technologist 1',
     role: 'LAB_TECH',
-    facility: 'Central Serology & Fractionation Lab',
+    facility: 'National blood laboratory',
     badgeNumber: 'LAB-TECH-4091',
     passwordHash: 'labtech2026',
     mustChangePassword: false,
     status: 'ACTIVE',
     createdAt: '2026-02-01T09:00:00Z',
     lastLoginAt: '2026-10-06T06:30:00Z',
-    provisionedBy: 'Director Neo Molefe'
+    provisionedBy: 'Sample Operations Lead'
   },
   {
     id: 'STAFF-LAB-02',
-    email: 'm.banda@lab.bloodchain.gov',
-    fullName: 'Michael Banda',
+    email: 'labtech2@example-health.example',
+    fullName: 'Sample Lab Technologist 2',
     role: 'LAB_TECH',
-    facility: 'Northern Reference Lab (Francistown)',
+    facility: 'Regional blood laboratory',
     badgeNumber: 'LAB-TECH-5510',
     temporaryPassword: 'TEMP-LAB-4402',
     passwordHash: 'TEMP-LAB-4402',
     mustChangePassword: true,
     status: 'ACTIVE',
     createdAt: '2026-10-05T17:30:00Z',
-    provisionedBy: 'Director Neo Molefe'
+    provisionedBy: 'Sample Operations Lead'
   },
   {
     id: 'STAFF-LOG-01',
-    email: 's.ndlovu@transit.bloodchain.gov',
-    fullName: 'Sipho Ndlovu',
+    email: 'courier1@example-logistics.example',
+    fullName: 'Sample Courier 1',
     role: 'LOGISTICS_COURIER',
-    facility: 'Cold-Chain Dispatch Corridor Alpha',
+    facility: 'Cold-chain dispatch (corridor A)',
     badgeNumber: 'DRV-COLD-2291',
     passwordHash: 'courier2026',
     mustChangePassword: false,
     status: 'ACTIVE',
     createdAt: '2026-03-10T11:00:00Z',
     lastLoginAt: '2026-10-06T08:00:00Z',
-    provisionedBy: 'Director Neo Molefe'
+    provisionedBy: 'Sample Operations Lead'
   },
   {
     id: 'STAFF-LOG-02',
-    email: 'b.pheto@transit.bloodchain.gov',
-    fullName: 'Boitumelo Pheto',
+    email: 'courier2@example-logistics.example',
+    fullName: 'Sample Courier 2',
     role: 'LOGISTICS_COURIER',
-    facility: 'Kweneng District Medical Transport',
+    facility: 'District medical transport',
     badgeNumber: 'DRV-COLD-3104',
     temporaryPassword: 'TEMP-LOG-9183',
     passwordHash: 'TEMP-LOG-9183',
     mustChangePassword: true,
     status: 'ACTIVE',
     createdAt: '2026-10-06T06:00:00Z',
-    provisionedBy: 'Director Neo Molefe'
+    provisionedBy: 'Sample Operations Lead'
   },
   {
     id: 'STAFF-OPS-01',
-    email: 'neo.molefe@moh.bw',
-    fullName: 'Director Neo Molefe',
+    email: 'operations@example-health.example',
+    fullName: 'Sample Operations Lead',
     role: 'NATIONAL_OPERATOR',
-    facility: 'National Operations Command Centre (Gaborone)',
+    facility: 'National operations centre',
     badgeNumber: 'ADM-EXEC-0001',
     passwordHash: 'admin2026',
     mustChangePassword: false,
@@ -257,8 +257,8 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
   },
   {
     id: 'STAFF-AUDIT-01',
-    email: 'r.cole@audit.bloodchain.gov',
-    fullName: 'Inspector Raymond Cole',
+    email: 'auditor@example-inspectorate.example',
+    fullName: 'Sample Quality Auditor',
     role: 'AUDITOR',
     facility: 'National Quality Inspectorate (illustrative)',
     badgeNumber: 'AUD-REG-1092',
@@ -267,14 +267,14 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
     status: 'ACTIVE',
     createdAt: '2026-01-10T10:00:00Z',
     lastLoginAt: '2026-10-06T08:30:00Z',
-    provisionedBy: 'Director Neo Molefe'
+    provisionedBy: 'Sample Operations Lead'
   }
 ];
 
 export const INITIAL_SYSTEM_ISSUES: SystemIssue[] = [
   {
     id: 'ISSUE-2026-01',
-    title: 'Torrent Cold Box #CB-409 Temperature Spike Alert',
+    title: 'Cold-chain box CB-409 temperature spike alert',
     category: 'COLD_CHAIN_ALERT',
     severity: 'HIGH',
     facility: 'Transit Corridor A1 (Gaborone to Molepolole)',
@@ -288,8 +288,8 @@ export const INITIAL_SYSTEM_ISSUES: SystemIssue[] = [
     title: 'Donor Level 2 Verification Review Pending',
     category: 'DONOR_APPEAL',
     severity: 'MEDIUM',
-    facility: 'National Donor Registration Enclave',
-    affectedEntity: 'Donor Mpho Dlamini (DONOR-29381)',
+    facility: 'Donor registration',
+    affectedEntity: 'Donor Sample Donor 3 (DONOR-29381)',
     description: 'New donor uploaded official national ID and medical questionnaire. Verification required to promote to Level 3.',
     status: 'OPEN',
     timestamp: '2026-10-05T14:25:00Z'
@@ -328,7 +328,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
     volumeMl: 450,
     collectedAt: '2026-10-06T06:30:00Z',
     expiresAt: '2026-11-10T06:30:00Z',
-    currentFacility: 'Metro Central Blood Center',
+    currentFacility: 'National Blood Service',
     status: 'IN_TESTING',
     labTests: {
       hiv: 'PENDING',
@@ -344,7 +344,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       {
         timestamp: '2026-10-06T06:35:00Z',
         temperatureCelsius: 4.1,
-        locationName: 'Metro Central Blood Center Intake Bay',
+        locationName: 'National Blood Service Intake Bay',
         lat: 51.5074,
         lng: -0.1278,
         batteryPct: 98,
@@ -360,7 +360,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
     volumeMl: 320,
     collectedAt: '2026-10-05T08:15:00Z',
     expiresAt: '2026-11-16T08:15:00Z',
-    currentFacility: 'National Reference Lab - Testing Bay',
+    currentFacility: 'National blood laboratory - testing bay',
     status: 'COLLECTED',
     labTests: {
       hiv: 'NEGATIVE',
@@ -395,7 +395,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
     volumeMl: 300,
     collectedAt: '2026-10-04T10:00:00Z',
     expiresAt: '2026-11-15T10:00:00Z',
-    currentFacility: 'Metro Central Blood Center - Storage Vault',
+    currentFacility: 'National Blood Service - Storage Vault',
     status: 'RELEASED',
     labTests: {
       hiv: 'NEGATIVE',
@@ -406,7 +406,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       aboRhConfirmatory: 'O-',
       hemoglobinG_dL: 14.1,
       testedAt: '2026-10-04T16:00:00Z',
-      testedBy: 'Michael Chen (Lead Serologist)',
+      testedBy: 'Sample Lab Technologist',
       qcReleaseApproval: true
     },
     storageTempRange: { min: 2, max: 6 },
@@ -414,7 +414,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       {
         timestamp: '2026-10-06T08:00:00Z',
         temperatureCelsius: 3.4,
-        locationName: 'Central Regional Vault Compartment B3',
+        locationName: 'Regional vault compartment B3',
         lat: 51.5080,
         lng: -0.1290,
         batteryPct: 99,
@@ -430,10 +430,10 @@ export const INITIAL_UNITS: BloodUnit[] = [
     volumeMl: 280,
     collectedAt: '2026-10-04T11:30:00Z',
     expiresAt: '2026-10-11T11:30:00Z', // 7 day shelf life for platelets
-    currentFacility: 'In Transit: ColdBox #CB-409 (Unit 12)',
+    currentFacility: 'In transit (cold box CB-409)',
     status: 'IN_TRANSIT',
-    transitCourier: 'SwiftMed Courier Fleet (Unit 14)',
-    destinationHospital: 'Saint Jude Memorial Trauma Hospital',
+    transitCourier: 'Cold-chain courier vehicle',
+    destinationHospital: 'Example Referral Hospital',
     labTests: {
       hiv: 'NEGATIVE',
       hbv: 'NEGATIVE',
@@ -451,7 +451,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       {
         timestamp: '2026-10-06T08:15:00Z',
         temperatureCelsius: 21.8,
-        locationName: 'Highway A40 Express Corridor',
+        locationName: 'In transit',
         lat: 51.5200,
         lng: -0.1400,
         batteryPct: 88,
@@ -460,7 +460,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       {
         timestamp: '2026-10-06T08:45:00Z',
         temperatureCelsius: 22.1,
-        locationName: 'En Route to Saint Jude Medical District',
+        locationName: 'In transit',
         lat: 51.5310,
         lng: -0.1520,
         batteryPct: 85,
@@ -476,9 +476,9 @@ export const INITIAL_UNITS: BloodUnit[] = [
     volumeMl: 310,
     collectedAt: '2026-10-03T09:00:00Z',
     expiresAt: '2026-11-14T09:00:00Z',
-    currentFacility: 'Saint Jude Memorial Trauma Hospital - Blood Bank',
+    currentFacility: 'Example Referral Hospital - Blood Bank',
     status: 'DELIVERED_TO_HOSPITAL',
-    destinationHospital: 'Saint Jude Memorial Trauma Hospital',
+    destinationHospital: 'Example Referral Hospital',
     labTests: {
       hiv: 'NEGATIVE',
       hbv: 'NEGATIVE',
@@ -488,7 +488,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       aboRhConfirmatory: 'O-',
       hemoglobinG_dL: 14.5,
       testedAt: '2026-10-03T15:00:00Z',
-      testedBy: 'Michael Chen',
+      testedBy: 'Sample Lab Technologist',
       qcReleaseApproval: true
     },
     storageTempRange: { min: 2, max: 6 },
@@ -496,7 +496,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       {
         timestamp: '2026-10-05T16:00:00Z',
         temperatureCelsius: 3.5,
-        locationName: 'Saint Jude Transfusion Medicine Refrigerator 1',
+        locationName: 'Hospital transfusion refrigerator 1',
         lat: 51.5401,
         lng: -0.1602,
         batteryPct: 99,
@@ -512,9 +512,9 @@ export const INITIAL_UNITS: BloodUnit[] = [
     volumeMl: 320,
     collectedAt: '2026-10-01T10:00:00Z',
     expiresAt: '2026-11-12T10:00:00Z',
-    currentFacility: 'Queen Victoria University Hospital - ICU Bay 4',
+    currentFacility: 'Example Regional Hospital - ICU Bay 4',
     status: 'TRANSFUSED',
-    destinationHospital: 'Queen Victoria University Hospital',
+    destinationHospital: 'Example Regional Hospital',
     patientHash: 'PT-8941-TRAUMA-EMERGENCY',
     patientAssignedBloodType: 'A+',
     transfusedAt: '2026-10-05T20:15:00Z',
@@ -527,7 +527,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       aboRhConfirmatory: 'O-',
       hemoglobinG_dL: 14.9,
       testedAt: '2026-10-01T16:00:00Z',
-      testedBy: 'Michael Chen',
+      testedBy: 'Sample Lab Technologist',
       qcReleaseApproval: true
     },
     storageTempRange: { min: 2, max: 6 },
@@ -535,7 +535,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       {
         timestamp: '2026-10-05T19:50:00Z',
         temperatureCelsius: 4.0,
-        locationName: 'Queen Victoria ICU Crossmatch Station',
+        locationName: 'Hospital ICU crossmatch station',
         lat: 51.5210,
         lng: -0.1340,
         batteryPct: 91,
@@ -554,7 +554,7 @@ export const INITIAL_BLOCKS: BlockchainBlock[] = [
     actor: {
       id: 'NATIONAL-REGULATOR-GOV',
       role: 'NATIONAL_OPERATOR',
-      facility: 'National Blood Authority Root Key',
+      facility: 'National blood service root key',
       signature: '0x99a4192b001ef0492190ab1288491024810294819028401928'
     },
     payload: {
@@ -573,7 +573,7 @@ export const INITIAL_BLOCKS: BlockchainBlock[] = [
     actor: {
       id: 'PHLEB-309',
       role: 'DONOR',
-      facility: 'Metro Central Blood Center',
+      facility: 'National Blood Service',
       signature: '0xec49102834bba901284729103847102938471029384710293847102938'
     },
     payload: {
@@ -619,14 +619,14 @@ export const INITIAL_BLOCKS: BlockchainBlock[] = [
     actor: {
       id: 'COURIER-MED-12',
       role: 'LOGISTICS_COURIER',
-      facility: 'SwiftMed Cold Chain Unit #12',
+      facility: 'Cold-chain courier Cold Chain Unit #12',
       signature: '0x1928374650192837465019283746501928374650192837465019283746'
     },
     payload: {
       coldBoxSensorId: 'CB-409',
       tempOnHandoff: 3.4,
-      origin: 'Metro Central Blood Center',
-      destination: 'Queen Victoria University Hospital'
+      origin: 'National Blood Service',
+      destination: 'Example Regional Hospital'
     },
     previousHash: '3bc1049281736481920394819203948192039481920394819203948192039481',
     hash: '77ea102938471029384710293847102938471029384710293847102938471029'
@@ -639,7 +639,7 @@ export const INITIAL_BLOCKS: BlockchainBlock[] = [
     actor: {
       id: 'CLINICIAN-TEAM-ICU',
       role: 'CLINICAL_STAFF',
-      facility: 'Queen Victoria University Hospital',
+      facility: 'Example Regional Hospital',
       signature: '0xbb28374619283746192837461928374619283746192837461928374619'
     },
     payload: {
@@ -661,7 +661,7 @@ export const INITIAL_BLOCKS: BlockchainBlock[] = [
     actor: {
       id: 'NURSE-J-DOE',
       role: 'CLINICAL_STAFF',
-      facility: 'Queen Victoria University Hospital - ICU',
+      facility: 'Example Regional Hospital - ICU',
       signature: '0x9918273645192837465019283746501928374650192837465019283746'
     },
     payload: {
@@ -678,7 +678,7 @@ export const INITIAL_BLOCKS: BlockchainBlock[] = [
 export const INITIAL_HOSPITAL_REQUESTS: HospitalRequest[] = [
   {
     id: 'REQ-EMERG-2026-091',
-    hospitalName: 'Saint Jude Memorial Trauma Hospital',
+    hospitalName: 'Example Referral Hospital',
     department: 'Emergency & Acute Trauma Bay 1',
     urgency: 'EMERGENCY_CODE_CRIMSON',
     bloodType: 'O-',
@@ -690,7 +690,7 @@ export const INITIAL_HOSPITAL_REQUESTS: HospitalRequest[] = [
   },
   {
     id: 'REQ-SURG-2026-088',
-    hospitalName: 'Queen Victoria University Hospital',
+    hospitalName: 'Example Regional Hospital',
     department: 'Cardiac Surgery Theatres',
     urgency: 'URGENT',
     bloodType: 'A+',
