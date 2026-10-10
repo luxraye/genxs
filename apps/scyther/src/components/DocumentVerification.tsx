@@ -1,298 +1,255 @@
 import React, { useState } from 'react';
 import { useScyther } from '../context/ScytherContext';
-import { 
-  ShieldCheck, 
-  FileUp, 
-  FileText, 
-  Upload, 
-  CheckCircle2, 
-  Lock, 
-  Clock, 
-  AlertCircle,
-  ExternalLink,
-  BadgeCheck,
-  Check
-} from 'lucide-react';
-import { DonorDocument } from '@shared/types/bloodchain';
+import { FileUp, FileText, CheckCircle2, Lock, Info, ExternalLink, ShieldCheck } from 'lucide-react';
+import type { DonorDocument } from '@shared/types/bloodchain';
 
-export const DocumentVerification: React.FC = () => {
-  const { donor, uploadDocument } = useScyther();
+const CONSENT_KEY = 'scyther_consent_v1';
+
+const maskId = (id: string) => (!id ? 'Not provided' : id.length <= 4 ? id : '•••• ' + id.slice(-4));
+
+export const Profile: React.FC<{ onSignIn?: () => void }> = ({ onSignIn }) => {
+  const { donor, uploadDocument, logoutDonor, isAuthenticated } = useScyther();
+
   const [docType, setDocType] = useState<DonorDocument['type']>('NATIONAL_ID');
-  const [docName, setDocName] = useState('National_Omang_ID.pdf');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadFeedback, setUploadFeedback] = useState<string | null>(null);
+  const [docName, setDocName] = useState('National_ID.pdf');
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [consent, setConsent] = useState<boolean>(() => localStorage.getItem(CONSENT_KEY) === 'true');
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const toggleConsent = (v: boolean) => {
+    setConsent(v);
+    localStorage.setItem(CONSENT_KEY, String(v));
+  };
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsUploading(true);
-    setUploadFeedback(null);
+    setBusy(true);
+    setFeedback(null);
     try {
-      const sizeKb = selectedFile ? Math.round(selectedFile.size / 1024) : 1240;
       const res = await uploadDocument({
-        name: docName.trim() || 'Omang_Document.pdf',
+        name: docName.trim() || 'Document.pdf',
         type: docType,
-        sizeKb,
-        fileBlob: selectedFile || undefined
+        sizeKb: file ? Math.round(file.size / 1024) : 0,
+        fileBlob: file ?? undefined
       });
-
       if (res.success) {
-        setUploadFeedback(`Document "${docName}" successfully uploaded to sovereign storage! Account advanced to Tier 2 (Pending Review).`);
-        setSelectedFile(null);
-        setTimeout(() => setUploadFeedback(null), 6000);
+        setFeedback('Document received and queued for review.');
+        setFile(null);
+      } else {
+        setFeedback(res.error ?? 'Upload failed.');
       }
     } finally {
-      setIsUploading(false);
+      setBusy(false);
     }
   };
 
-  const steps = [
-    { 
-      level: 1, 
-      title: 'Level 1: Account Created', 
-      desc: 'Digital citizen donor profile registered in sovereign directory.', 
-      reached: donor.tier >= 1 
-    },
-    { 
-      level: 2, 
-      title: 'Level 2: Files Uploaded', 
-      desc: 'National Omang ID / passport or health clearance submitted.', 
-      reached: donor.tier >= 2 
-    },
-    { 
-      level: 3, 
-      title: 'Level 3: Admin Verified', 
-      desc: 'Credentials authenticated against civil registry by National Ops desk.', 
-      reached: donor.tier >= 3 
-    },
-    { 
-      level: 4, 
-      title: 'Level 4: Confirmed Repeat', 
-      desc: 'Verified status + 2 or more complete clinical donations.', 
-      reached: donor.tier >= 4 
-    }
-  ];
+  if (!isAuthenticated) {
+    return (
+      <div className="stack">
+        <div className="page-head">
+          <div className="eyebrow">Account</div>
+          <h1 className="page-title">Profile</h1>
+        </div>
+        <div className="card">
+          <div className="card-bd">
+            <p className="muted">Sign in to view your donor profile and submitted documents.</p>
+            {onSignIn && (
+              <button className="btn btn--primary" style={{ marginTop: 14 }} onClick={onSignIn}>
+                Sign in
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const docs = donor.uploadedDocuments ?? [];
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      
-      {/* Header */}
-      <div className="border-b border-white/10 pb-6">
-        <div className="text-xs font-mono font-bold text-red-500 uppercase tracking-wider mb-1 flex items-center gap-2">
-          <BadgeCheck className="w-4 h-4" />
-          <span>Sovereign Identity Accreditation</span>
-        </div>
-        <h2 className="text-2xl font-bold text-white tracking-tight">
-          Omang ID & 4-Tier Credential Verification
-        </h2>
-        <p className="text-xs text-slate-400 mt-1">
-          Higher verification rankings give you priority fast-track access during national trauma appeals and emergency mobilization.
-        </p>
+    <div className="stack">
+      <div className="page-head">
+        <div className="eyebrow">Account</div>
+        <h1 className="page-title">Profile &amp; settings</h1>
+        <p className="page-sub">Your donor details, verification status, and privacy settings.</p>
       </div>
 
-      {/* 4-Tier Journey Stepper */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/60 border border-white/10 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-white">Verification Progression</h3>
-          <span className="font-mono text-xs px-3 py-1 rounded-full bg-red-950/80 border border-red-500/40 text-red-300 font-bold">
-            Current: Tier {donor.tier}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          {steps.map(step => (
-            <div
-              key={step.level}
-              className={`p-4 rounded-2xl border transition-all ${
-                step.reached
-                  ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 shadow-lg shadow-emerald-950/20'
-                  : 'bg-white/[0.02] border-white/5 opacity-50'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-xs font-bold text-white">
-                  Tier {step.level}
-                </span>
-                {step.reached ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                ) : (
-                  <Lock className="w-3.5 h-3.5 text-slate-500" />
-                )}
+      <div className="grid-2">
+        <div className="stack">
+          <div className="card">
+            <div className="card-hd">
+              <h3>Your details</h3>
+            </div>
+            <div className="card-bd">
+              <div className="row">
+                <span className="row-k" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>Full name</span>
+                <span>{donor.fullName}</span>
               </div>
-              <div className="font-bold text-sm text-white">{step.title.split(': ')[1]}</div>
-              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{step.desc}</p>
+              <div className="row">
+                <span className="row-k" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>Donor ID</span>
+                <span className="mono">{donor.id}</span>
+              </div>
+              <div className="row">
+                <span className="row-k" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>Blood group</span>
+                <span className="mono">{donor.bloodType}</span>
+              </div>
+              <div className="row">
+                <span className="row-k" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>National ID</span>
+                <span className="mono">{maskId(donor.nationalIdNumber)}</span>
+              </div>
+              <div className="row">
+                <span className="row-k" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>Phone</span>
+                <span className="mono">{donor.phone || 'Not provided'}</span>
+              </div>
+              <div className="row">
+                <span className="row-k" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>Email</span>
+                <span>{donor.email}</span>
+              </div>
+              <div className="row">
+                <span className="row-k" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>District</span>
+                <span>{donor.cityDistrict}</span>
+              </div>
+              <button className="btn btn--outline" style={{ marginTop: 16 }} onClick={logoutDonor}>
+                Sign out
+              </button>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Upload Feedback Banner */}
-      {uploadFeedback && (
-        <div className="p-4 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 text-white text-xs flex items-center gap-3 shadow-xl">
-          <Check className="w-5 h-5 text-emerald-400 shrink-0" />
-          <span>{uploadFeedback}</span>
-        </div>
-      )}
-
-      {/* Main Grid: Upload Form + Uploaded Documents List */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Left: Upload Console */}
-        <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 to-slate-950 border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5">
-          <div>
-            <div className="text-xs font-mono font-bold text-red-500 uppercase tracking-wide flex items-center gap-1.5">
-              <FileUp className="w-4 h-4" />
-              <span>Sovereign Storage Enclave</span>
-            </div>
-            <h3 className="text-base font-bold text-white mt-1">Upload Documents</h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Encrypted directly to Firebase Cloud Storage. Zero-PII exposed on public blockchain.
-            </p>
           </div>
 
-          <form onSubmit={handleUpload} className="space-y-4 text-xs">
-            <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Document Type</label>
-              <select
-                value={docType}
-                onChange={e => {
-                  const val = e.target.value as any;
-                  setDocType(val);
-                  if (val === 'NATIONAL_ID') setDocName('National_Omang_Card.pdf');
-                  else if (val === 'MEDICAL_CLEARANCE') setDocName('Physician_Clearance.pdf');
-                  else if (val === 'SEROLOGY_RECORD') setDocName('Blood_Screening_Report.pdf');
-                }}
-                className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-red-500"
-              >
-                <option value="NATIONAL_ID">National Omang ID / Passport</option>
-                <option value="MEDICAL_CLEARANCE">Clinical Medical Clearance Certificate</option>
-                <option value="SEROLOGY_RECORD">Recent Laboratory Serology Report</option>
-                <option value="DONOR_QUESTIONNAIRE">Signed Health History Questionnaire</option>
-              </select>
+          <div className="card">
+            <div className="card-hd">
+              <h3>Verification</h3>
+              <span className={`status ${donor.tier >= 3 ? 'status--safe' : 'status--hold'}`}>
+                {donor.tier >= 3 ? <ShieldCheck size={13} /> : <Lock size={13} />}
+                {donor.tier >= 3 ? 'Verified' : 'Not yet verified'}
+              </span>
             </div>
-
-            <div>
-              <label className="block text-slate-300 font-medium mb-1.5">File Identifier</label>
-              <input
-                type="text"
-                required
-                value={docName}
-                onChange={e => setDocName(e.target.value)}
-                className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:ring-1 focus:ring-red-500"
-              />
-            </div>
-
-            {/* Dropzone with Real File Input */}
-            <label className="block p-5 border-2 border-dashed border-white/15 hover:border-red-500/60 rounded-2xl text-center space-y-2 bg-white/[0.02] hover:bg-red-500/[0.03] cursor-pointer transition-all">
-              <input
-                type="file"
-                className="hidden"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={e => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setSelectedFile(file);
-                    setDocName(file.name);
-                  }
-                }}
-              />
-              <FileText className="w-8 h-8 text-slate-400 mx-auto" />
-              <div className="text-xs text-slate-300">
-                {selectedFile ? (
-                  <span className="font-semibold text-emerald-400">
-                    Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)
-                  </span>
-                ) : (
-                  <>
-                    <span className="font-semibold text-red-400">Choose file to upload</span> or drag and drop
-                  </>
-                )}
-              </div>
-              <p className="text-[10px] text-slate-500 font-mono">
-                PDF, JPG, PNG up to 10MB (End-to-End Encrypted)
+            <div className="card-bd">
+              <p className="muted" style={{ fontSize: 13 }}>
+                Submitting a document does not verify your identity. Documents are reviewed by the national blood
+                service before any verification is recorded.
               </p>
-            </label>
 
-            <button
-              type="submit"
-              disabled={isUploading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs shadow-xl shadow-red-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span>{isUploading ? 'Encrypting & Uploading...' : 'Upload for Supervisor Verification'}</span>
-            </button>
-          </form>
+              {feedback && (
+                <div className="notice notice--safe" style={{ marginTop: 14 }}>
+                  <CheckCircle2 className="notice-icon" size={15} />
+                  <span>{feedback}</span>
+                </div>
+              )}
+
+              {docs.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <table className="tbl">
+                    <thead>
+                      <tr>
+                        <th>Document</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {docs.map(d => (
+                        <tr key={d.id}>
+                          <td>
+                            <span style={{ display: 'inline-flex', gap: 7, alignItems: 'center' }}>
+                              <FileText size={14} color="var(--ink-3)" />
+                              {d.name}
+                              {d.fileDataUrl && (
+                                <a href={d.fileDataUrl} target="_blank" rel="noreferrer" title="Open">
+                                  <ExternalLink size={12} />
+                                </a>
+                              )}
+                            </span>
+                          </td>
+                          <td className="mono" style={{ fontSize: 12.5 }}>
+                            {new Date(d.uploadedAt).toLocaleDateString('en-GB')}
+                          </td>
+                          <td>
+                            <span className="status status--watch">{d.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Right: Uploaded Documents Table */}
-        <div className="lg:col-span-7 bg-white/[0.03] border border-white/10 rounded-3xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-bold text-white">Submitted Identity Records</h3>
-              <p className="text-xs text-slate-400">Securely archived under donor hash {donor.anonymizedHash.slice(0, 12)}...</p>
+        <div className="stack">
+          <div className="card">
+            <div className="card-hd">
+              <h3>Submit a document</h3>
             </div>
-            <span className="text-xs font-mono text-slate-400 bg-white/5 px-2.5 py-1 rounded-lg">
-              {donor.uploadedDocuments.length} files
-            </span>
+            <div className="card-bd">
+              <form onSubmit={submit}>
+                <div className="field">
+                  <label className="label" htmlFor="pf-type">Document type</label>
+                  <select
+                    id="pf-type"
+                    className="select"
+                    value={docType}
+                    onChange={e => {
+                      const v = e.target.value as DonorDocument['type'];
+                      setDocType(v);
+                      setDocName(v === 'NATIONAL_ID' ? 'National_ID.pdf' : v === 'MEDICAL_CLEARANCE' ? 'Medical_Clearance.pdf' : 'Screening_Report.pdf');
+                    }}
+                  >
+                    <option value="NATIONAL_ID">National ID / passport</option>
+                    <option value="MEDICAL_CLEARANCE">Medical clearance certificate</option>
+                    <option value="SEROLOGY_RECORD">Laboratory screening report</option>
+                    <option value="DONOR_QUESTIONNAIRE">Signed health questionnaire</option>
+                  </select>
+                </div>
+
+                <div className="field">
+                  <label className="label" htmlFor="pf-file">File</label>
+                  <input
+                    id="pf-file"
+                    className="input"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={e => {
+                      const f = e.target.files?.[0] ?? null;
+                      setFile(f);
+                      if (f) setDocName(f.name);
+                    }}
+                  />
+                  <span className="hint">PDF, JPG or PNG.</span>
+                </div>
+
+                <button className="btn btn--primary btn--block" type="submit" disabled={busy}>
+                  <FileUp size={15} />
+                  {busy ? 'Uploading…' : 'Submit for review'}
+                </button>
+              </form>
+            </div>
           </div>
 
-          {donor.uploadedDocuments.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 space-y-2 border border-dashed border-white/10 rounded-2xl">
-              <FileText className="w-10 h-10 text-slate-600 mx-auto" />
-              <p className="text-xs">No documents uploaded yet. Upload your Omang ID to advance to Tier 2.</p>
+          <div className="card">
+            <div className="card-hd">
+              <h3>Consent &amp; privacy</h3>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {donor.uploadedDocuments.map(docItem => (
-                <div
-                  key={docItem.id}
-                  className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-white/20 transition-all flex items-start justify-between gap-4 text-xs"
-                >
-                  <div className="space-y-1.5 flex-1">
-                    <div className="font-bold text-white flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-blue-400 shrink-0" />
-                      <span className="truncate">{docItem.name}</span>
-                      {docItem.fileDataUrl && (
-                        <a
-                          href={docItem.fileDataUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[10px] text-blue-400 hover:underline inline-flex items-center gap-0.5 ml-1"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          <span>View</span>
-                        </a>
-                      )}
-                    </div>
-
-                    <div className="text-[11px] text-slate-400 font-mono">
-                      {docItem.type.replace(/_/g, ' ')} · {docItem.sizeKb} KB · Uploaded {new Date(docItem.uploadedAt).toLocaleDateString()}
-                    </div>
-
-                    {docItem.reviewNotes && (
-                      <div className="text-[11px] text-slate-300 bg-black/40 p-2 rounded-lg font-mono border border-white/5">
-                        Admin Note: {docItem.reviewNotes} {docItem.reviewedBy ? `(${docItem.reviewedBy})` : ''}
-                      </div>
-                    )}
-                  </div>
-
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold font-mono shrink-0 ${
-                    docItem.status === 'APPROVED'
-                      ? 'bg-emerald-950 border border-emerald-500/40 text-emerald-300'
-                      : docItem.status === 'REJECTED'
-                      ? 'bg-red-950 border border-red-500/40 text-red-300'
-                      : 'bg-amber-950 border border-amber-500/40 text-amber-300'
-                  }`}>
-                    {docItem.status}
-                  </span>
-                </div>
-              ))}
+            <div className="card-bd">
+              <div className="notice" style={{ marginBottom: 14 }}>
+                <Info className="notice-icon" size={15} />
+                <span style={{ fontSize: 12.5 }}>
+                  Under the Data Protection Act, 2024 your information is processed for donor eligibility and service
+                  delivery only. You may withdraw consent at any time.
+                </span>
+              </div>
+              <label className="checkline">
+                <input type="checkbox" checked={consent} onChange={e => toggleConsent(e.target.checked)} />
+                <span>
+                  I consent to the national blood service processing my donor information for eligibility, donation
+                  administration and service communication.
+                </span>
+              </label>
             </div>
-          )}
+          </div>
         </div>
-
       </div>
-
     </div>
   );
 };

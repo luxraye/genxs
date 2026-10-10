@@ -1,63 +1,51 @@
 import React, { useState } from 'react';
 import { useScyther } from '../context/ScytherContext';
-import { 
-  X, 
-  Heart, 
-  Lock, 
-  Mail, 
-  User, 
-  Phone, 
-  ShieldCheck, 
-  ArrowRight, 
-  AlertCircle,
-  Eye,
-  EyeOff
-} from 'lucide-react';
-import { BloodType } from '@shared/types/bloodchain';
+import { X, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import type { BloodType } from '@shared/types/bloodchain';
 
-interface CitizenAuthModalProps {
+interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({ isOpen, onClose }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { loginDonor, registerDonor, quickDemoLogin, donorsList } = useScyther();
-  
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
+
+  const [mode, setMode] = useState<'SIGNIN' | 'REGISTER'>('SIGNIN');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [fullName, setFullName] = useState('');
   const [nationalId, setNationalId] = useState('');
   const [phone, setPhone] = useState('');
   const [bloodType, setBloodType] = useState<BloodType>('O+');
-  const [district, setDistrict] = useState('Gaborone Central');
-
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [district, setDistrict] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthError(null);
-    setIsSubmitting(true);
+    setError(null);
+    setBusy(true);
     try {
       const res = await loginDonor(email, password);
-      if (res.success) {
-        onClose();
-      } else {
-        setAuthError(res.error || 'Authentication failed.');
-      }
+      res.success ? onClose() : setError(res.error ?? 'Sign in failed.');
     } finally {
-      setIsSubmitting(false);
+      setBusy(false);
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const register = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthError(null);
-    setIsSubmitting(true);
+    setError(null);
+    if (!consent) {
+      setError('Please confirm consent to continue.');
+      return;
+    }
+    setBusy(true);
     try {
       const res = await registerDonor({
         fullName,
@@ -68,258 +56,156 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({ isOpen, onCl
         bloodType,
         cityDistrict: district
       });
-      if (res.success) {
-        onClose();
-      } else {
-        setAuthError(res.error || 'Registration failed.');
-      }
+      res.success ? onClose() : setError(res.error ?? 'Registration failed.');
     } finally {
-      setIsSubmitting(false);
+      setBusy(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md rounded-3xl bg-slate-900 border border-white/15 shadow-2xl p-6 sm:p-8 space-y-6 text-slate-100 max-h-[90vh] overflow-y-auto">
-        
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-700 flex items-center justify-center text-white mx-auto shadow-xl shadow-red-600/30">
-            <Heart className="w-6 h-6 fill-white" />
+    <div className="modal-backdrop" role="dialog" aria-modal="true" onMouseDown={onClose}>
+      <div className="modal" onMouseDown={e => e.stopPropagation()}>
+        <div className="modal-hd">
+          <div>
+            <div className="eyebrow" style={{ marginBottom: 4 }}>Donor account</div>
+            <h2 style={{ fontSize: 19 }}>{mode === 'SIGNIN' ? 'Sign in' : 'Register as a donor'}</h2>
           </div>
-          <h3 className="text-xl font-bold text-white tracking-tight">
-            {isRegisterMode ? 'Register Digital Bloodcard' : 'Citizen Donor Sign In'}
-          </h3>
-          <p className="text-xs text-slate-400">
-            {isRegisterMode
-              ? 'Create your sovereign donor identity credentials on Bloodchain.'
-              : 'Sign in to access your digital bloodcard and donation history.'}
-          </p>
+          <button className="modal-close" onClick={onClose} aria-label="Close">
+            <X size={18} />
+          </button>
         </div>
 
-        {/* Error Alert */}
-        {authError && (
-          <div className="p-3.5 rounded-xl bg-red-950/80 border border-red-500/50 text-red-200 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
-            <span>{authError}</span>
+        <div className="modal-bd">
+          <div className="seg" style={{ marginBottom: 18 }}>
+            <button aria-pressed={mode === 'SIGNIN'} onClick={() => setMode('SIGNIN')}>
+              Sign in
+            </button>
+            <button aria-pressed={mode === 'REGISTER'} onClick={() => setMode('REGISTER')}>
+              Register
+            </button>
           </div>
-        )}
 
-        {/* Forms */}
-        {isRegisterMode ? (
-          <form onSubmit={handleRegister} className="space-y-3.5 text-xs">
-            <div>
-              <label className="block text-slate-300 font-medium mb-1">Full Legal Name</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Neo Molefe"
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-red-500"
-              />
+          {error && (
+            <div className="notice notice--stop" style={{ marginBottom: 16 }}>
+              <AlertCircle className="notice-icon" size={15} />
+              <span>{error}</span>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Omang ID #</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="BW-ID-XXXX"
-                  value={nationalId}
-                  onChange={e => setNationalId(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white font-mono uppercase focus:outline-none focus:ring-1 focus:ring-red-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Blood Group</label>
-                <select
-                  value={bloodType}
-                  onChange={e => setBloodType(e.target.value as BloodType)}
-                  className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:ring-1 focus:ring-red-500"
-                >
-                  {(['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'] as BloodType[]).map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Mobile Phone</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="+267 71 000 000"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:ring-1 focus:ring-red-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">District / City</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Gaborone Central"
-                  value={district}
-                  onChange={e => setDistrict(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-red-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-slate-300 font-medium mb-1">Email Address</label>
-              <input
-                type="email"
-                required
-                placeholder="citizen@domain.bw"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-red-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-300 font-medium mb-1">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  minLength={6}
-                  placeholder="At least 6 characters"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-white pr-9 focus:outline-none focus:ring-1 focus:ring-red-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs shadow-xl shadow-red-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
-            >
-              <span>{isSubmitting ? 'Creating Sovereign Record...' : 'Complete Registration'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleLogin} className="space-y-4 text-xs">
-            <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Email Address</label>
-              <input
-                type="email"
-                required
-                placeholder="citizen@domain.bw"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:ring-1 focus:ring-red-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/15 rounded-xl px-3 py-2.5 text-white pr-9 focus:outline-none focus:ring-1 focus:ring-red-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs shadow-xl shadow-red-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              <span>{isSubmitting ? 'Signing In...' : 'Sign In to Bloodcard'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </form>
-        )}
-
-        {/* Toggle Mode */}
-        <div className="text-center text-xs text-slate-400">
-          {isRegisterMode ? (
-            <span>
-              Already registered?{' '}
-              <button
-                type="button"
-                onClick={() => setIsRegisterMode(false)}
-                className="text-red-400 hover:underline font-bold"
-              >
-                Sign In
-              </button>
-            </span>
-          ) : (
-            <span>
-              New donor?{' '}
-              <button
-                type="button"
-                onClick={() => setIsRegisterMode(true)}
-                className="text-red-400 hover:underline font-bold"
-              >
-                Register Citizen Bloodcard
-              </button>
-            </span>
           )}
-        </div>
 
-        {/* Fast Pilot Demo Switcher */}
-        <div className="border-t border-white/10 pt-4 space-y-2">
-          <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider text-center">
-            Fast Pilot Testing Accounts
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {donorsList.slice(0, 3).map(d => (
-              <button
-                key={d.id}
-                type="button"
-                onClick={() => {
-                  quickDemoLogin(d.id);
-                  onClose();
-                }}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-center transition-colors cursor-pointer"
-              >
-                <div className="font-bold text-white text-[11px] truncate">{d.fullName.split(' ')[0]}</div>
-                <div className="font-mono text-[9px] text-red-400">{d.bloodType} · Tier {d.tier}</div>
+          {mode === 'SIGNIN' ? (
+            <form onSubmit={signIn}>
+              <div className="field">
+                <label className="label" htmlFor="si-email">Email address</label>
+                <input id="si-email" className="input" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.bw" />
+              </div>
+              <div className="field">
+                <label className="label" htmlFor="si-pw">Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="si-pw"
+                    className="input"
+                    type={showPw ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    style={{ paddingRight: 38 }}
+                  />
+                  <button type="button" className="modal-close" style={{ position: 'absolute', right: 8, top: 8 }} onClick={() => setShowPw(v => !v)} aria-label="Toggle password">
+                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <button className="btn btn--primary btn--block" type="submit" disabled={busy}>
+                {busy ? 'Signing in…' : 'Sign in'}
               </button>
-            ))}
+            </form>
+          ) : (
+            <form onSubmit={register}>
+              <div className="field">
+                <label className="label" htmlFor="rg-name">Full name</label>
+                <input id="rg-name" className="input" required value={fullName} onChange={e => setFullName(e.target.value)} />
+              </div>
+              <div className="grid-2" style={{ gap: 12 }}>
+                <div className="field">
+                  <label className="label" htmlFor="rg-id">National ID</label>
+                  <input id="rg-id" className="input mono" required value={nationalId} onChange={e => setNationalId(e.target.value)} />
+                </div>
+                <div className="field">
+                  <label className="label" htmlFor="rg-bt">Blood group</label>
+                  <select id="rg-bt" className="select" value={bloodType} onChange={e => setBloodType(e.target.value as BloodType)}>
+                    {(['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'] as BloodType[]).map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid-2" style={{ gap: 12 }}>
+                <div className="field">
+                  <label className="label" htmlFor="rg-phone">Phone</label>
+                  <input id="rg-phone" className="input mono" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="+267 …" />
+                </div>
+                <div className="field">
+                  <label className="label" htmlFor="rg-district">District</label>
+                  <input id="rg-district" className="input" required value={district} onChange={e => setDistrict(e.target.value)} />
+                </div>
+              </div>
+              <div className="field">
+                <label className="label" htmlFor="rg-email">Email address</label>
+                <input id="rg-email" className="input" type="email" required value={email} onChange={e => setEmail(e.target.value)} />
+              </div>
+              <div className="field">
+                <label className="label" htmlFor="rg-pw">Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="rg-pw"
+                    className="input"
+                    type={showPw ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    style={{ paddingRight: 38 }}
+                  />
+                  <button type="button" className="modal-close" style={{ position: 'absolute', right: 8, top: 8 }} onClick={() => setShowPw(v => !v)} aria-label="Toggle password">
+                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <label className="checkline" style={{ marginBottom: 16 }}>
+                <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} />
+                <span>
+                  I consent to my information being processed for donor eligibility and service delivery, under the Data
+                  Protection Act, 2024.
+                </span>
+              </label>
+
+              <button className="btn btn--primary btn--block" type="submit" disabled={busy}>
+                {busy ? 'Creating account…' : 'Create donor account'}
+              </button>
+            </form>
+          )}
+
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 14 }}>
+            <div className="meta-k" style={{ marginBottom: 8 }}>Sample accounts (demonstration)</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {donorsList.slice(0, 3).map(d => (
+                <button
+                  key={d.id}
+                  className="btn btn--outline"
+                  style={{ flex: 1, flexDirection: 'column', alignItems: 'flex-start', gap: 2, padding: '8px 10px' }}
+                  onClick={() => {
+                    quickDemoLogin(d.id);
+                    onClose();
+                  }}
+                >
+                  <span style={{ fontWeight: 600 }}>{d.fullName.split(' ')[0]}</span>
+                  <span className="mono dim" style={{ fontSize: 11 }}>{d.bloodType}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-
       </div>
     </div>
   );

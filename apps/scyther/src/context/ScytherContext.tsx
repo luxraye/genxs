@@ -12,17 +12,15 @@ import {
   setDoc,
   collection,
   onSnapshot,
-  query,
-  where,
   type FirebaseUser
 } from '@shared/lib/firebase';
-import { 
-  DonorProfile, 
-  BloodUnit, 
-  BloodType, 
-  DonorDocument, 
-  DonorVerificationTier, 
-  SystemIssue 
+import {
+  DonorProfile,
+  BloodUnit,
+  BloodType,
+  DonorDocument,
+  DonorVerificationTier,
+  SystemIssue
 } from '@shared/types/bloodchain';
 import { INITIAL_DONOR, INITIAL_DONORS } from '@shared/data/seedData';
 import { sha256 } from '@shared/lib/crypto';
@@ -32,70 +30,114 @@ export interface DonationCenter {
   name: string;
   district: string;
   address: string;
-  phone: string;
   hours: string;
   urgentNeeds: BloodType[];
   lat: number;
   lng: number;
+  /** Illustrative availability for the demonstration environment. */
+  slots: { time: string; available: boolean }[];
 }
 
-export const BOTSWANA_CENTERS: DonationCenter[] = [
+/**
+ * ILLUSTRATIVE SITES — these are example locations, not a real facility list.
+ * Real centre data must come from the national blood service before any pilot.
+ */
+export const EXAMPLE_CENTERS: DonationCenter[] = [
   {
     id: 'CTR-GAB-001',
-    name: 'Princess Marina Hospital Blood Bank',
+    name: 'Example Referral Hospital — Blood Bank',
     district: 'Gaborone',
-    address: 'Hospital Way, Extension 9, Gaborone',
-    phone: '+267 362 1400',
-    hours: 'Mon - Fri: 07:30 - 17:00 | Sat: 08:00 - 13:00',
+    address: 'Illustrative address · Gaborone',
+    hours: 'Mon–Fri 07:30–17:00 · Sat 08:00–13:00',
     urgentNeeds: ['O-', 'O+', 'B-'],
     lat: -24.6541,
-    lng: 25.9087
+    lng: 25.9087,
+    slots: [
+      { time: '08:30', available: true },
+      { time: '09:30', available: true },
+      { time: '10:30', available: false },
+      { time: '11:30', available: true },
+      { time: '13:30', available: true },
+      { time: '14:30', available: false },
+      { time: '15:30', available: true },
+      { time: '16:30', available: true }
+    ]
   },
   {
     id: 'CTR-FRW-001',
-    name: 'Nyangabgwe Referral Hospital Center',
+    name: 'Example District Hospital — Donation Centre',
     district: 'Francistown',
-    address: 'Gerald Estate Road, Francistown',
-    phone: '+267 241 1000',
-    hours: 'Mon - Fri: 08:00 - 16:30',
+    address: 'Illustrative address · Francistown',
+    hours: 'Mon–Fri 08:00–16:30',
     urgentNeeds: ['O-', 'A-', 'AB-'],
     lat: -21.1685,
-    lng: 27.5118
+    lng: 27.5118,
+    slots: [
+      { time: '08:30', available: true },
+      { time: '09:30', available: false },
+      { time: '10:30', available: true },
+      { time: '11:30', available: true },
+      { time: '13:30', available: true },
+      { time: '14:30', available: true }
+    ]
   },
   {
     id: 'CTR-MOL-001',
-    name: 'Sekgoma Memorial Hospital Depository',
+    name: 'Example Regional Hospital — Donation Centre',
     district: 'Molepolole',
-    address: 'Kweneng Main Hospital Corridor',
-    phone: '+267 592 0333',
-    hours: 'Mon - Thu: 08:00 - 16:00',
+    address: 'Illustrative address · Molepolole',
+    hours: 'Mon–Thu 08:00–16:00',
     urgentNeeds: ['O-', 'A+'],
     lat: -24.4072,
-    lng: 25.5042
+    lng: 25.5042,
+    slots: [
+      { time: '08:30', available: true },
+      { time: '09:30', available: true },
+      { time: '10:30', available: true },
+      { time: '11:30', available: false }
+    ]
   },
   {
     id: 'CTR-MAU-001',
-    name: 'Maun General Transfusion Center',
-    district: 'Ngamiland / Maun',
-    address: 'Hospital Road, Central Maun',
-    phone: '+267 686 0456',
-    hours: 'Mon - Fri: 08:30 - 15:30',
+    name: 'Example District Hospital — Donation Centre',
+    district: 'Maun',
+    address: 'Illustrative address · Maun',
+    hours: 'Mon–Fri 08:30–15:30',
     urgentNeeds: ['O-', 'B+'],
     lat: -19.9833,
-    lng: 23.4167
+    lng: 23.4167,
+    slots: [
+      { time: '08:30', available: true },
+      { time: '09:30', available: true },
+      { time: '10:30', available: true },
+      { time: '11:30', available: true }
+    ]
   },
   {
     id: 'CTR-GAB-MOB',
-    name: 'Gaborone Main Mall Sovereign Mobile Drive',
-    district: 'Gaborone Central',
-    address: 'Civic Centre Concourse, Main Mall',
-    phone: '+267 71 894 102',
-    hours: 'Tue, Thu, Sat: 09:00 - 16:00',
+    name: 'Community Donation Drive — Main Mall',
+    district: 'Gaborone',
+    address: 'Illustrative location · Gaborone',
+    hours: 'Tue, Thu, Sat 09:00–16:00',
     urgentNeeds: ['O-', 'O+', 'A+'],
     lat: -24.6578,
-    lng: 25.9189
+    lng: 25.9189,
+    slots: [
+      { time: '09:00', available: true },
+      { time: '10:00', available: true },
+      { time: '11:00', available: false },
+      { time: '13:00', available: true },
+      { time: '14:00', available: true },
+      { time: '15:00', available: true }
+    ]
   }
 ];
+
+export interface Booking {
+  centerName: string;
+  date: string;
+  time: string;
+}
 
 interface ScytherContextType {
   currentUser: FirebaseUser | null;
@@ -107,7 +149,6 @@ interface ScytherContextType {
   isAuthenticated: boolean;
   isAuthLoading: boolean;
 
-  // Authentication
   loginDonor: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   registerDonor: (data: {
     fullName: string;
@@ -121,7 +162,6 @@ interface ScytherContextType {
   quickDemoLogin: (donorId: string) => void;
   logoutDonor: () => Promise<void>;
 
-  // Actions
   uploadDocument: (docData: {
     name: string;
     type: DonorDocument['type'];
@@ -129,8 +169,8 @@ interface ScytherContextType {
     sizeKb: number;
   }) => Promise<{ success: boolean; error?: string }>;
   bookAppointment: (centerId: string, slotDate: string, slotTime: string) => Promise<boolean>;
-  recordDonationIntake: (bloodType: BloodType, volumeMl: number) => Promise<string>;
-  bookedAppointment: { centerName: string; date: string; time: string } | null;
+  cancelAppointment: () => void;
+  bookedAppointment: Booking | null;
 }
 
 const ScytherContext = createContext<ScytherContextType | null>(null);
@@ -145,12 +185,11 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [donorsList, setDonorsList] = useState<DonorProfile[]>(INITIAL_DONORS);
   const [allUnits, setAllUnits] = useState<BloodUnit[]>([]);
   const [activeShortageAlerts, setActiveShortageAlerts] = useState<SystemIssue[]>([]);
-  const [bookedAppointment, setBookedAppointment] = useState<{ centerName: string; date: string; time: string } | null>(() => {
+  const [bookedAppointment, setBookedAppointment] = useState<Booking | null>(() => {
     const saved = localStorage.getItem('scyther_booked_slot');
     return saved ? JSON.parse(saved) : null;
   });
 
-  // 1. Firebase Auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
       setCurrentUser(user);
@@ -159,73 +198,77 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => unsubscribe();
   }, []);
 
-  // 2. Real-time Firestore sync for all Donors List
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'donorProfiles'), snapshot => {
-      if (!snapshot.empty) {
-        const list = snapshot.docs.map(d => d.data() as DonorProfile);
-        setDonorsList(list);
-      }
-    }, err => console.warn('Scyther donorProfiles sync:', err.message));
+    const unsub = onSnapshot(
+      collection(db, 'donorProfiles'),
+      snapshot => {
+        if (!snapshot.empty) {
+          setDonorsList(snapshot.docs.map(d => d.data() as DonorProfile));
+        }
+      },
+      err => console.warn('Scyther donorProfiles sync:', err.message)
+    );
     return () => unsub();
   }, []);
 
-  // 3. Real-time Firestore sync for logged-in Donor profile
   useEffect(() => {
     if (!donor.id) return;
-    const unsub = onSnapshot(doc(db, 'donorProfiles', donor.id), snapshot => {
-      if (snapshot.exists()) {
-        const updated = snapshot.data() as DonorProfile;
-        setDonor(updated);
-        localStorage.setItem('scyther_active_donor', JSON.stringify(updated));
-      }
-    }, err => console.warn('Scyther donor profile sync:', err.message));
+    const unsub = onSnapshot(
+      doc(db, 'donorProfiles', donor.id),
+      snapshot => {
+        if (snapshot.exists()) {
+          const updated = snapshot.data() as DonorProfile;
+          setDonor(updated);
+          localStorage.setItem('scyther_active_donor', JSON.stringify(updated));
+        }
+      },
+      err => console.warn('Scyther donor profile sync:', err.message)
+    );
     return () => unsub();
   }, [donor.id]);
 
-  // 4. Real-time Firestore sync for Blood Units
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'bloodUnits'), snapshot => {
-      if (!snapshot.empty) {
-        const list = snapshot.docs.map(d => d.data() as BloodUnit);
-        setAllUnits(list);
-      }
-    }, err => console.warn('Scyther bloodUnits sync:', err.message));
+    const unsub = onSnapshot(
+      collection(db, 'bloodUnits'),
+      snapshot => {
+        if (!snapshot.empty) {
+          setAllUnits(snapshot.docs.map(d => d.data() as BloodUnit));
+        }
+      },
+      err => console.warn('Scyther bloodUnits sync:', err.message)
+    );
     return () => unsub();
   }, []);
 
-  // 5. Real-time Shortage Alerts from System Issues
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'systemIssues'), snapshot => {
-      if (!snapshot.empty) {
-        const issues = snapshot.docs.map(d => d.data() as SystemIssue);
-        const shortages = issues.filter(i => 
-          i.category === 'SUPPLY_DEFICIT' && i.status === 'OPEN'
-        );
-        setActiveShortageAlerts(shortages);
-      }
-    }, err => console.warn('Scyther shortages sync:', err.message));
+    const unsub = onSnapshot(
+      collection(db, 'systemIssues'),
+      snapshot => {
+        if (!snapshot.empty) {
+          const issues = snapshot.docs.map(d => d.data() as SystemIssue);
+          setActiveShortageAlerts(issues.filter(i => i.category === 'SUPPLY_DEFICIT' && i.status === 'OPEN'));
+        }
+      },
+      err => console.warn('Scyther shortages sync:', err.message)
+    );
     return () => unsub();
   }, []);
 
-  // Filter blood units belonging to this donor
-  const donorUnits = allUnits.filter(u => 
-    donor.linkedUnitDins?.includes(u.din) || u.donorAnonymizedId === donor.anonymizedHash
+  const donorUnits = allUnits.filter(
+    u => donor.linkedUnitDins?.includes(u.din) || u.donorAnonymizedId === donor.anonymizedHash
   );
 
-  // Authentication Methods
   const loginDonor = async (email: string, password?: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const found = donorsList.find(d => d.email.toLowerCase() === cleanEmail);
     if (!found) {
-      return { success: false, error: 'No donor profile found with this email address. Please register.' };
+      return { success: false, error: 'No donor account found with this email address. Please register.' };
     }
 
     if (password) {
       try {
         await signInWithEmailAndPassword(auth, cleanEmail, password);
       } catch (authErr: any) {
-        // Auto-provision in Firebase Auth if first time with matching demo account
         if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential') {
           try {
             await createUserWithEmailAndPassword(auth, cleanEmail, password);
@@ -233,14 +276,14 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
             await signInAnonymously(auth);
           }
         } else {
-          return { success: false, error: 'Invalid password. Please check your credentials.' };
+          return { success: false, error: 'Those credentials were not accepted. Please check and try again.' };
         }
       }
     } else {
       try {
         await signInAnonymously(auth);
       } catch {
-        // Non-blocking
+        /* non-blocking in the demonstration environment */
       }
     }
 
@@ -259,8 +302,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     cityDistrict: string;
   }): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = data.email.trim().toLowerCase();
-    const existing = donorsList.find(d => d.email.toLowerCase() === cleanEmail);
-    if (existing) {
+    if (donorsList.find(d => d.email.toLowerCase() === cleanEmail)) {
       return { success: false, error: 'A donor with this email address is already registered.' };
     }
 
@@ -277,7 +319,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const anon = await signInAnonymously(auth);
         uid = anon.user.uid;
       } catch {
-        // Non-blocking
+        /* non-blocking */
       }
     }
 
@@ -306,21 +348,24 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setDonorsList(prev => [newDonor, ...prev]);
     localStorage.setItem('scyther_active_donor', JSON.stringify(newDonor));
 
-    // Save to Firestore
     try {
       await setDoc(doc(db, 'donorProfiles', newId), newDonor, { merge: true });
       if (uid) {
-        await setDoc(doc(db, 'users', uid), {
-          uid,
-          email: cleanEmail,
-          displayName: data.fullName,
-          role: 'DONOR',
-          donorId: newId,
-          lastSeen: new Date().toISOString()
-        }, { merge: true });
+        await setDoc(
+          doc(db, 'users', uid),
+          {
+            uid,
+            email: cleanEmail,
+            displayName: data.fullName,
+            role: 'DONOR',
+            donorId: newId,
+            lastSeen: new Date().toISOString()
+          },
+          { merge: true }
+        );
       }
     } catch (err: any) {
-      console.warn('Firestore donor profile registration save:', err.message);
+      console.warn('Firestore donor registration save:', err.message);
     }
 
     return { success: true };
@@ -338,20 +383,23 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       await fbSignOut(auth);
     } catch {
-      // Non-blocking
+      /* non-blocking */
     }
     localStorage.removeItem('scyther_active_donor');
     setDonor(INITIAL_DONOR);
   };
 
-  // Upload Document with Real Cloud Storage
+  /**
+   * Submitting a document starts a manual review. It does NOT verify identity
+   * and does NOT advance the donor's verification tier — only a reviewer can.
+   */
   const uploadDocument = async (docData: {
     name: string;
     type: DonorDocument['type'];
     fileBlob?: Blob;
     sizeKb: number;
   }): Promise<{ success: boolean; error?: string }> => {
-    let downloadUrl: string | undefined = undefined;
+    let downloadUrl: string | undefined;
 
     if (docData.fileBlob) {
       try {
@@ -359,7 +407,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const res = await uploadFileToStorage(storagePath, docData.fileBlob);
         downloadUrl = res.downloadUrl;
       } catch (err: any) {
-        console.warn('Cloud Storage upload notice:', err.message);
+        console.warn('Document upload notice:', err.message);
       }
     }
 
@@ -371,16 +419,12 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       uploadedAt: new Date().toISOString(),
       fileDataUrl: downloadUrl,
       status: 'PENDING',
-      reviewNotes: 'Uploaded by citizen. Pending National Blood Registry review.'
+      reviewNotes: 'Submitted for review. Verification is performed by the national blood service.'
     };
-
-    const nextDocs = [...donor.uploadedDocuments, newDoc];
-    const nextTier = (donor.tier === 1 ? 2 : donor.tier) as DonorVerificationTier;
 
     const updatedDonor: DonorProfile = {
       ...donor,
-      tier: nextTier,
-      uploadedDocuments: nextDocs,
+      uploadedDocuments: [...donor.uploadedDocuments, newDoc],
       tierUpdatedAt: new Date().toISOString()
     };
 
@@ -389,142 +433,65 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     try {
       await setDoc(doc(db, 'donorProfiles', donor.id), updatedDonor, { merge: true });
-      // Create operational ticket in /systemIssues
       const issueId = `ISSUE-${Date.now().toString(36).toUpperCase()}`;
-      await setDoc(doc(db, 'systemIssues', issueId), {
-        id: issueId,
-        title: `Donor Omang/Health Verification: ${donor.fullName}`,
-        category: 'DONOR_APPEAL',
-        severity: 'MEDIUM',
-        facility: 'National Donor Registry Desk',
-        affectedEntity: `Donor ID: ${donor.id}`,
-        description: `Uploaded "${docData.name}". Review credentials to upgrade to Level 3.`,
-        status: 'OPEN',
-        timestamp: new Date().toISOString()
-      }, { merge: true });
+      await setDoc(
+        doc(db, 'systemIssues', issueId),
+        {
+          id: issueId,
+          title: `Donor document review: ${donor.fullName}`,
+          category: 'DONOR_APPEAL',
+          severity: 'MEDIUM',
+          facility: 'National Donor Registry Desk',
+          affectedEntity: `Donor ID: ${donor.id}`,
+          description: `Submitted "${docData.name}" for review.`,
+          status: 'OPEN',
+          timestamp: new Date().toISOString()
+        },
+        { merge: true }
+      );
     } catch (err: any) {
-      console.warn('Firestore doc upload update:', err.message);
+      console.warn('Firestore document update:', err.message);
     }
 
     return { success: true };
   };
 
   const bookAppointment = async (centerId: string, slotDate: string, slotTime: string): Promise<boolean> => {
-    const center = BOTSWANA_CENTERS.find(c => c.id === centerId);
+    const center = EXAMPLE_CENTERS.find(c => c.id === centerId);
     if (!center) return false;
 
-    const booking = {
-      centerName: center.name,
-      date: slotDate,
-      time: slotTime
-    };
-
+    const booking: Booking = { centerName: center.name, date: slotDate, time: slotTime };
     setBookedAppointment(booking);
     localStorage.setItem('scyther_booked_slot', JSON.stringify(booking));
 
     try {
       const bookingId = `BK-${Date.now().toString(36).toUpperCase()}`;
-      await setDoc(doc(db, 'appointments', bookingId), {
-        id: bookingId,
-        donorId: donor.id,
-        donorName: donor.fullName,
-        bloodType: donor.bloodType,
-        centerId,
-        centerName: center.name,
-        slotDate,
-        slotTime,
-        status: 'CONFIRMED',
-        bookedAt: new Date().toISOString()
-      }, { merge: true });
+      await setDoc(
+        doc(db, 'appointments', bookingId),
+        {
+          id: bookingId,
+          donorId: donor.id,
+          donorName: donor.fullName,
+          bloodType: donor.bloodType,
+          centerId,
+          centerName: center.name,
+          slotDate,
+          slotTime,
+          status: 'CONFIRMED',
+          bookedAt: new Date().toISOString()
+        },
+        { merge: true }
+      );
     } catch (err: any) {
-      console.warn('Appointment booking Firestore save:', err.message);
+      console.warn('Appointment booking save:', err.message);
     }
 
     return true;
   };
 
-  const recordDonationIntake = async (bloodType: BloodType, volumeMl: number): Promise<string> => {
-    const newDinNumber = `W0423-26-${Math.floor(100000 + Math.random() * 900000)}`;
-    const nowIso = new Date().toISOString();
-    const expiryIso = new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString();
-
-    const newUnit: BloodUnit = {
-      din: newDinNumber,
-      donorAnonymizedId: donor.anonymizedHash,
-      bloodType,
-      componentType: 'WHOLE_BLOOD',
-      volumeMl,
-      collectedAt: nowIso,
-      expiresAt: expiryIso,
-      currentFacility: 'Princess Marina Hospital Blood Bank - Phlebotomy Bay 1',
-      status: 'COLLECTED',
-      labTests: {
-        hiv: 'PENDING',
-        hbv: 'PENDING',
-        hcv: 'PENDING',
-        syphilis: 'PENDING',
-        westNile: 'PENDING',
-        aboRhConfirmatory: 'PENDING',
-        hemoglobinG_dL: 14.8
-      },
-      storageTempRange: { min: 1, max: 6 },
-      telemetryLogs: [
-        {
-          timestamp: nowIso,
-          temperatureCelsius: 4.1,
-          locationName: 'Gaborone Collection Refrigerator A',
-          lat: -24.6541,
-          lng: 25.9087,
-          batteryPct: 100,
-          breachDetected: false
-        }
-      ]
-    };
-
-    // Save to Firestore
-    try {
-      await setDoc(doc(db, 'bloodUnits', newDinNumber), newUnit, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore blood unit intake save:', err.message);
-    }
-
-    // Call Fabric API gateway
-    fetch('/donations/record', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        txId: `tx-${Date.now().toString(36)}-${newDinNumber.replace(/[^a-zA-Z0-9]/g, '')}`,
-        donorHash: donor.anonymizedHash,
-        centreId: 'CTR-GAB-001',
-        centreName: 'Princess Marina Hospital',
-        district: 'Gaborone',
-        bloodType,
-        donatedAt: nowIso,
-        operatorHash: 'c47a10dca9f39c3e2f1c34b57e8a9d21f06e5b48a3c72d1e9f84ab06c5d13e78'
-      })
-    }).catch(err => console.warn('Fabric API record dispatch:', err.message));
-
-    const nextCount = donor.totalDonations + 1;
-    const nextTier = (donor.tier === 3 && nextCount >= 2 ? 4 : donor.tier) as DonorVerificationTier;
-
-    const updatedDonor: DonorProfile = {
-      ...donor,
-      totalDonations: nextCount,
-      tier: nextTier,
-      lastDonationDate: nowIso.split('T')[0],
-      linkedUnitDins: [newDinNumber, ...donor.linkedUnitDins]
-    };
-
-    setDonor(updatedDonor);
-    localStorage.setItem('scyther_active_donor', JSON.stringify(updatedDonor));
-
-    try {
-      await setDoc(doc(db, 'donorProfiles', donor.id), updatedDonor, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore donor stats update:', err.message);
-    }
-
-    return newDinNumber;
+  const cancelAppointment = () => {
+    setBookedAppointment(null);
+    localStorage.removeItem('scyther_booked_slot');
   };
 
   return (
@@ -535,7 +502,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         donorsList,
         donorUnits,
         activeShortageAlerts,
-        centers: BOTSWANA_CENTERS,
+        centers: EXAMPLE_CENTERS,
         isAuthenticated: !!donor.id,
         isAuthLoading,
         loginDonor,
@@ -544,7 +511,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         logoutDonor,
         uploadDocument,
         bookAppointment,
-        recordDonationIntake,
+        cancelAppointment,
         bookedAppointment
       }}
     >
