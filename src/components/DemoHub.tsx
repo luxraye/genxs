@@ -77,7 +77,7 @@ export const DemoHub: React.FC = () => {
     fullName: '',
     email: '',
     organization: '',
-    roleCategory: 'Ministry of Health / National Blood Service',
+    roleCategory: 'National Blood Service',
     interestTier: 'Full Sovereign Deployment Pilot',
     notes: ''
   });
@@ -132,23 +132,23 @@ export const DemoHub: React.FC = () => {
     // Create quick downloadable executive brief memorandum
     const briefContent = `BLOODCHAIN - EXECUTIVE MEMORANDUM & INVESTOR BRIEF
 =====================================================
-The Sovereign Vein-to-Vein Blood Custody Protocol
-Pilot Implementation: Republic of Botswana Health Corridor
+The Vein-to-Vein Blood Custody Protocol
+Design Concept: Botswana Health Corridor
 
 KEY VALUE PROPOSITIONS:
-1. Zero Bedside Incompatibilities: Dual-clinician biometric/RFID crossmatch verification.
-2. Cold-Chain Spoilage Recaptured: Sensitech IoT continuous telemetry saves up to $2.4M/district.
-3. National Sovereign Ledger: Zero-PII Merkle DAG architecture on Hyperledger Fabric.
-4. WHO / ISBT-128 Compliant: Plug-and-play FHIR/HL7 hospital information interface.
+1. Bedside Mismatch Prevention: dual-clinician crossmatch verification.
+2. Cold-Chain Spoilage Reduction: continuous BLE telemetry flags excursions before release.
+3. Assurance Layer: a signed, append-only, hash-chained audit log with no personal data.
+4. Interoperability: ISBT 128 unit identification and a read-only HL7 FHIR interface.
 
 DEPLOYMENT METRICS:
-- Target Initial Rollout: 3 Major Referral Centres (Princess Marina, Nyangabgwe, Sekgoma)
-- Daily Units Orchestrated: 450+ Units
-- Bedside Error Rate: 0.00% (Cryptographic Hardware Lock)
+- Illustrative Rollout Concept: three major referral centres (example sites)
+- Illustrative Daily Volume: 450+ units (sample)
+- Bedside Verification: two-clinician interlock before transfusion
 
 CONTACT & CREDENTIALS:
 Access Credentials Issued: Sandbox Mode Enabled
-Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
+Inquiries: partners@bloodchain.life · investors@bloodchain.life
 `;
     const blob = new Blob([briefContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -187,14 +187,14 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 <span className="font-semibold text-white tracking-wide">Sovereign Blood Infrastructure</span>
                 <span aria-hidden="true" className="text-slate-500">·</span>
-                <span className="text-red-400 font-bold">Republic of Botswana Pilot</span>
+                <span className="text-red-400 font-bold">Demonstration Environment</span>
                 <span aria-hidden="true" className="text-slate-500">·</span>
-                <span className="text-slate-300">Zero-PII On-Chain</span>
+                <span className="text-slate-300">Illustrative Sample Data</span>
               </div>
 
               {/* Bold Primary Value Proposition Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.05] text-balance">
-                Zero Waste. Zero Mismatch. <br />
+                Designed to Prevent Waste and Mismatch. <br />
                 <span className="bg-gradient-to-r from-red-400 via-rose-300 to-amber-200 bg-clip-text text-transparent">
                   Unbroken Vein-to-Vein Provenance.
                 </span>
@@ -202,7 +202,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
 
               {/* Compelling Value Proposition Statement for Investors & Ministries */}
               <p className="text-base sm:text-lg text-slate-200/90 max-w-2xl leading-relaxed font-normal">
-                A closed-custody cryptographic infrastructure orchestrating national blood reserves from citizen donor vein to trauma bedside transfusion. Eliminating 100% of preventable bedside crossmatch fatalities and recapturing up to <strong className="text-white font-semibold">$2.4M per district</strong> in thermal spoilage — purpose-built for sovereign health authorities and healthcare investors.
+                A closed-custody infrastructure orchestrating national blood reserves from donor to bedside transfusion. Designed to prevent avoidable bedside mismatch and to reduce thermal spoilage — purpose-built for national health authorities and healthcare partners.
               </p>
 
               {/* High-Impact Value Driver Bullets with Glass Backdrop */}
@@ -212,8 +212,8 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                     <Shield className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-white">100% Mismatch Elimination</div>
-                    <div className="text-[11px] text-slate-300">Dual-clinician wristband & DIN cryptographic interlocking.</div>
+                    <div className="text-xs font-bold text-white">Mismatch Prevention by Design</div>
+                    <div className="text-[11px] text-slate-300">Dual-clinician wristband and DIN interlock.</div>
                   </div>
                 </div>
 
@@ -222,8 +222,8 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                     <Thermometer className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-white">$2.4M Spoilage Recaptured</div>
-                    <div className="text-[11px] text-slate-300">Sensitech IoT 2°C–6°C continuous cold-chain enforcement.</div>
+                    <div className="text-xs font-bold text-white">Spoilage Reduction</div>
+                    <div className="text-[11px] text-slate-300">BLE loggers enforce the 2°C–6°C window continuously.</div>
                   </div>
                 </div>
               </div>
@@ -247,7 +247,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                   className="px-5 py-3.5 text-xs font-bold text-slate-100 bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 rounded-xl transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-lg"
                 >
                   <Activity className="w-4 h-4 text-emerald-400" />
-                  <span>Launch Live Situation Room</span>
+                  <span>Open Operations View</span>
                 </button>
 
                 <button
@@ -273,7 +273,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
               <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-slate-400 border-t border-white/10">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>WHO Blood Standard Compliant</span>
+                  <span>Aligned to ISBT 128</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -281,7 +281,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Zero-PII On-Chain Enclave</span>
+                  <span>No PII in Audit Log</span>
                 </div>
               </div>
 
@@ -297,10 +297,10 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                   <span>Cold Vault #CB-409: 3.8°C Nominal</span>
                 </div>
 
-                {/* Floating Glassmorphic HUD Badge #2: Blockchain Merkle Status */}
+                {/* Floating Glassmorphic HUD Badge #2: Audit Chain Status */}
                 <div className="absolute top-5 right-5 z-20 px-3 py-1.5 rounded-full bg-slate-950/85 backdrop-blur-xl border border-emerald-500/40 text-[10px] font-mono font-semibold text-emerald-300 flex items-center gap-1.5 shadow-xl">
                   <Lock className="w-3 h-3 text-emerald-400" />
-                  <span>SHA-256 Merkle Sealed</span>
+                  <span>SHA-256 hash-chain Sealed</span>
                 </div>
 
                 {/* Main Hero Visual Image */}
@@ -352,7 +352,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                   LIVE
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">Immutable Merkle state</p>
+              <p className="text-[11px] text-slate-400">Immutable hash-chain state</p>
             </div>
 
             <div className="space-y-1">
@@ -378,9 +378,9 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                 <span className="text-3xl lg:text-4xl font-mono font-bold text-white tabular-nums">
                   {inTransitCount > 0 ? inTransitCount : 1}
                 </span>
-                <span className="text-xs font-mono text-emerald-400">Sensitech 3.8°C</span>
+                <span className="text-xs font-mono text-emerald-400">Logger 3.8°C</span>
               </div>
-              <p className="text-[11px] text-slate-400">Real-time GPS transit corridor</p>
+              <p className="text-[11px] text-slate-400">Simulated GPS transit corridor</p>
             </div>
 
             <div className="space-y-1">
@@ -411,7 +411,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
         <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-px">
           {[
             { id: 'SUITE', label: '1. The Vein-to-Vein Application Suite', icon: Layers },
-            { id: 'LEDGER_FEED', label: '2. Live Public Blockchain Ledger', icon: Activity },
+            { id: 'LEDGER_FEED', label: '2. Public Assurance Feed', icon: Activity },
             { id: 'INVESTOR_BRIEF', label: '3. Investor & Partner Briefing', icon: BarChart3 },
             { id: 'PILOT', label: '4. Botswana National Pilot Architecture', icon: Globe2 }
           ].map(tab => {
@@ -447,7 +447,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                 Six Specialized Applications. One Sovereign Backbone.
               </h2>
               <p className="mt-1 text-sm text-slate-600 max-w-3xl">
-                From citizen smartphone registration to trauma bedside crossmatching, each persona operates a tailored interface synchronized with Hyperledger Fabric and Firestore.
+                From citizen smartphone registration to trauma bedside crossmatching, each persona operates a tailored interface synchronized with sovereign audit service and Firestore.
               </p>
             </div>
 
@@ -548,7 +548,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                   </div>
                   <p className="text-xs font-semibold text-blue-600">Laboratory Technologists & Bio-Safety Leads</p>
                   <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                    ISBT-128 intake scanning, mandatory 5-panel infectious screening (HIV, HBV, HCV, Syphilis, WNV), component fractionation into PRBC/Platelets/FFP, and digital QC release signatures.
+                    ISBT-128 intake scanning, mandatory 5-panel infectious screening (HIV-1/2, HBsAg, HCV, Syphilis, ABO/Rh), component fractionation into PRBC/Platelets/FFP, and digital QC release signatures.
                   </p>
                   <ul className="mt-4 space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-3">
                     <li className="flex items-center gap-1.5">
@@ -582,7 +582,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                 <div className="aspect-[16/9] w-full overflow-hidden relative">
                   <img 
                     src={LOGISTICS_IMAGE} 
-                    alt="Sensitech temperature telemetry cooler in transit" 
+                    alt="Temperature telemetry cooler in transit" 
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -591,7 +591,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                     2°C – 6°C NOMINAL
                   </span>
                   <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-white">
-                    <span className="text-[11px] font-semibold">Sensitech IoT Telemetry Corridor</span>
+                    <span className="text-[11px] font-semibold">Cold-Chain Telemetry Corridor</span>
                     <Truck className="w-4 h-4 text-amber-400" />
                   </div>
                 </div>
@@ -605,7 +605,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                   </div>
                   <p className="text-xs font-semibold text-amber-600">Cold-Chain Drivers & Regional Dispatchers</p>
                   <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                    Active cooler custody handover, continuous 2°C–6°C Sensitech temperature streaming, GPS progression tracking, thermal breach alarms, and hospital counter-signature handover.
+                    Active cooler custody handover, continuous 2°C–6°C temperature streaming, GPS progression tracking, thermal breach alarms, and hospital counter-signature handover.
                   </p>
                   <ul className="mt-4 space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-3">
                     <li className="flex items-center gap-1.5">
@@ -719,12 +719,12 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                   </div>
                   <p className="text-xs font-semibold text-purple-600">Ministry Health Directors & Supply Leads</p>
                   <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                    Real-time National Deficit Matrix across all regional healthcare hubs (Princess Marina, Nyangabgwe, Sekgoma), emergency shortage alarms (&lt;3 days reserve), and inter-hospital rebalancing.
+                    Simulated National Deficit Matrix across regional hubs (example sites), shortage alarms, and inter-hospital rebalancing.
                   </p>
                   <ul className="mt-4 space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-3">
                     <li className="flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Live 8-group supply and burn rate monitor</span>
+                      <span>Sample 8-group supply and burn rate monitor</span>
                     </li>
                     <li className="flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -776,7 +776,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                   </div>
                   <p className="text-xs font-semibold text-slate-700">Health Regulators & External Auditors</p>
                   <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                    Public block explorer and Merkle DAG audit trail. Features an interactive Tamper Demonstration tool proving how cryptographic SHA-256 digests immediately reject altered test or temperature records.
+                    Public block explorer and hash chain audit trail. Features an interactive Tamper Demonstration tool proving how cryptographic SHA-256 digests immediately reject altered test or temperature records.
                   </p>
                   <ul className="mt-4 space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-3">
                     <li className="flex items-center gap-1.5">
@@ -817,10 +817,10 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                 <span>The Transparency Backbone</span>
               </div>
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                Hyperledger Fabric Public Event Feed
+                sovereign audit service Public Event Feed
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                Served live from <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono">services/fabric-node</code>. Every record is cryptographically committed with pseudonymous donor and operator hashes.
+                Served from the demo backend <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono">services/fabric-node</code>. Every record is cryptographically committed with pseudonymous donor and operator hashes.
               </p>
             </div>
 
@@ -828,7 +828,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
               onClick={() => setActiveView('BOTSWANA_LIVE')}
               className="self-start sm:self-center px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <span>Manage Botswana Network Live</span>
+              <span>Demo Network Controls</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -909,7 +909,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
               </div>
               <h3 className="text-base font-bold text-slate-900">Eliminating Cold-Chain Spoilage</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Sensitech IoT telemetry monitors every blood box during transit. If coolers exceed 6°C for RBCs or 24°C for Platelets, automated alarms flag the unit, preventing spoiled units from ever reaching patient veins.
+                BLE telemetry monitors every blood box during transit. If coolers exceed 6°C for RBCs or 24°C for Platelets, automated alarms flag the unit, preventing spoiled units from ever reaching patient veins.
               </p>
               <div className="pt-2 text-xs font-bold text-blue-600">
                 Up to $2.4M Saved in Prevented Waste per District
@@ -922,10 +922,10 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
               </div>
               <h3 className="text-base font-bold text-slate-900">Sovereign Cloud & Zero-PII</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Complies with national healthcare sovereignty laws, HIPAA, and GDPR. Personal patient and donor details are stored strictly in accredited local enclaves. The ledger records only unforgeable cryptographic hashes.
+                Designed for data-protection compliance and in-country residency. Personal patient and donor details are stored separately from the audit log. The ledger records only unforgeable cryptographic hashes.
               </p>
               <div className="pt-2 text-xs font-bold text-emerald-600">
-                Audit-Ready for WHO & International Regulators
+                Audit-Ready Record Keeping
               </div>
             </div>
 
@@ -985,7 +985,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                 {
                   id: 'roi',
                   q: 'What is the deployment model for national blood transfusion services?',
-                  a: 'Bloodchain deploys as a hybrid consortium: hospital wards and testing centers operate role-based progressive web applications, while the ledger nodes run on sovereign government cloud or partner nodes (Hyperledger Fabric / Ethereum L2). It integrates with existing EHRs via HL7/FHIR.'
+                  a: 'Bloodchain deploys as a hybrid consortium: hospital wards and testing centers operate role-based progressive web applications, while the ledger nodes run on sovereign government cloud or partner nodes (sovereign audit service / Ethereum L2). It integrates with existing EHRs via HL7/FHIR.'
                 },
                 {
                   id: 'offline',
@@ -1000,7 +1000,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                 {
                   id: 'tamper_proof',
                   q: 'How does Bloodchain prove data has not been compromised in transit?',
-                  a: 'Each block contains the SHA-256 hash of all unit actions and the cryptographic hash of the prior block. If any record is modified post-hoc, the Merkle root changes immediately and consensus nodes automatically reject the altered state.'
+                  a: 'Each block contains the SHA-256 hash of all unit actions and the cryptographic hash of the prior block. If any record is modified post-hoc, the hash-chain root changes immediately and consensus nodes automatically reject the altered state.'
                 }
               ].map(faq => {
                 const isExpanded = expandedFaq === faq.id;
@@ -1037,7 +1037,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
               Botswana Health Corridor Corridor
             </h2>
             <p className="mt-1 text-sm text-slate-600 max-w-3xl">
-              Configured from <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono">github.com/luxraye/live</code> for the pilot across three major referral facilities connecting Gaborone, Francistown, and Molepolole.
+              Demonstration configuration across three example facilities.
             </p>
           </div>
 
@@ -1059,7 +1059,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                   </span>
                   <h3 className="text-2xl font-bold">Botswana Central & Northern Grid</h3>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Connecting regional trauma centers through IoT cold-chain corridors. Emergency Code Crimson dispatch enables real-time inter-hospital rebalancing within 4.2 minutes.
+                    Connecting regional trauma centers through IoT cold-chain corridors. Emergency Code Crimson dispatch demonstrates inter-hospital rebalancing within 4.2 minutes (sample).
                   </p>
                 </div>
 
@@ -1078,7 +1078,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="border border-slate-200 rounded-xl p-5 bg-white shadow-xs hover:border-red-400 transition-colors">
               <span className="font-mono text-xs text-slate-400">CTR-GAB-001</span>
-              <h3 className="text-base font-bold text-slate-900 mt-1">Princess Marina Hospital</h3>
+              <h3 className="text-base font-bold text-slate-900 mt-1">Example Referral Hospital</h3>
               <p className="text-xs text-red-600 font-semibold">Gaborone (Capital Trauma Centre)</p>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                 Primary regional intake node handling central fractionation, emergency cardiothoracic surgery requisitions, and central cold vaults.
@@ -1198,7 +1198,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Ministry of Health, Apollo Health, or HealthTech Capital"
+                      placeholder="e.g. Health Ministry, hospital group, or health fund"
                       value={accessForm.organization}
                       onChange={e => setAccessForm(prev => ({ ...prev, organization: e.target.value }))}
                       className="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -1213,7 +1213,7 @@ Inquiries: partner-relations@bloodchain.gov / investors@bloodchain.network
                         onChange={e => setAccessForm(prev => ({ ...prev, roleCategory: e.target.value }))}
                         className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-red-500"
                       >
-                        <option value="Ministry of Health / National Blood Service">Ministry of Health / Blood Service</option>
+                        <option value="National Blood Service">National Blood Service</option>
                         <option value="Hospital Network / Transfusion Medicine">Hospital Network / Transfusion</option>
                         <option value="Venture Investor / Sovereign Wealth Fund">Venture Investor / Sovereign Fund</option>
                         <option value="WHO / Global Health Development Body">WHO / Development Body</option>

@@ -37,7 +37,7 @@ export const LuxrayeLiveSync: React.FC = () => {
   const [selectedDistrict, setSelectedDistrict] = useState<string>('ALL');
   
   // Submit new donation to Fabric form
-  const [newTxCentre, setNewTxCentre] = useState('Princess Marina Hospital');
+  const [newTxCentre, setNewTxCentre] = useState('Example Referral Hospital');
   const [newTxDistrict, setNewTxDistrict] = useState('Gaborone');
   const [newTxCentreId, setNewTxCentreId] = useState('CTR-GAB-001');
   const [newTxBloodType, setNewTxBloodType] = useState('O-');
@@ -118,7 +118,7 @@ export const LuxrayeLiveSync: React.FC = () => {
         console.warn('Firestore sync note:', fsErr);
       }
 
-      setSubmitSuccessMsg(`Transaction committed to Hyperledger Fabric Block #${data.blockHeight}! TX ID: ${txId}`);
+      setSubmitSuccessMsg(`Transaction committed to sovereign audit service Block #${data.blockHeight}! TX ID: ${txId}`);
       await fetchFabricData();
     } catch (err: any) {
       alert(`Error: ${err.message}`);
@@ -139,7 +139,7 @@ export const LuxrayeLiveSync: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 tracking-wider uppercase mb-1">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Connected to github.com/luxraye/live</span>
+            <span>Demonstration data source</span>
             <span aria-hidden="true">·</span>
             <span className="text-slate-400 font-mono text-[11px]">Commit 8166dc8f (main)</span>
           </div>
@@ -147,7 +147,7 @@ export const LuxrayeLiveSync: React.FC = () => {
             Botswana Sovereign Health Infrastructure
           </h1>
           <p className="mt-1 text-xs text-slate-400 max-w-3xl">
-            National sovereign platform for blood supply telemetry, cryptographic donor provenance, and emergency shortage response for the Republic of Botswana (Ministry of Health).
+            National blood supply telemetry, donor provenance and shortage-response demonstration.
           </p>
         </div>
 
@@ -174,7 +174,7 @@ export const LuxrayeLiveSync: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Cards from Hyperledger Fabric Stats */}
+      {/* KPI Cards from sovereign audit service Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
           <p className="text-xs font-medium text-slate-500">Fabric Block Donations</p>
@@ -227,7 +227,7 @@ export const LuxrayeLiveSync: React.FC = () => {
             </p>
           </div>
           <span className="text-[11px] text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded font-semibold self-start sm:self-auto">
-            Ministry of Health Live Grid
+            National Inventory Grid (sample)
           </span>
         </div>
 
@@ -235,7 +235,7 @@ export const LuxrayeLiveSync: React.FC = () => {
           {[
             {
               id: 'CTR-GAB-001',
-              name: 'Princess Marina Hospital',
+              name: 'Example Referral Hospital',
               city: 'Gaborone (Capital)',
               stock: { 'O+': 28, 'O-': 4, 'A+': 18, 'A-': 2, 'B+': 14, 'B-': 3, 'AB+': 8, 'AB-': 1 },
               shortage: 'CRITICAL O-'
@@ -288,7 +288,7 @@ export const LuxrayeLiveSync: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Grid: Submit Donation & Public Hyperledger Fabric Feed */}
+      {/* Main Grid: Submit Donation & Public sovereign audit service Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Submit to Fabric */}
@@ -319,7 +319,7 @@ export const LuxrayeLiveSync: React.FC = () => {
                   const id = e.target.value;
                   setNewTxCentreId(id);
                   if (id === 'CTR-GAB-001') {
-                    setNewTxCentre('Princess Marina Hospital');
+                    setNewTxCentre('Example Referral Hospital');
                     setNewTxDistrict('Gaborone');
                   } else if (id === 'CTR-FRW-001') {
                     setNewTxCentre('Nyangabgwe Referral Hospital');
@@ -331,7 +331,7 @@ export const LuxrayeLiveSync: React.FC = () => {
                 }}
                 className="w-full text-xs bg-white border border-slate-300 rounded px-3 py-1.5 text-slate-900"
               >
-                <option value="CTR-GAB-001">Princess Marina Hospital (Gaborone)</option>
+                <option value="CTR-GAB-001">Example Referral Hospital</option>
                 <option value="CTR-FRW-001">Nyangabgwe Referral Hospital (Francistown)</option>
                 <option value="CTR-MOL-001">Sekgoma Memorial Hospital (Molepolole)</option>
               </select>
@@ -374,7 +374,7 @@ export const LuxrayeLiveSync: React.FC = () => {
               className="w-full py-2 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-1.5"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{submittingTx ? 'Submitting to Fabric...' : 'Commit to Hyperledger Fabric'}</span>
+              <span>{submittingTx ? 'Submitting to Fabric...' : 'Commit to sovereign audit service'}</span>
             </button>
           </form>
         </div>
@@ -385,7 +385,7 @@ export const LuxrayeLiveSync: React.FC = () => {
             <div>
               <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
                 <Database className="w-4 h-4 text-blue-600" />
-                <span>Live Hyperledger Fabric Public Feed ({filteredRecords.length})</span>
+                <span>Public Assurance Feed ({filteredRecords.length})</span>
               </h3>
               <p className="text-xs text-slate-500">
                 Served from <code className="bg-slate-100 px-1 rounded text-[11px]">GET /public/ledger</code> in <code className="bg-slate-100 px-1 rounded text-[11px]">services/fabric-node</code>.
@@ -459,7 +459,7 @@ export const LuxrayeLiveSync: React.FC = () => {
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
         <div>
           <h2 className="text-base font-semibold text-slate-900">
-            Vein-to-Vein Role Matrix in luxraye/live
+            Vein-to-Vein Role Matrix
           </h2>
           <p className="text-xs text-slate-500">
             Application architecture defined in the repository for national deployment across the healthcare system.
@@ -506,7 +506,7 @@ export const LuxrayeLiveSync: React.FC = () => {
             {
               role: 'Public & Regulators',
               app: 'Demo Hub',
-              platform: 'Web (Hyperledger Explorer)',
+              platform: 'Web (Audit Explorer)',
               icon: ShieldCheck,
               desc: 'Open public ledger feed (#ledger), real-time transparency, donor verification records.'
             }

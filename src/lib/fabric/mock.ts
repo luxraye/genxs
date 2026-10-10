@@ -118,10 +118,10 @@ interface SeedSpec {
 }
 
 const SEED_SPECS: SeedSpec[] = [
-  { centreId: 'CTR-GAB-001', centreName: 'Princess Marina Hospital', district: 'Gaborone', bloodType: 'O+', daysAgo: 0, hoursOffset: 3 },
+  { centreId: 'CTR-GAB-001', centreName: 'Example Referral Hospital', district: 'Gaborone', bloodType: 'O+', daysAgo: 0, hoursOffset: 3 },
   { centreId: 'CTR-FRW-001', centreName: 'Nyangabgwe Referral Hospital', district: 'Francistown', bloodType: 'A-', daysAgo: 1, hoursOffset: 5 },
   { centreId: 'CTR-MOL-001', centreName: 'Sekgoma Memorial Hospital', district: 'Molepolole', bloodType: 'B+', daysAgo: 2, hoursOffset: 8 },
-  { centreId: 'CTR-GAB-001', centreName: 'Princess Marina Hospital', district: 'Gaborone', bloodType: 'O-', daysAgo: 3, hoursOffset: 2 },
+  { centreId: 'CTR-GAB-001', centreName: 'Example Referral Hospital', district: 'Gaborone', bloodType: 'O-', daysAgo: 3, hoursOffset: 2 },
   { centreId: 'CTR-FRW-001', centreName: 'Nyangabgwe Referral Hospital', district: 'Francistown', bloodType: 'AB+', daysAgo: 5, hoursOffset: 6 },
   { centreId: 'CTR-MOL-001', centreName: 'Sekgoma Memorial Hospital', district: 'Molepolole', bloodType: 'A+', daysAgo: 6, hoursOffset: 10 },
 ];

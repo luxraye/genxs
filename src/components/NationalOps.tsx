@@ -66,7 +66,7 @@ export const NationalOps: React.FC = () => {
             Supply, Demand & Strategic Dispatch Command
           </h1>
           <p className="mt-1 text-xs text-slate-500">
-            Real-time nationwide visibility into blood bank reserves, shortage alerts, and emergency allocation.
+            Nationwide visibility into sample blood bank reserves, shortage alerts and allocation.
           </p>
         </div>
 

@@ -59,7 +59,7 @@ export class NotFoundError extends Error {
 
 export class LedgerUnavailableError extends Error {
   constructor(message: string) {
-    super(`Hyperledger Fabric ledger is unavailable: ${message}`);
+    super(`Audit ledger service is unavailable: ${message}`);
     this.name = 'LedgerUnavailableError';
   }
 }

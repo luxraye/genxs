@@ -212,7 +212,7 @@ export async function submitClinicalTransfusion(record: any): Promise<any> {
 }
 
 /**
- * Public Hyperledger Fabric ledger feed (proxied to github.com/luxraye/live or local emulator).
+ * Public sovereign audit service ledger feed (proxied to github.com/luxraye/live or local emulator).
  */
 export async function fetchFabricLedger(limit = 20, bookmark = ''): Promise<any> {
   const res = await fetch(`${API_BASE}/public/ledger?limit=${limit}&bookmark=${encodeURIComponent(bookmark)}`);
@@ -221,7 +221,7 @@ export async function fetchFabricLedger(limit = 20, bookmark = ''): Promise<any>
 }
 
 /**
- * Public Hyperledger Fabric stats.
+ * Public sovereign audit service stats.
  */
 export async function fetchFabricStats(): Promise<any> {
   const res = await fetch(`${API_BASE}/public/stats`);
@@ -230,7 +230,7 @@ export async function fetchFabricStats(): Promise<any> {
 }
 
 /**
- * Record donation transaction to Hyperledger Fabric.
+ * Record donation transaction to sovereign audit service.
  */
 export async function recordDonationToFabric(record: any): Promise<any> {
   const res = await fetch(`${API_BASE}/donations/record`, {

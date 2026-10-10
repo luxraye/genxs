@@ -100,7 +100,7 @@ export const AdminCommandCentre: React.FC = () => {
     fullName: '',
     email: '',
     role: 'CLINICAL_STAFF' as UserRole,
-    facility: 'Princess Marina Hospital (Gaborone)',
+    facility: 'Example Referral Hospital',
     badgeNumber: '',
     customTempPassword: ''
   });
@@ -118,7 +118,7 @@ export const AdminCommandCentre: React.FC = () => {
       fullName: '',
       email: '',
       role: 'CLINICAL_STAFF',
-      facility: 'Princess Marina Hospital (Gaborone)',
+      facility: 'Example Referral Hospital',
       badgeNumber: '',
       customTempPassword: ''
     });
@@ -316,7 +316,7 @@ export const AdminCommandCentre: React.FC = () => {
               <div className="text-xl font-bold font-mono text-slate-900">
                 {units.filter(u => u.status === 'IN_TRANSIT').length || 1} Active Box
               </div>
-              <p className="text-[11px] text-slate-500 font-mono">Sensitech Avg: 3.8°C Nominal</p>
+              <p className="text-[11px] text-slate-500 font-mono">Avg: 3.8°C Nominal</p>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-1">
@@ -332,13 +332,13 @@ export const AdminCommandCentre: React.FC = () => {
 
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-1">
               <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>Hyperledger Fabric</span>
+                <span>sovereign audit service</span>
                 <Database className="w-4 h-4 text-purple-500" />
               </div>
               <div className="text-xl font-bold font-mono text-slate-900">
                 #{blockchain.length} Blocks
               </div>
-              <p className="text-[11px] text-slate-500 font-mono">100% Merkle DAG Verified</p>
+              <p className="text-[11px] text-slate-500 font-mono">100% hash chain Verified</p>
             </div>
           </div>
 
@@ -636,7 +636,7 @@ export const AdminCommandCentre: React.FC = () => {
               </div>
               <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
                 <span className="font-bold text-amber-800">Tier 2: Documentation Uploaded</span>
-                <p className="text-[11px] text-amber-700 mt-1">Omang ID & health questionnaire uploaded. Awaiting admin review.</p>
+                <p className="text-[11px] text-amber-700 mt-1">National ID & health questionnaire uploaded. Awaiting admin review.</p>
               </div>
               <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
                 <span className="font-bold text-blue-800">Tier 3: Admin Greenlit</span>
@@ -654,7 +654,7 @@ export const AdminCommandCentre: React.FC = () => {
             <div className="relative flex-1 max-w-sm">
               <input
                 type="text"
-                placeholder="Search donors by name, Omang ID, or district..."
+                placeholder="Search donors by name, ID, or district..."
                 value={donorSearchTerm}
                 onChange={e => setDonorSearchTerm(e.target.value)}
                 className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -1049,7 +1049,7 @@ export const AdminCommandCentre: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="Princess Marina Hospital, Gaborone"
+                  placeholder="Example Referral Hospital"
                   value={provisionForm.facility}
                   onChange={e => setProvisionForm(prev => ({ ...prev, facility: e.target.value }))}
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-red-500"

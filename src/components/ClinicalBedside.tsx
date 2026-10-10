@@ -116,7 +116,7 @@ export const ClinicalBedside: React.FC = () => {
             Bedside Crossmatch, Transfusion & Hemovigilance
           </h1>
           <p className="mt-1 text-xs text-slate-500">
-            Zero-Mistake Transfusion Safety: Mandatory two-clinician digital verification against patient wristband before blood can be infused.
+            Transfusion Safety by Design: mandatory two-clinician verification against the patient wristband before blood is infused.
           </p>
         </div>
 
@@ -457,7 +457,7 @@ export const ClinicalBedside: React.FC = () => {
                 Active Requisition Manifest ({requests.length})
               </h2>
               <p className="text-xs text-slate-500 mb-4">
-                Real-time tracking of units allocated by National Operations.
+                Tracking of units allocated by national operations.
               </p>
 
               <div className="space-y-3">

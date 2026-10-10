@@ -475,7 +475,7 @@ export const AppAuthGate: React.FC<AppAuthGateProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">National ID / Omang Number</label>
+                  <label className="block text-slate-300 font-medium mb-1">National ID Number</label>
                   <input
                     type="text"
                     placeholder="BW-ID-XXXX-XXX"

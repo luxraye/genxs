@@ -120,7 +120,7 @@ export const ArchitectureView: React.FC = () => {
                   name: 'Transfusion / Audit',
                   role: 'Clinician / Public',
                   event: 'TRANSFUSED_FINAL',
-                  desc: 'Custody closed. Cryptographic Merkle audit published.',
+                  desc: 'Custody closed. Cryptographic hash-chain audit published.',
                   target: 'LEDGER'
                 }
               ].map(item => (
@@ -155,9 +155,9 @@ export const ArchitectureView: React.FC = () => {
               <div className="w-8 h-8 rounded bg-red-100 flex items-center justify-center text-red-600 mb-3">
                 <Database className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-900">1. Hybrid Off-Chain / On-Chain Split</h3>
+              <h3 className="text-sm font-semibold text-slate-900">1. Hybrid Off-Chain / Audit Log Split</h3>
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Patient records and Donor Personal Identifiable Information (PII) are salted and stored in an encrypted off-chain enclave (HIPAA / GDPR compliant). Only cryptographic hashes, unit DINs, cold telemetry, and state transition signatures touch the immutable ledger.
+                Patient records and donor personal identifiable information (PII) are pseudonymised and held in a separate, access-controlled store. Only cryptographic hashes, unit DINs, cold telemetry and state-transition signatures enter the append-only audit log.
               </p>
             </div>
 
@@ -212,7 +212,7 @@ export const ArchitectureView: React.FC = () => {
                   role: 'Laboratory Scientists & QC Officers',
                   icon: FlaskConical,
                   badge: 'Testing & Component Fractionation',
-                  purpose: 'Intake scanning, serology testing for infectious markers (HIV, HBV, HCV, Syphilis, West Nile), component fractionation (RBC, Platelets, FFP), and cryptographically signed QC release.',
+                  purpose: 'Intake scanning, serology testing for infectious markers (HIV-1/2, HBsAg, HCV, Syphilis), component fractionation (RBC, Platelets, FFP), and cryptographically signed QC release.',
                   keyFeatures: ['Mandatory 5-panel infection screening lock', 'ABO/Rh confirmatory typing', 'Fractionation into component units', 'Biohazard quarantine lockdown']
                 },
                 {
@@ -249,7 +249,7 @@ export const ArchitectureView: React.FC = () => {
                   icon: Search,
                   badge: 'Verifiable Provenance Explorer',
                   purpose: 'Independent public block explorer to inspect immutable cryptographic custody blocks, verify SHA-256 chain integrity, and test tamper detection.',
-                  keyFeatures: ['ISBT-128 DIN full-history search', 'Cryptographic block hash verification', 'Interactive tamper simulation demonstration', 'Merkle proof audit trail']
+                  keyFeatures: ['ISBT-128 DIN full-history search', 'Cryptographic block hash verification', 'Interactive tamper simulation demonstration', 'hash-chain proof audit trail']
                 }
               ].map(app => {
                 const Icon = app.icon;
@@ -409,7 +409,7 @@ export const ArchitectureView: React.FC = () => {
               {[
                 {
                   invariant: 'Invariant 1: Zero-Release on Incomplete or Reactive Testing',
-                  rule: 'No unit can transition from IN_TESTING to RELEASED unless all 5 panels (HIV 1/2, HBV, HCV, Syphilis, West Nile) are confirmed NEGATIVE, and ABO/Rh confirmatory typing matches. Any positive marker permanently transitions unit to BIOHAZARD_QUARANTINE.',
+                  rule: 'No unit can transition from IN_TESTING to RELEASED unless all 5 panels (HIV 1/2, HBsAg, HCV, Syphilis) are confirmed NEGATIVE, and ABO/Rh confirmatory typing matches. Any positive marker permanently transitions unit to BIOHAZARD_QUARANTINE.',
                   enforcedBy: 'Smart Contract Serology Validation Hook'
                 },
                 {
@@ -425,7 +425,7 @@ export const ArchitectureView: React.FC = () => {
                 {
                   invariant: 'Invariant 4: Cryptographic Handoff Monotonicity',
                   rule: 'Custody cannot skip steps. A unit cannot jump from Phlebotomy directly to Hospital without a certified Lab Release block and a Courier Transit block. Every block pointer must match prevHash.',
-                  enforcedBy: 'Merkle Hash DAG & State Machine Engine'
+                  enforcedBy: 'Hash Chain & State Machine Engine'
                 }
               ].map((inv, idx) => (
                 <div key={idx} className="border border-slate-200 rounded-lg p-4 bg-slate-50">

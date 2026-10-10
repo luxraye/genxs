@@ -57,7 +57,7 @@ export const DonorPortal: React.FC = () => {
 
   // Document Upload State
   const [docType, setDocType] = useState<DonorDocument['type']>('NATIONAL_ID');
-  const [docName, setDocName] = useState('National_Omang_ID_Card.pdf');
+  const [docName, setDocName] = useState('National_ID_Card.pdf');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [docUploadSuccess, setDocUploadSuccess] = useState<string | null>(null);
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
@@ -325,7 +325,7 @@ export const DonorPortal: React.FC = () => {
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                My Transfusion Journey — Live Units in Custody
+                My Transfusion Journey — Units in Custody
               </h3>
               <span className="text-xs font-mono text-slate-500">{donorUnits.length} linked units</span>
             </div>
@@ -422,7 +422,7 @@ export const DonorPortal: React.FC = () => {
                 </div>
                 <h3 className="text-base font-bold text-slate-900">Upload Credentials</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Upload your national Omang ID / Passport, clinical medical clearance, or recent serology blood test.
+                  Upload your national ID or passport, clinical medical clearance, or a recent blood test.
                 </p>
               </div>
 
@@ -434,14 +434,14 @@ export const DonorPortal: React.FC = () => {
                     onChange={e => {
                       const type = e.target.value as any;
                       setDocType(type);
-                      if (type === 'NATIONAL_ID') setDocName('Omang_Identity_Card.pdf');
+                      if (type === 'NATIONAL_ID') setDocName('Identity_Card.pdf');
                       else if (type === 'MEDICAL_CLEARANCE') setDocName('Physician_Clearance_2026.pdf');
                       else if (type === 'SEROLOGY_RECORD') setDocName('Blood_Screening_Report.pdf');
                       else setDocName('Health_Questionnaire.pdf');
                     }}
                     className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-red-500"
                   >
-                    <option value="NATIONAL_ID">National Omang ID / Passport</option>
+                    <option value="NATIONAL_ID">National ID / Passport</option>
                     <option value="MEDICAL_CLEARANCE">Clinical Health Clearance Certificate</option>
                     <option value="SEROLOGY_RECORD">Recent Laboratory Serology Report</option>
                     <option value="DONOR_QUESTIONNAIRE">Signed Health Questionnaire</option>
@@ -509,7 +509,7 @@ export const DonorPortal: React.FC = () => {
               {donor.uploadedDocuments.length === 0 ? (
                 <div className="py-8 text-center text-slate-400 space-y-2">
                   <FileText className="w-8 h-8 text-slate-300 mx-auto" />
-                  <p className="text-xs">No documents uploaded yet. Submit your Omang ID to unlock Level 2.</p>
+                  <p className="text-xs">No documents uploaded yet. Submit your national ID to unlock Level 2.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -570,7 +570,7 @@ export const DonorPortal: React.FC = () => {
               Phlebotomy Collection Simulation
             </h2>
             <p className="text-xs text-slate-500">
-              Simulates a 450ml whole-blood intake collection, generates an ISBT-128 DIN barcode, and mints the genesis donation block into the cryptographic Merkle tree.
+              Simulates a 450ml whole-blood intake collection, generates an ISBT-128 DIN barcode, and mints the genesis donation block into the cryptographic hash-chain tree.
             </p>
           </div>
 
@@ -624,7 +624,7 @@ export const DonorPortal: React.FC = () => {
               Self-Service Clinical Pre-Screening Questionnaire
             </h2>
             <p className="text-xs text-slate-500">
-              Complies with WHO blood donor eligibility standards.
+              Eligibility screening follows published deferral guidance.
             </p>
           </div>
 
@@ -681,7 +681,7 @@ export const DonorPortal: React.FC = () => {
           <div className="space-y-3">
             {[
               {
-                name: 'Princess Marina Central Blood Depository (Gaborone)',
+                name: 'Example Central Blood Depository',
                 address: 'Hospital Way, Gaborone Central',
                 slots: ['Tomorrow, 09:30 AM', 'Tomorrow, 11:00 AM', 'Friday, 02:15 PM']
               },

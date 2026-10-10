@@ -888,7 +888,7 @@ export const BloodchainProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         txId: `tx-${Date.now().toString(36)}-${newDinNumber.replace(/[^a-zA-Z0-9]/g, '')}`,
         donorHash: donor.anonymizedHash,
         centreId: 'CTR-GAB-001',
-        centreName: 'Princess Marina Hospital',
+        centreName: 'Example Referral Hospital',
         district: 'Gaborone',
         bloodType,
         donatedAt: nowIso,

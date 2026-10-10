@@ -60,13 +60,13 @@ export const INITIAL_DONORS: DonorProfile[] = [
     uploadedDocuments: [
       {
         id: 'DOC-881',
-        name: 'Omang_ID_Card_Tebogo.jpg',
+        name: 'national ID_ID_Card_Tebogo.jpg',
         type: 'NATIONAL_ID',
         sizeKb: 2100,
         uploadedAt: '2026-08-01T11:00:00Z',
         status: 'APPROVED',
         reviewedBy: 'Admin Verification Desk',
-        reviewNotes: 'Valid national Omang ID card approved.'
+        reviewNotes: 'Valid national national ID card approved.'
       }
     ],
     tierUpdatedAt: '2026-08-02T09:30:00Z'
@@ -144,7 +144,7 @@ export const INITIAL_DONORS: DonorProfile[] = [
     uploadedDocuments: [
       {
         id: 'DOC-551',
-        name: 'Omang_Passport_Lesedi.pdf',
+        name: 'national ID_Passport_Lesedi.pdf',
         type: 'NATIONAL_ID',
         sizeKb: 1350,
         uploadedAt: '2026-02-14T10:00:00Z',
@@ -162,7 +162,7 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
     email: 'dr.nkomo@botswanahealth.gov',
     fullName: 'Dr. Thabo Nkomo',
     role: 'CLINICAL_STAFF',
-    facility: 'Princess Marina Hospital',
+    facility: 'Example Referral Hospital',
     badgeNumber: 'MD-GAB-8491',
     passwordHash: 'clinician2026',
     mustChangePassword: false,
@@ -176,7 +176,7 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
     email: 'dr.sharma@hospital.org',
     fullName: 'Dr. Ananya Sharma',
     role: 'CLINICAL_STAFF',
-    facility: 'Princess Marina Trauma Ward',
+    facility: 'Example Referral Centre Trauma Ward',
     badgeNumber: 'MD-GAB-9102',
     temporaryPassword: 'TEMP-DOC-7721',
     passwordHash: 'TEMP-DOC-7721',
@@ -260,7 +260,7 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
     email: 'r.cole@audit.bloodchain.gov',
     fullName: 'Inspector Raymond Cole',
     role: 'AUDITOR',
-    facility: 'WHO & National Quality Inspectorate',
+    facility: 'National Quality Inspectorate (illustrative)',
     badgeNumber: 'AUD-REG-1092',
     passwordHash: 'auditor2026',
     mustChangePassword: false,
@@ -278,7 +278,7 @@ export const INITIAL_SYSTEM_ISSUES: SystemIssue[] = [
     category: 'COLD_CHAIN_ALERT',
     severity: 'HIGH',
     facility: 'Transit Corridor A1 (Gaborone to Molepolole)',
-    affectedEntity: 'Sensitech Box #CB-409 (Unit W0423-26-894101)',
+    affectedEntity: 'BLE Box #CB-409 (Unit W0423-26-894101)',
     description: 'Ambient sensor registered 6.8°C for 4 minutes during vehicle transfer. Automated IoT alarm triggered. Requires courier inspection confirmation.',
     status: 'OPEN',
     timestamp: '2026-10-06T08:12:00Z'
@@ -290,7 +290,7 @@ export const INITIAL_SYSTEM_ISSUES: SystemIssue[] = [
     severity: 'MEDIUM',
     facility: 'National Donor Registration Enclave',
     affectedEntity: 'Donor Mpho Dlamini (DONOR-29381)',
-    description: 'New donor uploaded official Omang ID and medical questionnaire. Verification required to promote to Level 3.',
+    description: 'New donor uploaded official national ID and medical questionnaire. Verification required to promote to Level 3.',
     status: 'OPEN',
     timestamp: '2026-10-05T14:25:00Z'
   },
@@ -312,7 +312,7 @@ export const INITIAL_SYSTEM_ISSUES: SystemIssue[] = [
     severity: 'CRITICAL',
     facility: 'Sekgoma Memorial Hospital',
     affectedEntity: 'Requisition REQ-ER-2026-109',
-    description: 'Trauma ward reserve below 2 units of Universal O-. Recommended emergency rebalancing from Princess Marina depository.',
+    description: 'Trauma ward reserve below 2 units of Universal O-. Recommended emergency rebalancing from Example Referral Centre depository.',
     status: 'OPEN',
     timestamp: '2026-10-06T08:10:00Z'
   }
@@ -559,7 +559,7 @@ export const INITIAL_BLOCKS: BlockchainBlock[] = [
     },
     payload: {
       protocol: 'Bloodchain Protocol v2.4-ISBT128',
-      standard: 'ISBT-128 & WHO Blood Regulatory Standard',
+      standard: 'Aligned to ISBT 128',
       genesisNote: 'National Unbroken Chain of Custody Root Initialized'
     },
     previousHash: '0000000000000000000000000000000000000000000000000000000000000000',

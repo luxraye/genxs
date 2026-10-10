@@ -39,7 +39,7 @@ function BloodchainAppContent() {
             targetApp="DONOR"
             allowedRoles={['DONOR', 'NATIONAL_OPERATOR']}
             appName="Scyther — Donor Portal"
-            appSubtitle="Citizen Identity, Eligibility & 4-Tier Verification"
+            appSubtitle="Donor Identity, Eligibility & 4-Tier Verification"
             description="Scyther provides digital bloodcard credentials, appointment scheduling, self-service eligibility screening, and multi-tier credential verification with secure document upload."
             icon={Heart}
             accentColor="red"
@@ -55,7 +55,7 @@ function BloodchainAppContent() {
             allowedRoles={['LAB_TECH', 'NATIONAL_OPERATOR']}
             appName="Crucible — Lab & Release"
             appSubtitle="Fractionation, 5-Panel Serology & Quality Clearance"
-            description="Crucible enforces mandatory 5-panel infectious disease screening (HIV, HBV, HCV, Syphilis, WNV), component fractionation into Packed RBCs, Platelets, and FFP, and cryptographically signed release gates."
+            description="Crucible enforces 5-panel infectious disease screening (HIV-1/2, HBsAg, HCV, Syphilis, ABO/Rh), component fractionation into Packed RBCs, Platelets, and FFP, and signed release gates."
             icon={FlaskConical}
             accentColor="blue"
           >
@@ -70,7 +70,7 @@ function BloodchainAppContent() {
             allowedRoles={['LOGISTICS_COURIER', 'NATIONAL_OPERATOR']}
             appName="Torrent — Transit Logistics"
             appSubtitle="IoT Telemetry, Thermal Excursion Alarms & Courier Custody"
-            description="Torrent tracks active cooler custody handover, continuous 2°C–6°C Sensitech temperature streaming, GPS progression tracking, and hospital counter-signature receipts."
+            description="Torrent tracks active cooler custody handover, continuous 2°C–6°C temperature streaming from BLE loggers, GPS progression tracking, and hospital counter-signature receipts."
             icon={Truck}
             accentColor="amber"
           >
@@ -114,8 +114,8 @@ function BloodchainAppContent() {
             targetApp="LEDGER"
             allowedRoles={['AUDITOR', 'NATIONAL_OPERATOR']}
             appName="Ledger Explorer & Proof"
-            appSubtitle="Merkle DAG Audit Trail & Cryptographic Verification"
-            description="Inspect sealed blocks, cryptographic SHA-256 digests, and test the interactive tamper simulator proving consensus rejection upon altered test or temperature records."
+            appSubtitle="Hash-Chained Audit Trail & Verification"
+            description="Inspect sealed checkpoints and SHA-256 digests, and use the interactive tamper simulator to see altered test or temperature records detected."
             icon={Search}
             accentColor="slate"
           >
@@ -132,15 +132,15 @@ function BloodchainAppContent() {
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-800">Bloodchain</span>
             <span aria-hidden="true">·</span>
-            <span>National Closed-Custody Blood Provenance System</span>
+            <span>Demonstration environment · all data illustrative</span>
             <span aria-hidden="true">·</span>
-            <span className="font-mono text-[11px]">ISBT-128 & WHO Blood Standards</span>
+            <span className="font-mono text-[11px]">Design aligned to ISBT 128</span>
           </div>
 
           <div className="flex items-center gap-4 text-slate-400">
-            <span>Cryptographic Backing: SHA-256 Merkle DAG</span>
+            <span>Audit Trail: SHA-256 Hash-Chained Log</span>
             <span aria-hidden="true">·</span>
-            <span>Zero-PII On-Chain</span>
+            <span>No PII in Audit Log</span>
           </div>
         </div>
       </footer>
