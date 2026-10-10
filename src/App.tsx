@@ -8,7 +8,6 @@ import { TransitLogistics } from './components/TransitLogistics';
 import { ClinicalBedside } from './components/ClinicalBedside';
 import { AdminCommandCentre } from './components/AdminCommandCentre';
 import { LedgerExplorer } from './components/LedgerExplorer';
-import { GeminiChatbot } from './components/GeminiChatbot';
 import { LuxrayeLiveSync } from './components/LuxrayeLiveSync';
 import { DemoHub } from './components/DemoHub';
 import { AppAuthGate } from './components/auth/AppAuthGate';
@@ -123,7 +122,6 @@ function BloodchainAppContent() {
           </AppAuthGate>
         )}
 
-        {activeView === 'CHATBOT' && <GeminiChatbot />}
       </main>
 
       {/* Clean footer */}

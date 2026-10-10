@@ -6,6 +6,7 @@ import { RequisitionConductor } from './components/RequisitionConductor';
 import { StaffProvisioning } from './components/StaffProvisioning';
 import { DonorVerificationDesk } from './components/DonorVerificationDesk';
 import { IncidentCommand } from './components/IncidentCommand';
+import { AdvisoryInsights } from './components/AdvisoryInsights';
 import { SignIn } from './components/SignIn';
 import { Info } from 'lucide-react';
 
@@ -15,6 +16,7 @@ const hashToTab = (): Tab => {
   if (h === 'staff') return 'STAFF';
   if (h === 'donors') return 'DONORS';
   if (h === 'incidents') return 'INCIDENTS';
+  if (h === 'advisory') return 'ADVISORY';
   return 'MATRIX';
 };
 
@@ -81,6 +83,7 @@ const Shell: React.FC = () => {
           {view === 'STAFF' && <StaffProvisioning />}
           {view === 'DONORS' && <DonorVerificationDesk />}
           {view === 'INCIDENTS' && <IncidentCommand />}
+          {view === 'ADVISORY' && <AdvisoryInsights />}
         </div>
       </main>
 

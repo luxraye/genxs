@@ -51,7 +51,6 @@ export const Header: React.FC = () => {
     { id: 'CLINICAL', label: 'Clinical Bedside', icon: Stethoscope },
     { id: 'OPERATIONS', label: 'Admin Command', icon: Activity },
     { id: 'LEDGER', label: 'Ledger Explorer', icon: Search },
-    { id: 'CHATBOT', label: 'AI Copilot', icon: Sparkles }
   ] as const;
 
   return (
@@ -87,7 +86,7 @@ export const Header: React.FC = () => {
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${item.id === 'CHATBOT' ? 'text-amber-400' : isActive ? 'text-red-400' : 'text-slate-400'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-red-400' : 'text-slate-400'}`} />
                 <span>{item.label}</span>
               </button>
             );
@@ -97,18 +96,7 @@ export const Header: React.FC = () => {
         {/* Zone 3: Actions & Firebase Auth / Role / Offline Simulation */}
         <div className="flex items-center gap-2.5 shrink-0">
           
-          {/* AI Copilot Quick Launch on smaller screens */}
-          <button
-            onClick={() => setActiveView('CHATBOT')}
-            className={`xl:hidden flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-              activeView === 'CHATBOT'
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                : 'bg-slate-800 text-slate-300 border-slate-700'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">AI Copilot</span>
-          </button>
+          
 
           {/* Offline Mode Simulator Button */}
           <button

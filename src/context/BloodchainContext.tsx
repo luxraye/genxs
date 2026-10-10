@@ -56,7 +56,7 @@ export type ActiveViewType =
   | 'CLINICAL' 
   | 'OPERATIONS' 
   | 'LEDGER'
-  | 'CHATBOT'
+  
   | 'BOTSWANA_LIVE';
 
 interface BloodchainContextType {

@@ -1,8 +1,8 @@
 import React from 'react';
 import { useRubric } from '../context/RubricContext';
-import { Plus, Activity, Building2, Users, UserCheck, AlertTriangle, LogOut } from 'lucide-react';
+import { Plus, Activity, Building2, Users, UserCheck, AlertTriangle, LogOut, TrendingUp } from 'lucide-react';
 
-export type Tab = 'MATRIX' | 'REQUISITIONS' | 'STAFF' | 'DONORS' | 'INCIDENTS';
+export type Tab = 'MATRIX' | 'REQUISITIONS' | 'STAFF' | 'DONORS' | 'INCIDENTS' | 'ADVISORY';
 
 interface HeaderProps {
   activeTab: Tab;
@@ -22,7 +22,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
     { id: 'REQUISITIONS', label: 'Requisitions', icon: Building2, count: pendingRequests, tone: 'watch' },
     { id: 'STAFF', label: 'Personnel', icon: Users },
     { id: 'DONORS', label: 'Donor verification', icon: UserCheck },
-    { id: 'INCIDENTS', label: 'Incidents', icon: AlertTriangle, count: openIssues, tone: 'alert' }
+    { id: 'INCIDENTS', label: 'Incidents', icon: AlertTriangle, count: openIssues, tone: 'alert' },
+    { id: 'ADVISORY', label: 'Advisory', icon: TrendingUp }
   ];
 
   return (
