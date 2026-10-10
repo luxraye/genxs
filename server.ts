@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as fabricMock from './src/lib/fabric/mock';
+import { spineRouter } from './services/spine/server';
 import type { InterAppEvent, EventType, BloodchainAppId, TelemetryPingPayload } from './src/types/events';
 
 dotenv.config();
@@ -28,6 +29,9 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+// Single source of truth for every surface.
+app.use('/api/spine', spineRouter);
 
 // ─── Inter-App Real-Time Event Bus & State ──────────────────────────────────
 const sseClients = new Set<express.Response>();
@@ -641,7 +645,7 @@ async function startServer() {
     console.log(`[Bloodchain Gateway] Running on http://localhost:${port}`);
     console.log(`[Bloodchain Gateway] Inter-App Event Bus active at /api/events/stream & /api/events/publish`);
     console.log(`[Bloodchain Gateway] IoT Telemetry Ingestion active at /api/telemetry/pings`);
-    console.log(`[Bloodchain Gateway] Hyperledger Fabric Proxy target: ${FABRIC_NODE_URL}`);
+    console.log('[Bloodchain Gateway] Shared state service active at /api/spine');
   });
 }
 

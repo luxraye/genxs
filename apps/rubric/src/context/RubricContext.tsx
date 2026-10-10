@@ -30,6 +30,7 @@ import {
   INITIAL_HOSPITAL_REQUESTS,
   INITIAL_SYSTEM_ISSUES
 } from '@shared/data/seedData';
+import { useSpine } from '@shared/lib/spine/react';
 
 const OPERATOR_KEY = 'rubric_active_operator';
 
@@ -106,6 +107,16 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [currentOperator, setCurrentOperator] = useState<StaffAccount | null>(readStoredOperator);
 
   const [units, setUnits] = useState<BloodUnit[]>(INITIAL_UNITS);
+
+  // When the shared state service is reachable, the units shown here are the
+  // service's units — not this surface's private copy. See services/spine.
+  const spine = useSpine();
+  useEffect(() => {
+    if (spine.mode !== 'shared') return;
+    return spine.onSnapshot(snap => {
+      if (Array.isArray(snap.units) && snap.units.length > 0) setUnits(snap.units as BloodUnit[]);
+    });
+  }, [spine.mode]);
   const [requests, setRequests] = useState<HospitalRequest[]>(INITIAL_HOSPITAL_REQUESTS);
   const [staffList, setStaffList] = useState<StaffAccount[]>(INITIAL_STAFF_ACCOUNTS);
   const [donorsList, setDonorsList] = useState<DonorProfile[]>(INITIAL_DONORS);

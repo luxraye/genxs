@@ -22,7 +22,11 @@
     "deploy:staging": "npx -p firebase-tools firebase deploy --project genxs-staging --only hosting",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js apps/*/dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.mts",
+    "typecheck": "tsc --noEmit",
+    "spine": "tsx services/spine/smoke.mts",
+    "dev:gateway": "tsx server.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

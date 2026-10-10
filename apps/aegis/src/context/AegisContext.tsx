@@ -30,6 +30,7 @@ import {
   INITIAL_SYSTEM_ISSUES,
   INITIAL_BLOCKS
 } from '@shared/data/seedData';
+import { useSpine } from '@shared/lib/spine/react';
 import { isRbcCompatible } from '@shared/lib/bloodCompatibility';
 import { sha256, calculateBlockHash } from '@shared/lib/crypto';
 
@@ -118,6 +119,16 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [currentClinician, setCurrentClinician] = useState<StaffAccount | null>(readStoredClinician);
 
   const [units, setUnits] = useState<BloodUnit[]>(INITIAL_UNITS);
+
+  // When the shared state service is reachable, the units shown here are the
+  // service's units — not this surface's private copy. See services/spine.
+  const spine = useSpine();
+  useEffect(() => {
+    if (spine.mode !== 'shared') return;
+    return spine.onSnapshot(snap => {
+      if (Array.isArray(snap.units) && snap.units.length > 0) setUnits(snap.units as BloodUnit[]);
+    });
+  }, [spine.mode]);
   const [requests, setRequests] = useState<HospitalRequest[]>(INITIAL_HOSPITAL_REQUESTS);
   const [issuesList, setIssuesList] = useState<SystemIssue[]>(INITIAL_SYSTEM_ISSUES);
   const [blockchain, setBlockchain] = useState<BlockchainBlock[]>(INITIAL_BLOCKS);
@@ -172,6 +183,14 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const persistUnit = async (u: BloodUnit) => {
+    if (spine.mode === 'shared') {
+      try {
+        await spine.client.patchUnit(u.din, u as any);
+        return;
+      } catch (err: any) {
+        console.warn('Shared-state unit write refused, falling back to local write:', err.message);
+      }
+    }
     try {
       await setDoc(doc(db, 'bloodUnits', u.din), u, { merge: true });
     } catch (err: any) {
@@ -262,8 +281,12 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         user = cred.user;
       } catch (authErr: any) {
         if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential') {
-          const cred = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
-          user = cred.user;
+          // Staff accounts are provisioned by operations, never self-created. An open
+        // registration path into a clinical console is an access-control defect.
+        return {
+          success: false,
+          error: 'No account is provisioned for that address. Ask an administrator to provision one.'
+        };
         } else {
           throw authErr;
         }
