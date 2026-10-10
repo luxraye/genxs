@@ -371,7 +371,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       aboRhConfirmatory: 'A+',
       hemoglobinG_dL: 15.2,
       testedAt: '2026-10-05T14:20:00Z',
-      testedBy: 'Dr. Sarah Lin (QC-409)',
+      testedBy: 'Laboratory technologist (QC-409)',
       qcReleaseApproval: false
     },
     storageTempRange: { min: 2, max: 6 },
@@ -443,7 +443,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       aboRhConfirmatory: 'B+',
       hemoglobinG_dL: 13.9,
       testedAt: '2026-10-04T18:00:00Z',
-      testedBy: 'Dr. Sarah Lin (QC-409)',
+      testedBy: 'Laboratory technologist (QC-409)',
       qcReleaseApproval: true
     },
     storageTempRange: { min: 20, max: 24 }, // Platelets stored at 20-24C with agitation
