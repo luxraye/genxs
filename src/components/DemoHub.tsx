@@ -44,14 +44,14 @@ import { db } from '../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 // Mission-relevant HD visual assets
-const HERO_IMAGE = '/src/assets/images/hero_audit_blood_grid_1791309472035.jpg';
-const DONOR_IMAGE = '/src/assets/images/donor_blood_drive_1791309652490.jpg';
-const LAB_IMAGE = '/src/assets/images/laboratory_fractionation_serology_1791309504388.jpg';
-const LOGISTICS_IMAGE = '/src/assets/images/iot_cold_chain_transit_1791309495139.jpg';
-const BEDSIDE_IMAGE = '/src/assets/images/bedside_clinical_transfusion_1791309482591.jpg';
-const OPS_IMAGE = '/src/assets/images/situation_room_ops_1791309668046.jpg';
-const LEDGER_IMAGE = '/src/assets/images/ledger_security_vault_1791309692752.jpg';
-const CORRIDOR_IMAGE = '/src/assets/images/health_corridor_hospital_1791309705818.jpg';
+const HERO_IMAGE = '/images/hero_audit_blood_grid_1791309472035.jpg';
+const DONOR_IMAGE = '/images/donor_blood_drive_1791309652490.jpg';
+const LAB_IMAGE = '/images/laboratory_fractionation_serology_1791309504388.jpg';
+const LOGISTICS_IMAGE = '/images/iot_cold_chain_transit_1791309495139.jpg';
+const BEDSIDE_IMAGE = '/images/bedside_clinical_transfusion_1791309482591.jpg';
+const OPS_IMAGE = '/images/situation_room_ops_1791309668046.jpg';
+const LEDGER_IMAGE = '/images/ledger_security_vault_1791309692752.jpg';
+const CORRIDOR_IMAGE = '/images/health_corridor_hospital_1791309705818.jpg';
 
 export const DemoHub: React.FC = () => {
   const { 
