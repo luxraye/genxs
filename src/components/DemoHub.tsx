@@ -1216,7 +1216,7 @@ Inquiries: partners@bloodchain.life · investors@bloodchain.life
                         <option value="National Blood Service">National Blood Service</option>
                         <option value="Hospital Network / Transfusion Medicine">Hospital Network / Transfusion</option>
                         <option value="Venture Investor / Sovereign Wealth Fund">Venture Investor / Sovereign Fund</option>
-                        <option value="WHO / Global Health Development Body">WHO / Development Body</option>
+                        <option value="Global Health Development Body">Global Health Development Body</option>
                         <option value="Medical Logistics / Cold-Chain Carrier">Cold-Chain Carrier</option>
                       </select>
                     </div>
