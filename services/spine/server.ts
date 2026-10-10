@@ -110,7 +110,7 @@ spineRouter.post('/units/:din/events', (req, res) => {
     eventType as any,
     {
       id: String(actor.id).slice(0, 80),
-      role: String(actor.role || 'UNKNOWN').slice(0, 40),
+      role: String(actor.role || 'UNKNOWN').slice(0, 40) as UserRole,
       facility: String(actor.facility || 'unspecified').slice(0, 120),
       signature: String(actor.signature || '0x0').slice(0, 130)
     },
