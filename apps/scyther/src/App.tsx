@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ScytherProvider, useScyther } from './context/ScytherContext';
+import React, { useEffect, useState } from 'react';
+import { ScytherProvider } from './context/ScytherContext';
 import { Header, type Tab } from './components/Header';
 import { DonorCard, ImpactPanel } from './components/Bloodcard';
 import { EligibilityCheck } from './components/EligibilityQuiz';
@@ -8,6 +8,16 @@ import { MyDonations } from './components/DonationJourney';
 import { Profile } from './components/DocumentVerification';
 import { AuthModal } from './components/CitizenAuthModal';
 import { Info } from 'lucide-react';
+
+const hashToTab = (): Tab => {
+  const h = (window.location.hash || '').replace(/^#\/?/, '').toLowerCase();
+  if (h === 'book' || h === 'booking') return 'BOOK';
+  if (h === 'donations') return 'DONATIONS';
+  if (h === 'profile') return 'PROFILE';
+  return 'HOME';
+};
+
+const tabToHash = (t: Tab) => (t === 'HOME' ? '' : t.toLowerCase());
 
 const DemoNotice: React.FC = () => (
   <div className="notice notice--demo">
@@ -20,8 +30,22 @@ const DemoNotice: React.FC = () => (
 );
 
 const Shell: React.FC = () => {
-  const [tab, setTab] = useState<Tab>('HOME');
+  const [tab, setTab] = useState<Tab>(hashToTab);
   const [authOpen, setAuthOpen] = useState(false);
+
+  useEffect(() => {
+    const h = tabToHash(tab);
+    const cur = window.location.hash.replace(/^#\/?/, '');
+    if (cur !== h) {
+      window.history.replaceState(null, '', h ? `#${h}` : window.location.pathname + window.location.search);
+    }
+  }, [tab]);
+
+  useEffect(() => {
+    const onHash = () => setTab(hashToTab());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
   return (
     <div className="shell">
@@ -47,8 +71,8 @@ const Shell: React.FC = () => {
 
       <footer className="footer">
         <div className="container footer-inner">
-          <span>Bloodchain · Botswana national blood service · Donor portal</span>
-          <span>Demonstration build · all records illustrative</span>
+          <span>Bloodchain &middot; Botswana national blood service &middot; Donor portal</span>
+          <span>Demonstration build &middot; all records illustrative</span>
         </div>
       </footer>
 
