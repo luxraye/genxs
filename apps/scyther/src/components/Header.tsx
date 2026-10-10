@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useScyther } from '../context/ScytherContext';
 import { Plus, AlertTriangle, ChevronDown, LogOut, User as UserIcon } from 'lucide-react';
 
-export type Tab = 'HOME' | 'BOOK' | 'DONATIONS' | 'PROFILE';
+export type Tab = 'HOME' | 'BOOK' | 'DONATIONS' | 'PROFILE' | 'SIGNIN';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'HOME', label: 'Home' },

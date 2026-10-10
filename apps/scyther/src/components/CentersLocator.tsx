@@ -11,7 +11,8 @@ import {
   LocateFixed,
   Info,
   Car,
-  Hospital
+  Hospital,
+  ChevronDown
 } from 'lucide-react';
 
 type ServiceKey = 'hospital' | 'clinic' | 'pharmacy' | 'doctors';
@@ -43,6 +44,7 @@ export const Booking: React.FC<{ onDone: () => void }> = ({ onDone }) => {
   const [drive, setDrive] = useState<{ km: number; min: number } | null>(null);
   const [driveMsg, setDriveMsg] = useState<string | null>(null);
   const [driveBusy, setDriveBusy] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
 
   const locate = () => {
     setGeoMsg(null);
@@ -365,46 +367,61 @@ export const Booking: React.FC<{ onDone: () => void }> = ({ onDone }) => {
 
       {SERVICE_KEYS.some(k => layers[k]) && (
         <div className="card">
-          <div className="card-hd">
-            <h3>Nearby health services</h3>
-            <span className="dim" style={{ fontSize: 12.5 }}>
-              {userPos ? 'Nearest first' : 'Enable your location to sort by distance'}
+          <button
+            className="collapse-hd"
+            aria-expanded={servicesOpen}
+            onClick={() => setServicesOpen(v => !v)}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              <span style={{ fontFamily: '"Instrument Sans", sans-serif', fontWeight: 600, fontSize: 15 }}>
+                Nearby health services
+              </span>
+              <span className="badge">{nearbyServices.length} places</span>
             </span>
-          </div>
-          <div className="card-bd">
-            <div className="service-list">
-              {nearbyServices.slice(0, 18).map(f => {
-                const d = distanceTo(f.lat, f.lon);
-                return (
-                  <button key={f.id} className="service-row" onClick={() => setSelectedId(f.id)}>
-                    <span
-                      className="bc-pin-dot"
-                      style={{ background: CATEGORY_META[f.category as MapCategory].color, width: 10, height: 10, border: '1.5px solid #fff', flexShrink: 0 }}
-                    />
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {f.name}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              <span className="dim" style={{ fontSize: 12.5, fontWeight: 400 }}>
+                {userPos ? 'Nearest first' : 'Share location to sort'}
+              </span>
+              <ChevronDown className="chev" size={18} />
+            </span>
+          </button>
+
+          {servicesOpen && (
+            <div className="card-bd collapse-body">
+              <div className="service-list">
+                {nearbyServices.slice(0, 18).map(f => {
+                  const d = distanceTo(f.lat, f.lon);
+                  return (
+                    <button key={f.id} className="service-row" onClick={() => setSelectedId(f.id)}>
+                      <span
+                        className="bc-pin-dot"
+                        style={{ background: CATEGORY_META[f.category as MapCategory].color, width: 10, height: 10, border: '1.5px solid #fff', flexShrink: 0 }}
+                      />
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {f.name}
+                        </span>
+                        <span className="muted" style={{ fontSize: 12 }}>
+                          {CATEGORY_META[f.category as MapCategory].label}
+                          {f.city ? ` · ${f.city}` : ''}
+                        </span>
                       </span>
-                      <span className="muted" style={{ fontSize: 12 }}>
-                        {CATEGORY_META[f.category as MapCategory].label}
-                        {f.city ? ` · ${f.city}` : ''}
-                      </span>
-                    </span>
-                    {d !== null && (
-                      <span className="mono" style={{ fontSize: 12.5, fontWeight: 600, flexShrink: 0 }}>
-                        {formatKm(d)}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+                      {d !== null && (
+                        <span className="mono" style={{ fontSize: 12.5, fontWeight: 600, flexShrink: 0 }}>
+                          {formatKm(d)}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {nearbyServices.length > 18 && (
+                <p className="muted" style={{ fontSize: 12, marginTop: 12 }}>
+                  Showing the nearest 18 of {nearbyServices.length} matching services.
+                </p>
+              )}
             </div>
-            {nearbyServices.length > 18 && (
-              <p className="muted" style={{ fontSize: 12, marginTop: 12 }}>
-                Showing the nearest 18 of {nearbyServices.length} matching services.
-              </p>
-            )}
-          </div>
+          )}
         </div>
       )}
 

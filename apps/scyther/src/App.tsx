@@ -6,7 +6,7 @@ import { EligibilityCheck } from './components/EligibilityQuiz';
 import { Booking } from './components/CentersLocator';
 import { MyDonations } from './components/DonationJourney';
 import { Profile } from './components/DocumentVerification';
-import { AuthModal } from './components/CitizenAuthModal';
+import { AuthPage } from './components/AuthPage';
 import { Info } from 'lucide-react';
 
 const hashToTab = (): Tab => {
@@ -14,6 +14,7 @@ const hashToTab = (): Tab => {
   if (h === 'book' || h === 'booking') return 'BOOK';
   if (h === 'donations') return 'DONATIONS';
   if (h === 'profile') return 'PROFILE';
+  if (h === 'signin' || h === 'signup' || h === 'login') return 'SIGNIN';
   return 'HOME';
 };
 
@@ -31,7 +32,6 @@ const DemoNotice: React.FC = () => (
 
 const Shell: React.FC = () => {
   const [tab, setTab] = useState<Tab>(hashToTab);
-  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     const h = tabToHash(tab);
@@ -49,11 +49,11 @@ const Shell: React.FC = () => {
 
   return (
     <div className="shell">
-      <Header activeTab={tab} setActiveTab={setTab} onOpenAuth={() => setAuthOpen(true)} />
+      <Header activeTab={tab} setActiveTab={setTab} onOpenAuth={() => setTab('SIGNIN')} />
 
       <main className="main">
         <div className="container stack">
-          <DemoNotice />
+          {tab !== 'SIGNIN' && <DemoNotice />}
 
           {tab === 'HOME' && (
             <>
@@ -65,18 +65,17 @@ const Shell: React.FC = () => {
 
           {tab === 'BOOK' && <Booking onDone={() => setTab('DONATIONS')} />}
           {tab === 'DONATIONS' && <MyDonations />}
-          {tab === 'PROFILE' && <Profile onSignIn={() => setAuthOpen(true)} />}
+          {tab === 'PROFILE' && <Profile onSignIn={() => setTab('SIGNIN')} />}
+          {tab === 'SIGNIN' && <AuthPage onSuccess={() => setTab('HOME')} />}
         </div>
       </main>
 
       <footer className="footer">
         <div className="container footer-inner">
           <span>Bloodchain &middot; Botswana national blood service &middot; Donor portal</span>
-          <span>Demonstration build &middot; all records illustrative</span>
+          <span>Part of the Bloodchain ecosystem &middot; demonstration build</span>
         </div>
       </footer>
-
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 };

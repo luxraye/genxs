@@ -1027,3 +1027,102 @@ a {
 .service-row:hover {
   background: var(--surface-2);
 }
+
+/* ── Collapsible section ────────────────────────────────────────────────────── */
+
+.collapse-hd {
+  width: 100%;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  transition: background var(--ease);
+}
+.collapse-hd:hover {
+  background: var(--surface-2);
+}
+.collapse-hd .chev {
+  color: var(--ink-3);
+  transition: transform 160ms var(--ease);
+}
+.collapse-hd[aria-expanded="true"] .chev {
+  transform: rotate(180deg);
+}
+.collapse-hd:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+.collapse-body {
+  border-top: 1px solid var(--border);
+}
+
+/* ── Auth page ──────────────────────────────────────────────────────────────── */
+
+.auth-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+.auth-brand {
+  background: var(--brand);
+  color: #fff;
+  padding: 44px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+}
+.auth-points {
+  list-style: none;
+  padding: 0;
+  margin: 26px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.auth-points li {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.94);
+}
+.auth-tag {
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+  padding-top: 20px;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.92);
+}
+.auth-form {
+  padding: 34px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--surface-2);
+}
+.auth-form .card {
+  box-shadow: var(--shadow-2);
+}
+@media (max-width: 900px) {
+  .auth-wrap {
+    grid-template-columns: 1fr;
+  }
+  .auth-brand {
+    padding: 32px 26px;
+  }
+  .auth-form {
+    padding: 22px;
+  }
+}
