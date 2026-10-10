@@ -33,7 +33,7 @@ export interface DonationCenter {
   hours: string;
   urgentNeeds: BloodType[];
   lat: number;
-  lng: number;
+  lon: number;
   /** Illustrative availability for the demonstration environment. */
   slots: { time: string; available: boolean }[];
 }
@@ -51,7 +51,7 @@ export const EXAMPLE_CENTERS: DonationCenter[] = [
     hours: 'Mon–Fri 07:30–17:00 · Sat 08:00–13:00',
     urgentNeeds: ['O-', 'O+', 'B-'],
     lat: -24.6541,
-    lng: 25.9087,
+    lon: 25.9087,
     slots: [
       { time: '08:30', available: true },
       { time: '09:30', available: true },
@@ -71,7 +71,7 @@ export const EXAMPLE_CENTERS: DonationCenter[] = [
     hours: 'Mon–Fri 08:00–16:30',
     urgentNeeds: ['O-', 'A-', 'AB-'],
     lat: -21.1685,
-    lng: 27.5118,
+    lon: 27.5118,
     slots: [
       { time: '08:30', available: true },
       { time: '09:30', available: false },
@@ -89,7 +89,7 @@ export const EXAMPLE_CENTERS: DonationCenter[] = [
     hours: 'Mon–Thu 08:00–16:00',
     urgentNeeds: ['O-', 'A+'],
     lat: -24.4072,
-    lng: 25.5042,
+    lon: 25.5042,
     slots: [
       { time: '08:30', available: true },
       { time: '09:30', available: true },
@@ -105,7 +105,7 @@ export const EXAMPLE_CENTERS: DonationCenter[] = [
     hours: 'Mon–Fri 08:30–15:30',
     urgentNeeds: ['O-', 'B+'],
     lat: -19.9833,
-    lng: 23.4167,
+    lon: 23.4167,
     slots: [
       { time: '08:30', available: true },
       { time: '09:30', available: true },
@@ -121,7 +121,7 @@ export const EXAMPLE_CENTERS: DonationCenter[] = [
     hours: 'Tue, Thu, Sat 09:00–16:00',
     urgentNeeds: ['O-', 'O+', 'A+'],
     lat: -24.6578,
-    lng: 25.9189,
+    lon: 25.9189,
     slots: [
       { time: '09:00', available: true },
       { time: '10:00', available: true },
