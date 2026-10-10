@@ -124,6 +124,8 @@ export const Booking: React.FC<{ onDone: () => void }> = ({ onDone }) => {
     else setDriveMsg('Road estimate unavailable right now. Showing the straight-line distance instead.');
   };
 
+  if (!donor) return null;
+
   return (
     <div className="stack">
       <div className="page-head">

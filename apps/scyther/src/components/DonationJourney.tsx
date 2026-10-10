@@ -42,8 +42,10 @@ const fmt = (iso?: string) => {
 
 export const MyDonations: React.FC = () => {
   const { donor, donorUnits } = useScyther();
-  const dins = donor.linkedUnitDins ?? [];
+  const dins = donor?.linkedUnitDins ?? [];
   const [selected, setSelected] = useState<string>(dins[0] ?? '');
+
+  if (!donor) return null;
 
   const unit = donorUnits.find(u => u.din === selected);
   const current = unit ? stageIndex(unit.status) : 0;

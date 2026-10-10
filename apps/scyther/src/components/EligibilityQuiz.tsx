@@ -62,6 +62,8 @@ export const EligibilityCheck: React.FC<{ onBook: () => void }> = ({ onBook }) =
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
 
+  if (!donor) return null;
+
   const allAnswered = QUESTIONS.every(q => answers[q.id] !== undefined);
   const blocking = QUESTIONS.filter(q => answers[q.id] !== undefined && answers[q.id] !== q.eligibleAnswer);
   const isEligible = blocking.length === 0;

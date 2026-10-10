@@ -19,11 +19,12 @@ import {
   BloodUnit,
   BloodType,
   DonorDocument,
-  DonorVerificationTier,
   SystemIssue
 } from '@shared/types/bloodchain';
-import { INITIAL_DONOR, INITIAL_DONORS } from '@shared/data/seedData';
+import { INITIAL_DONORS } from '@shared/data/seedData';
 import { sha256 } from '@shared/lib/crypto';
+
+const AUTH_KEY = 'scyther_active_donor';
 
 export interface DonationCenter {
   id: string;
@@ -39,7 +40,7 @@ export interface DonationCenter {
 }
 
 /**
- * ILLUSTRATIVE SITES — these are example locations, not a real facility list.
+ * ILLUSTRATIVE SITES — example locations, not a real facility list.
  * Real centre data must come from the national blood service before any pilot.
  */
 export const EXAMPLE_CENTERS: DonationCenter[] = [
@@ -141,7 +142,8 @@ export interface Booking {
 
 interface ScytherContextType {
   currentUser: FirebaseUser | null;
-  donor: DonorProfile;
+  /** Null when no donor is signed in. */
+  donor: DonorProfile | null;
   donorsList: DonorProfile[];
   donorUnits: BloodUnit[];
   activeShortageAlerts: SystemIssue[];
@@ -175,20 +177,37 @@ interface ScytherContextType {
 
 const ScytherContext = createContext<ScytherContextType | null>(null);
 
+const readStoredDonor = (): DonorProfile | null => {
+  try {
+    const saved = localStorage.getItem(AUTH_KEY);
+    return saved ? (JSON.parse(saved) as DonorProfile) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [donor, setDonor] = useState<DonorProfile>(() => {
-    const saved = localStorage.getItem('scyther_active_donor');
-    return saved ? JSON.parse(saved) : INITIAL_DONOR;
-  });
+  // A visitor starts signed out. Only a successful sign-in or registration sets a donor.
+  const [donor, setDonor] = useState<DonorProfile | null>(readStoredDonor);
   const [donorsList, setDonorsList] = useState<DonorProfile[]>(INITIAL_DONORS);
   const [allUnits, setAllUnits] = useState<BloodUnit[]>([]);
   const [activeShortageAlerts, setActiveShortageAlerts] = useState<SystemIssue[]>([]);
   const [bookedAppointment, setBookedAppointment] = useState<Booking | null>(() => {
-    const saved = localStorage.getItem('scyther_booked_slot');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('scyther_booked_slot');
+      return saved ? (JSON.parse(saved) as Booking) : null;
+    } catch {
+      return null;
+    }
   });
+
+  const persist = (d: DonorProfile | null) => {
+    if (d) localStorage.setItem(AUTH_KEY, JSON.stringify(d));
+    else localStorage.removeItem(AUTH_KEY);
+    setDonor(d);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
@@ -202,9 +221,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const unsub = onSnapshot(
       collection(db, 'donorProfiles'),
       snapshot => {
-        if (!snapshot.empty) {
-          setDonorsList(snapshot.docs.map(d => d.data() as DonorProfile));
-        }
+        if (!snapshot.empty) setDonorsList(snapshot.docs.map(d => d.data() as DonorProfile));
       },
       err => console.warn('Scyther donorProfiles sync:', err.message)
     );
@@ -212,28 +229,22 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   useEffect(() => {
-    if (!donor.id) return;
+    if (!donor?.id) return;
     const unsub = onSnapshot(
       doc(db, 'donorProfiles', donor.id),
       snapshot => {
-        if (snapshot.exists()) {
-          const updated = snapshot.data() as DonorProfile;
-          setDonor(updated);
-          localStorage.setItem('scyther_active_donor', JSON.stringify(updated));
-        }
+        if (snapshot.exists()) persist(snapshot.data() as DonorProfile);
       },
       err => console.warn('Scyther donor profile sync:', err.message)
     );
     return () => unsub();
-  }, [donor.id]);
+  }, [donor?.id]);
 
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'bloodUnits'),
       snapshot => {
-        if (!snapshot.empty) {
-          setAllUnits(snapshot.docs.map(d => d.data() as BloodUnit));
-        }
+        if (!snapshot.empty) setAllUnits(snapshot.docs.map(d => d.data() as BloodUnit));
       },
       err => console.warn('Scyther bloodUnits sync:', err.message)
     );
@@ -254,9 +265,11 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => unsub();
   }, []);
 
-  const donorUnits = allUnits.filter(
-    u => donor.linkedUnitDins?.includes(u.din) || u.donorAnonymizedId === donor.anonymizedHash
-  );
+  const donorUnits = donor
+    ? allUnits.filter(
+        u => donor.linkedUnitDins?.includes(u.din) || u.donorAnonymizedId === donor.anonymizedHash
+      )
+    : [];
 
   const loginDonor = async (email: string, password?: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
@@ -287,8 +300,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     }
 
-    setDonor(found);
-    localStorage.setItem('scyther_active_donor', JSON.stringify(found));
+    persist(found);
     return { success: true };
   };
 
@@ -344,9 +356,8 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       tierUpdatedAt: new Date().toISOString()
     };
 
-    setDonor(newDonor);
+    persist(newDonor);
     setDonorsList(prev => [newDonor, ...prev]);
-    localStorage.setItem('scyther_active_donor', JSON.stringify(newDonor));
 
     try {
       await setDoc(doc(db, 'donorProfiles', newId), newDonor, { merge: true });
@@ -373,10 +384,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const quickDemoLogin = (donorId: string) => {
     const found = donorsList.find(d => d.id === donorId) || INITIAL_DONORS.find(d => d.id === donorId);
-    if (found) {
-      setDonor(found);
-      localStorage.setItem('scyther_active_donor', JSON.stringify(found));
-    }
+    if (found) persist(found);
   };
 
   const logoutDonor = async () => {
@@ -385,8 +393,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch {
       /* non-blocking */
     }
-    localStorage.removeItem('scyther_active_donor');
-    setDonor(INITIAL_DONOR);
+    persist(null);
   };
 
   /**
@@ -399,8 +406,9 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     fileBlob?: Blob;
     sizeKb: number;
   }): Promise<{ success: boolean; error?: string }> => {
-    let downloadUrl: string | undefined;
+    if (!donor) return { success: false, error: 'You are not signed in.' };
 
+    let downloadUrl: string | undefined;
     if (docData.fileBlob) {
       try {
         const storagePath = `donors/${donor.id}/${Date.now()}-${docData.name}`;
@@ -428,8 +436,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       tierUpdatedAt: new Date().toISOString()
     };
 
-    setDonor(updatedDonor);
-    localStorage.setItem('scyther_active_donor', JSON.stringify(updatedDonor));
+    persist(updatedDonor);
 
     try {
       await setDoc(doc(db, 'donorProfiles', donor.id), updatedDonor, { merge: true });
@@ -457,6 +464,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const bookAppointment = async (centerId: string, slotDate: string, slotTime: string): Promise<boolean> => {
+    if (!donor) return false;
     const center = EXAMPLE_CENTERS.find(c => c.id === centerId);
     if (!center) return false;
 
@@ -503,7 +511,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
         donorUnits,
         activeShortageAlerts,
         centers: EXAMPLE_CENTERS,
-        isAuthenticated: !!donor.id,
+        isAuthenticated: donor !== null,
         isAuthLoading,
         loginDonor,
         registerDonor,

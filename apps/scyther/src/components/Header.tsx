@@ -18,8 +18,11 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onOpenAuth }) => {
-  const { donor, donorsList, quickDemoLogin, logoutDonor, activeShortageAlerts, isAuthenticated } = useScyther();
+  const { donor, donorsList, quickDemoLogin, logoutDonor, activeShortageAlerts } = useScyther();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // The header is only rendered for signed-in donors; render nothing otherwise.
+  if (!donor) return null;
 
   return (
     <header className="topbar">
@@ -46,89 +49,86 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onOpenA
         </nav>
 
         <div className="account">
-          {isAuthenticated ? (
-            <div style={{ position: 'relative' }}>
-              <button
-                className="btn btn--outline"
-                onClick={() => setMenuOpen(v => !v)}
-                aria-expanded={menuOpen}
+          <div style={{ position: 'relative' }}>
+            <button className="btn btn--outline" onClick={() => setMenuOpen(v => !v)} aria-expanded={menuOpen}>
+              <span className="avatar avatar--brand">{donor.fullName.charAt(0).toUpperCase()}</span>
+              <span style={{ maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {donor.fullName.split(' ')[0]}
+              </span>
+              <ChevronDown size={15} />
+            </button>
+
+            {menuOpen && (
+              <div
+                className="card"
+                style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 268, zIndex: 50 }}
               >
-                <span className="avatar avatar--brand">{donor.fullName.charAt(0).toUpperCase()}</span>
-                <span style={{ maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {donor.fullName.split(' ')[0]}
-                </span>
-                <ChevronDown size={15} />
-              </button>
-
-              {menuOpen && (
-                <div
-                  className="card"
-                  style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 268, zIndex: 50 }}
-                >
-                  <div className="card-bd" style={{ paddingBottom: 12 }}>
-                    <div style={{ fontWeight: 600 }}>{donor.fullName}</div>
-                    <div className="muted" style={{ fontSize: 12.5 }}>
-                      {donor.email}
-                    </div>
-                    <div className="muted mono" style={{ fontSize: 12, marginTop: 6 }}>
-                      {donor.bloodType} · {donor.cityDistrict}
-                    </div>
+                <div className="card-bd" style={{ paddingBottom: 12 }}>
+                  <div style={{ fontWeight: 600 }}>{donor.fullName}</div>
+                  <div className="muted" style={{ fontSize: 12.5 }}>
+                    {donor.email}
                   </div>
-
-                  <div className="card-bd" style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-                    <div className="meta-k" style={{ marginBottom: 6 }}>
-                      Sample accounts (demonstration)
-                    </div>
-                    {donorsList.slice(0, 3).map(d => (
-                      <button
-                        key={d.id}
-                        className="navlink"
-                        style={{ width: '100%', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}
-                        onClick={() => {
-                          quickDemoLogin(d.id);
-                          setMenuOpen(false);
-                        }}
-                      >
-                        <span>{d.fullName}</span>
-                        <span className="mono dim" style={{ fontSize: 12 }}>
-                          {d.bloodType}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="card-bd" style={{ borderTop: '1px solid var(--border)', paddingTop: 10 }}>
-                    <button
-                      className="navlink"
-                      style={{ width: '100%', textAlign: 'left', display: 'flex', gap: 8, alignItems: 'center' }}
-                      onClick={() => {
-                        setActiveTab('PROFILE');
-                        setMenuOpen(false);
-                      }}
-                    >
-                      <UserIcon size={15} />
-                      <span>Profile &amp; settings</span>
-                    </button>
-                    <button
-                      className="navlink"
-                      style={{ width: '100%', textAlign: 'left', display: 'flex', gap: 8, alignItems: 'center', color: 'var(--stop)' }}
-                      onClick={() => {
-                        logoutDonor();
-                        setMenuOpen(false);
-                      }}
-                    >
-                      <LogOut size={15} />
-                      <span>Sign out</span>
-                    </button>
+                  <div className="muted mono" style={{ fontSize: 12, marginTop: 6 }}>
+                    {donor.bloodType} · {donor.cityDistrict}
                   </div>
                 </div>
-              )}
-            </div>
-          ) : (
-            <button className="btn btn--primary" onClick={onOpenAuth}>
-              Sign in
-            </button>
-          )}
+
+                <div className="card-bd" style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                  <div className="meta-k" style={{ marginBottom: 6 }}>
+                    Sample accounts (demonstration)
+                  </div>
+                  {donorsList.slice(0, 3).map(d => (
+                    <button
+                      key={d.id}
+                      className="navlink"
+                      style={{ width: '100%', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}
+                      onClick={() => {
+                        quickDemoLogin(d.id);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <span>{d.fullName}</span>
+                      <span className="mono dim" style={{ fontSize: 12 }}>
+                        {d.bloodType}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="card-bd" style={{ borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+                  <button
+                    className="navlink"
+                    style={{ width: '100%', textAlign: 'left', display: 'flex', gap: 8, alignItems: 'center' }}
+                    onClick={() => {
+                      setActiveTab('PROFILE');
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <UserIcon size={15} />
+                    <span>Profile &amp; settings</span>
+                  </button>
+                  <button
+                    className="navlink"
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      display: 'flex',
+                      gap: 8,
+                      alignItems: 'center',
+                      color: 'var(--stop)'
+                    }}
+                    onClick={() => {
+                      logoutDonor();
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <LogOut size={15} />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -137,8 +137,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onOpenA
           <div className="notice notice--stop">
             <AlertTriangle className="notice-icon" size={16} />
             <span>
-              <strong>Shortage appeal — {activeShortageAlerts[0].title}.</strong>{' '}
-              {activeShortageAlerts[0].description}
+              <strong>Shortage appeal — {activeShortageAlerts[0].title}.</strong> {activeShortageAlerts[0].description}
             </span>
           </div>
         </div>
@@ -161,3 +160,6 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onOpenA
     </header>
   );
 };
+
+// `onOpenAuth` is retained for API compatibility with callers that still pass it.
+void 0 as unknown as HeaderProps['onOpenAuth'];

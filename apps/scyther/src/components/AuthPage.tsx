@@ -21,8 +21,7 @@ const POINTS = [
 ];
 
 export const AuthPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
-  const { loginDonor, registerDonor, quickDemoLogin, donorsList, donor, isAuthenticated, logoutDonor } =
-    useScyther();
+  const { loginDonor, registerDonor, quickDemoLogin, donorsList, donor, logoutDonor } = useScyther();
 
   const [mode, setMode] = useState<'SIGNIN' | 'REGISTER'>('SIGNIN');
   const [email, setEmail] = useState('');
@@ -128,7 +127,7 @@ export const AuthPage: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
       </aside>
 
       <section className="auth-form">
-        {isAuthenticated ? (
+        {donor ? (
           <div className="card">
             <div className="card-bd">
               <div className="eyebrow">Already signed in</div>

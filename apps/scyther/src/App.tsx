@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScytherProvider } from './context/ScytherContext';
+import { ScytherProvider, useScyther } from './context/ScytherContext';
 import { Header, type Tab } from './components/Header';
 import { DonorCard, ImpactPanel } from './components/Bloodcard';
 import { EligibilityCheck } from './components/EligibilityQuiz';
@@ -30,16 +30,29 @@ const DemoNotice: React.FC = () => (
   </div>
 );
 
+const Footer: React.FC = () => (
+  <footer className="footer">
+    <div className="container footer-inner">
+      <span>Bloodchain &middot; Botswana national blood service &middot; Donor portal</span>
+      <span>Part of the Bloodchain ecosystem &middot; demonstration build</span>
+    </div>
+  </footer>
+);
+
 const Shell: React.FC = () => {
+  const { isAuthenticated } = useScyther();
   const [tab, setTab] = useState<Tab>(hashToTab);
 
+  // Signed out, the only view is the sign-in page.
+  const view: Tab = isAuthenticated ? tab : 'SIGNIN';
+
   useEffect(() => {
-    const h = tabToHash(tab);
+    const h = tabToHash(view);
     const cur = window.location.hash.replace(/^#\/?/, '');
     if (cur !== h) {
       window.history.replaceState(null, '', h ? `#${h}` : window.location.pathname + window.location.search);
     }
-  }, [tab]);
+  }, [view]);
 
   useEffect(() => {
     const onHash = () => setTab(hashToTab());
@@ -47,15 +60,28 @@ const Shell: React.FC = () => {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  if (!isAuthenticated) {
+    return (
+      <div className="shell">
+        <main className="main">
+          <div className="container">
+            <AuthPage onSuccess={() => setTab('HOME')} />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="shell">
-      <Header activeTab={tab} setActiveTab={setTab} onOpenAuth={() => setTab('SIGNIN')} />
+      <Header activeTab={view} setActiveTab={setTab} onOpenAuth={() => setTab('SIGNIN')} />
 
       <main className="main">
         <div className="container stack">
-          {tab !== 'SIGNIN' && <DemoNotice />}
+          {view !== 'SIGNIN' && <DemoNotice />}
 
-          {tab === 'HOME' && (
+          {view === 'HOME' && (
             <>
               <DonorCard onBook={() => setTab('BOOK')} />
               <EligibilityCheck onBook={() => setTab('BOOK')} />
@@ -63,19 +89,14 @@ const Shell: React.FC = () => {
             </>
           )}
 
-          {tab === 'BOOK' && <Booking onDone={() => setTab('DONATIONS')} />}
-          {tab === 'DONATIONS' && <MyDonations />}
-          {tab === 'PROFILE' && <Profile onSignIn={() => setTab('SIGNIN')} />}
-          {tab === 'SIGNIN' && <AuthPage onSuccess={() => setTab('HOME')} />}
+          {view === 'BOOK' && <Booking onDone={() => setTab('DONATIONS')} />}
+          {view === 'DONATIONS' && <MyDonations />}
+          {view === 'PROFILE' && <Profile />}
+          {view === 'SIGNIN' && <AuthPage onSuccess={() => setTab('HOME')} />}
         </div>
       </main>
 
-      <footer className="footer">
-        <div className="container footer-inner">
-          <span>Bloodchain &middot; Botswana national blood service &middot; Donor portal</span>
-          <span>Part of the Bloodchain ecosystem &middot; demonstration build</span>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

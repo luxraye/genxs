@@ -17,6 +17,7 @@ const fmtDate = (iso?: string) => {
 
 export const DonorCard: React.FC<{ onBook: () => void }> = ({ onBook }) => {
   const { donor, bookedAppointment } = useScyther();
+  if (!donor) return null;
 
   return (
     <div className="donorcard">
@@ -92,6 +93,7 @@ export const DonorCard: React.FC<{ onBook: () => void }> = ({ onBook }) => {
 
 export const ImpactPanel: React.FC = () => {
   const { donor } = useScyther();
+  if (!donor) return null;
   const units = donor.totalDonations;
   const transfusions = donor.totalDonations * 3;
 

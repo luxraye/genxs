@@ -7,8 +7,8 @@ const CONSENT_KEY = 'scyther_consent_v1';
 
 const maskId = (id: string) => (!id ? 'Not provided' : id.length <= 4 ? id : '•••• ' + id.slice(-4));
 
-export const Profile: React.FC<{ onSignIn?: () => void }> = ({ onSignIn }) => {
-  const { donor, uploadDocument, logoutDonor, isAuthenticated } = useScyther();
+export const Profile: React.FC<{ onSignIn?: () => void }> = () => {
+  const { donor, uploadDocument, logoutDonor } = useScyther();
 
   const [docType, setDocType] = useState<DonorDocument['type']>('NATIONAL_ID');
   const [docName, setDocName] = useState('National_ID.pdf');
@@ -44,26 +44,7 @@ export const Profile: React.FC<{ onSignIn?: () => void }> = ({ onSignIn }) => {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="stack">
-        <div className="page-head">
-          <div className="eyebrow">Account</div>
-          <h1 className="page-title">Profile</h1>
-        </div>
-        <div className="card">
-          <div className="card-bd">
-            <p className="muted">Sign in to view your donor profile and submitted documents.</p>
-            {onSignIn && (
-              <button className="btn btn--primary" style={{ marginTop: 14 }} onClick={onSignIn}>
-                Sign in
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!donor) return null;
 
   const docs = donor.uploadedDocuments ?? [];
 
