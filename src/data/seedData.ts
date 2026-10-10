@@ -253,7 +253,7 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
     status: 'ACTIVE',
     createdAt: '2026-01-01T00:00:00Z',
     lastLoginAt: '2026-10-06T09:00:00Z',
-    provisionedBy: 'Sovereign Health Ministry'
+    provisionedBy: 'Operations desk'
   },
   {
     id: 'STAFF-AUDIT-01',
