@@ -1,96 +1,118 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAegis } from './context/AegisContext';
-import { Header, AegisTab } from './components/Header';
+import { Header, type AegisTab } from './components/Header';
 import { BedsideScanner } from './components/BedsideScanner';
 import { TransfusionMonitor } from './components/TransfusionMonitor';
 import { HospitalRequisitions } from './components/HospitalRequisitions';
 import { HemovigilanceReporter } from './components/HemovigilanceReporter';
-import { ClinicianAuthModal } from './components/ClinicianAuthModal';
+import { SignIn } from './components/SignIn';
+import { Info } from 'lucide-react';
 
-export const App: React.FC = () => {
-  const { currentClinician } = useAegis();
+const hashToTab = (): AegisTab => {
+  const h = (window.location.hash || '').replace(/^#\/?/, '').toLowerCase();
+  if (h === 'monitor') return 'MONITOR';
+  if (h === 'orders') return 'REQUISITIONS';
+  if (h === 'reactions') return 'HEMOVIGILANCE';
+  return 'BEDSIDE_SCANNER';
+};
 
-  const [activeTab, setActiveTab] = useState<AegisTab>('BEDSIDE_SCANNER');
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [selectedMonitorDin, setSelectedMonitorDin] = useState<string | undefined>(undefined);
-  const [selectedHemoDin, setSelectedHemoDin] = useState<string | undefined>(undefined);
-  const [isCodeCrimsonTriggered, setIsCodeCrimsonTriggered] = useState(false);
+const tabToHash = (t: AegisTab) => {
+  if (t === 'BEDSIDE_SCANNER') return 'verify';
+  if (t === 'MONITOR') return 'monitor';
+  if (t === 'REQUISITIONS') return 'orders';
+  return 'reactions';
+};
 
-  const handleTriggerCodeCrimson = () => {
-    setIsCodeCrimsonTriggered(true);
-    setActiveTab('REQUISITIONS');
-  };
+const Footer: React.FC = () => (
+  <footer className="footer">
+    <div className="container footer-inner">
+      <span>Bloodchain &middot; ward transfusion console</span>
+      <span>Demonstration build &middot; all records illustrative</span>
+    </div>
+  </footer>
+);
+
+const Shell: React.FC = () => {
+  const { isAuthenticated } = useAegis();
+  const [tab, setTab] = useState<AegisTab>(hashToTab);
+  const [monitorDin, setMonitorDin] = useState<string | undefined>(undefined);
+  const [hemoDin, setHemoDin] = useState<string | undefined>(undefined);
+
+  const view: AegisTab = isAuthenticated ? tab : 'BEDSIDE_SCANNER';
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const h = tabToHash(view);
+    const cur = window.location.hash.replace(/^#\/?/, '');
+    if (cur !== h) window.history.replaceState(null, '', `#${h}`);
+  }, [view, isAuthenticated]);
+
+  useEffect(() => {
+    const onHash = () => setTab(hashToTab());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="shell">
+        <main className="main">
+          <div className="container">
+            <SignIn onSuccess={() => setTab('BEDSIDE_SCANNER')} />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-600 selection:text-white">
-      {/* Header Navigation */}
+    <div className="shell">
       <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onOpenAuthModal={() => setIsAuthModalOpen(true)}
-        onTriggerCodeCrimson={handleTriggerCodeCrimson}
+        activeTab={view}
+        setActiveTab={setTab}
+        onTriggerCodeCrimson={() => {
+          setTab('REQUISITIONS');
+        }}
       />
 
-      {/* Main Viewport */}
-      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'BEDSIDE_SCANNER' && (
-          <BedsideScanner
-            onProceedToMonitor={(din) => {
-              setSelectedMonitorDin(din);
-              setActiveTab('MONITOR');
-            }}
-          />
-        )}
+      <main className="main">
+        <div className="container stack">
+          <div className="notice notice--demo">
+            <Info className="notice-icon" size={15} />
+            <span>
+              <strong>Demonstration environment.</strong> Units, patients and observations shown here are illustrative
+              sample data. This console does not contain artificial intelligence and is not a decision-making device.
+            </span>
+          </div>
 
-        {activeTab === 'MONITOR' && (
-          <TransfusionMonitor
-            initialUnitDin={selectedMonitorDin}
-            onNavigateToHemovigilance={(din) => {
-              setSelectedHemoDin(din);
-              setActiveTab('HEMOVIGILANCE');
-            }}
-          />
-        )}
-
-        {activeTab === 'REQUISITIONS' && (
-          <HospitalRequisitions
-            initialCodeCrimson={isCodeCrimsonTriggered}
-          />
-        )}
-
-        {activeTab === 'HEMOVIGILANCE' && (
-          <HemovigilanceReporter
-            initialUnitDin={selectedHemoDin}
-          />
-        )}
+          {view === 'BEDSIDE_SCANNER' && (
+            <BedsideScanner
+              onProceedToMonitor={din => {
+                setMonitorDin(din);
+                setTab('MONITOR');
+              }}
+            />
+          )}
+          {view === 'MONITOR' && (
+            <TransfusionMonitor
+              initialUnitDin={monitorDin}
+              onNavigateToHemovigilance={din => {
+                setHemoDin(din);
+                setTab('HEMOVIGILANCE');
+              }}
+            />
+          )}
+          {view === 'REQUISITIONS' && <HospitalRequisitions />}
+          {view === 'HEMOVIGILANCE' && <HemovigilanceReporter initialUnitDin={hemoDin} />}
+        </div>
       </main>
 
-      {/* Clinician Authentication Modal */}
-      <ClinicianAuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
-
-      {/* Sovereign Footer */}
-      <footer className="mt-auto border-t border-white/5 bg-slate-950 py-6 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-slate-400">Aegis Bedside Safety Tablet</span>
-            <span>·</span>
-            <span>Princess Marina Hospital</span>
-            <span>·</span>
-            <span className="font-mono text-emerald-400">v2.0-SOVEREIGN</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-[11px] font-mono text-slate-500">
-            <span>WHO / ISBT-128 COMPLIANT</span>
-            <span>·</span>
-            <span>FABRIC GATEWAY: PROXIED</span>
-            <span>·</span>
-            <span className="text-emerald-400">SAFETY INTERLOCK ACTIVE</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
+
+export default function App() {
+  return <Shell />;
+}

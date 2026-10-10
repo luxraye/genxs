@@ -1,24 +1,8 @@
 import React, { useState } from 'react';
-import { useAegis } from '../context/AegisContext';
-import { BloodType, BloodUnit } from '@shared/types/bloodchain';
+import { useAegis, WARD_UNIT_STATUSES } from '../context/AegisContext';
+import { BloodType } from '@shared/types/bloodchain';
 import { isRbcCompatible } from '@shared/lib/bloodCompatibility';
-import { 
-  UserCheck, 
-  QrCode, 
-  CheckCircle2, 
-  AlertOctagon, 
-  ShieldCheck, 
-  Clock, 
-  Activity, 
-  Sparkles, 
-  Lock, 
-  Check, 
-  XCircle,
-  Stethoscope,
-  ArrowRight,
-  Flame,
-  AlertTriangle
-} from 'lucide-react';
+import { UserCheck, QrCode, CheckCircle2, AlertOctagon, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface BedsideScannerProps {
   onProceedToMonitor: (unitDin: string) => void;
@@ -27,365 +11,228 @@ interface BedsideScannerProps {
 export const BedsideScanner: React.FC<BedsideScannerProps> = ({ onProceedToMonitor }) => {
   const { units, verifyBedsideCrossmatch, currentClinician } = useAegis();
 
-  const deliveredUnits = units.filter(u => 
-    ['DELIVERED_TO_HOSPITAL', 'RELEASED', 'BEDSIDE_CROSSMATCHED'].includes(u.status)
-  );
+  const wardUnits = units.filter(u => WARD_UNIT_STATUSES.includes(u.status));
 
-  const [selectedUnitDin, setSelectedUnitDin] = useState<string>(deliveredUnits[0]?.din || '');
-  const [patientId, setPatientId] = useState<string>('PT-4820-TRAUMA');
+  const [selectedDin, setSelectedDin] = useState<string>(wardUnits[0]?.din || '');
+  const [patientId, setPatientId] = useState<string>('PT-0001');
   const [patientBloodType, setPatientBloodType] = useState<BloodType>('O-');
-  const [nurse1, setNurse1] = useState<string>('Nurse Specialist J. Doe (RN-402)');
-  const [nurse2, setNurse2] = useState<string>(
-    currentClinician ? `${currentClinician.fullName} (${currentClinician.badgeNumber})` : 'Dr. Marcus Vance (Trauma Attending)'
+  const [witness1, setWitness1] = useState<string>('');
+  const [witness2, setWitness2] = useState<string>(
+    currentClinician ? `${currentClinician.fullName} (${currentClinician.badgeNumber})` : ''
   );
 
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationFeedback, setVerificationFeedback] = useState<{
-    success: boolean;
-    message: string;
-    blockSig?: string;
-  } | null>(null);
+  const [feedback, setFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
-  const selectedUnit = units.find(u => u.din === selectedUnitDin) || deliveredUnits[0];
+  const selectedUnit = units.find(u => u.din === selectedDin) || wardUnits[0];
+  const isCompatible = selectedUnit ? isRbcCompatible(selectedUnit.bloodType, patientBloodType) : false;
+  const crossmatched = units.filter(u => u.status === 'BEDSIDE_CROSSMATCHED').length;
 
-  const handleRunVerification = async () => {
+  const run = async () => {
     if (!selectedUnit) return;
     setIsVerifying(true);
-    setVerificationFeedback(null);
-
+    setFeedback(null);
     try {
-      const res = await verifyBedsideCrossmatch(
-        selectedUnit.din,
-        patientId,
-        patientBloodType,
-        nurse1,
-        nurse2
-      );
-
-      if (res.success) {
-        setVerificationFeedback({
-          success: true,
-          message: `VERIFICATION PASSED: Donor Unit (${selectedUnit.bloodType}) is clinically compatible with Patient (${patientBloodType}). Dual clinician signatures cryptographically notarized to Hyperledger Fabric.`,
-          blockSig: `0x${Math.random().toString(16).slice(2, 10)}${Math.random().toString(16).slice(2, 10)}...`
-        });
-      } else {
-        setVerificationFeedback({
-          success: false,
-          message: res.error || 'Bedside crossmatch verification failed.'
-        });
-      }
+      const res = await verifyBedsideCrossmatch(selectedUnit.din, patientId, patientBloodType, witness1, witness2);
+      setFeedback({
+        success: res.success,
+        message: res.success
+          ? `Verified. Donor red cells ${selectedUnit.bloodType} are compatible with patient ${patientBloodType}. Both witnesses recorded against the unit.`
+          : res.error || 'Bedside verification failed.'
+      });
     } finally {
       setIsVerifying(false);
     }
   };
 
-  const isCompatible = selectedUnit ? isRbcCompatible(selectedUnit.bloodType, patientBloodType) : false;
-
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="stack">
+      <div className="page-head">
         <div>
-          <div className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-2">
-            <QrCode className="w-4 h-4" />
-            <span>Zero-Mistake Transfusion Protocol</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
-            Bedside Dual-Verification Scanner
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Mandatory two-clinician digital crossmatch comparing blood bag ISBT-128 barcode against patient wristband prior to line infusion.
+          <div className="eyebrow">Bedside verification</div>
+          <h1 className="page-title">Bedside dual-verification</h1>
+          <p className="page-sub">
+            Compare the blood-bag ISBT 128 barcode against the patient wristband before the line is opened. Two
+            clinicians must be recorded.
           </p>
         </div>
-
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300">
-            Ward Inventory: <strong className="text-white">{deliveredUnits.length}</strong>
-          </span>
-          <span className="px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
-            Crossmatched: <strong className="text-emerald-200">{units.filter(u => u.status === 'BEDSIDE_CROSSMATCHED').length}</strong>
-          </span>
+        <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(120px, 1fr))' }}>
+          <div className="kpi">
+            <div className="kpi-k">Ward units</div>
+            <div className="kpi-v">{wardUnits.length}</div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-k">Crossmatched</div>
+            <div className="kpi-v">{crossmatched}</div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column: Hospital Blood Bag Inventory */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-xl space-y-4">
-          <div>
-            <h3 className="text-sm font-bold text-white flex items-center justify-between">
-              <span>Delivered Ward Units</span>
-              <span className="text-xs font-mono text-emerald-400">({deliveredUnits.length})</span>
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Select or scan blood bag barcode to load unit into the dual-verification deck.
-            </p>
+      <div className="ward-grid">
+        <div className="card">
+          <div className="card-hd">
+            <strong>Delivered ward units</strong>
+            <span className="mono dim">{wardUnits.length}</span>
           </div>
-
-          <div className="space-y-2.5 max-h-[540px] overflow-y-auto pr-1">
-            {deliveredUnits.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 text-xs italic">
-                No units currently delivered to ward. Request blood via Tab 3.
-              </div>
+          <div className="card-bd">
+            {wardUnits.length === 0 ? (
+              <div className="tbl-empty">No units delivered to the ward. Raise a ward order first.</div>
             ) : (
-              deliveredUnits.map(unit => {
-                const isSelected = unit.din === selectedUnitDin;
-                const isCrossmatched = unit.status === 'BEDSIDE_CROSSMATCHED';
-
-                return (
-                  <button
-                    key={unit.din}
-                    onClick={() => {
-                      setSelectedUnitDin(unit.din);
-                      setVerificationFeedback(null);
-                    }}
-                    className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-emerald-500 bg-emerald-950/30 ring-1 ring-emerald-500/50 shadow-md'
-                        : 'border-white/5 bg-slate-950/50 hover:border-white/15 hover:bg-slate-950'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-bold text-white">{unit.din}</span>
-                      <span className="font-mono text-xs font-black text-red-400 px-2 py-0.5 rounded bg-red-950/50 border border-red-500/30">
-                        {unit.bloodType}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-2 text-[11px] text-slate-400">
-                      <span>{unit.componentType.replace(/_/g, ' ')}</span>
-                      <span className={`font-mono text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                        isCrossmatched
-                          ? 'bg-emerald-500/20 text-emerald-300'
-                          : 'bg-white/5 text-slate-300'
-                      }`}>
-                        {unit.status.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })
+              <div className="wide-list">
+                {wardUnits.map(u => {
+                  const on = u.din === selectedDin;
+                  return (
+                    <button
+                      key={u.din}
+                      className="queue-item"
+                      aria-pressed={on}
+                      onClick={() => {
+                        setSelectedDin(u.din);
+                        setFeedback(null);
+                      }}
+                    >
+                      <div className="queue-top">
+                        <span className="mono" style={{ fontWeight: 600 }}>{u.din}</span>
+                        <span className="cell-strong mono">{u.bloodType}</span>
+                      </div>
+                      <div className="queue-foot">
+                        <span>{u.componentType.replace(/_/g, ' ').toLowerCase()}</span>
+                        <span className="status status--hold">{u.status.replace(/_/g, ' ').toLowerCase()}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Right Column: Two-Clinician Verification Console */}
         {selectedUnit ? (
-          <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-xl space-y-6">
-              
-              {/* Top Banner */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 font-bold uppercase">
-                    <UserCheck className="w-4 h-4" />
-                    <span>Bedside Verification Terminal</span>
-                  </div>
-                  <h3 className="text-base font-bold text-white">
-                    Simultaneous Dual-Scan Interlock
-                  </h3>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-[10px] font-mono text-slate-400 uppercase">Selected Unit DIN</div>
-                  <div className="font-mono text-sm font-bold text-white bg-slate-950 px-3 py-1 rounded-lg border border-white/10 inline-block mt-0.5">
-                    {selectedUnit.din}
-                  </div>
-                </div>
+          <div className="stack">
+            <div className="card">
+              <div className="card-hd">
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <UserCheck size={16} /> Bedside verification terminal
+                </span>
+                <span className="mono dim">{selectedUnit.din}</span>
               </div>
-
-              {/* Scanned Blood Bag vs Scanned Patient Comparison */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                {/* 1. Scanned Blood Bag Card */}
-                <div className="p-4 rounded-xl bg-slate-950/80 border border-white/10 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-                    <span className="flex items-center gap-1.5">
-                      <QrCode className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>1. Blood Bag Barcode</span>
-                    </span>
-                    <span className="text-emerald-400 font-bold">ISBT-128</span>
-                  </div>
-
-                  <div className="font-mono text-sm font-bold text-white tracking-wide">
-                    {selectedUnit.din}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-xs">
-                    <div>
-                      <span className="text-slate-500 text-[10px] uppercase font-mono">Donor Group</span>
-                      <div className="text-2xl font-black text-red-400 font-mono">
-                        {selectedUnit.bloodType}
+              <div className="card-bd stack">
+                <div className="verify-pair">
+                  <div className="scan-cell">
+                    <div className="queue-top" style={{ marginBottom: 8 }}>
+                      <span className="mono dim" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <QrCode size={14} /> Blood bag
+                      </span>
+                      <span className="mono dim">ISBT 128</span>
+                    </div>
+                    <div className="mono" style={{ fontWeight: 600 }}>{selectedUnit.din}</div>
+                    <div className="spec-grid" style={{ marginTop: 10, gridTemplateColumns: '1fr 1fr' }}>
+                      <div className="spec">
+                        <div className="spec-k">Donor group</div>
+                        <div className="spec-v" style={{ fontSize: 22, fontWeight: 700 }}>{selectedUnit.bloodType}</div>
+                      </div>
+                      <div className="spec">
+                        <div className="spec-k">Component</div>
+                        <div className="spec-v">{selectedUnit.componentType.replace(/_/g, ' ').toLowerCase()}</div>
                       </div>
                     </div>
-                    <div>
-                      <span className="text-slate-500 text-[10px] uppercase font-mono">Component</span>
-                      <div className="font-semibold text-slate-200 mt-1">
-                        {selectedUnit.componentType.replace(/_/g, ' ')}
-                      </div>
+                    <div className="hint" style={{ marginTop: 8 }}>{selectedUnit.currentFacility}</div>
+                  </div>
+
+                  <div className="scan-cell">
+                    <div className="queue-top" style={{ marginBottom: 8 }}>
+                      <span className="mono dim" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <QrCode size={14} /> Patient wristband
+                      </span>
+                      <span className="mono dim">EHR scan</span>
                     </div>
-                  </div>
-
-                  <div className="text-[10px] text-slate-500 font-mono pt-1">
-                    Vault Facility: {selectedUnit.currentFacility}
-                  </div>
-                </div>
-
-                {/* 2. Scanned Patient Wristband Card */}
-                <div className="p-4 rounded-xl bg-slate-950/80 border border-white/10 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-                    <span className="flex items-center gap-1.5">
-                      <QrCode className="w-3.5 h-3.5 text-purple-400" />
-                      <span>2. Patient Wristband</span>
-                    </span>
-                    <span className="text-purple-400 font-bold">EHR 2D Scan</span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div>
-                      <label className="text-[10px] text-slate-400 uppercase font-mono block mb-1">
-                        Patient Identifier (EHR)
-                      </label>
+                    <div className="field">
+                      <label className="label" htmlFor="pt-id">Patient reference</label>
                       <input
-                        type="text"
+                        id="pt-id"
+                        className="input"
                         value={patientId}
                         onChange={e => setPatientId(e.target.value)}
-                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                       />
                     </div>
-
-                    <div>
-                      <label className="text-[10px] text-slate-400 uppercase font-mono block mb-1">
-                        Recipient Blood Group
-                      </label>
+                    <div className="field">
+                      <label className="label" htmlFor="pt-bt">Recipient ABO/Rh</label>
                       <select
+                        id="pt-bt"
+                        className="select"
                         value={patientBloodType}
                         onChange={e => setPatientBloodType(e.target.value as BloodType)}
-                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                       >
                         {(['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'] as BloodType[]).map(bt => (
-                          <option key={bt} value={bt}>Recipient ABO/Rh: {bt}</option>
+                          <option key={bt} value={bt}>{bt}</option>
                         ))}
                       </select>
                     </div>
                   </div>
                 </div>
 
-              </div>
-
-              {/* Dual-Clinician Digital Signatures */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-3">
-                <div className="text-xs font-mono font-bold text-slate-300 uppercase flex items-center gap-1.5">
-                  <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Mandatory Two-Clinician Identity Signatures</span>
+                <div className="field">
+                  <label className="label" htmlFor="w1">Witnessing clinician 1</label>
+                  <input
+                    id="w1"
+                    className="input"
+                    value={witness1}
+                    placeholder="Name and role"
+                    onChange={e => setWitness1(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label className="label" htmlFor="w2">Witnessing clinician 2</label>
+                  <input
+                    id="w2"
+                    className="input"
+                    value={witness2}
+                    placeholder="Name and role"
+                    onChange={e => setWitness2(e.target.value)}
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <label className="block text-slate-400 mb-1 text-[11px]">
-                      Clinician Witness 1 (Nurse Specialist)
-                    </label>
-                    <input
-                      type="text"
-                      value={nurse1}
-                      onChange={e => setNurse1(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-1.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-400 mb-1 text-[11px]">
-                      Clinician Witness 2 (Attending / Second RN)
-                    </label>
-                    <input
-                      type="text"
-                      value={nurse2}
-                      onChange={e => setNurse2(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-1.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Dynamic Compatibility Result Banner */}
-              <div className={`p-4 rounded-xl border text-xs flex items-start gap-3 transition-all ${
-                isCompatible
-                  ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
-                  : 'bg-rose-950/60 border-rose-500/50 text-rose-200 animate-pulse'
-              }`}>
-                {isCompatible ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertOctagon className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-                )}
-                <div>
-                  <div className="font-bold text-sm">
-                    {isCompatible ? 'RBC Compatibility Verified Safe' : 'FATAL BIOLOGICAL INCOMPATIBILITY'}
-                  </div>
-                  <p className="mt-0.5 leading-relaxed font-sans text-[11px]">
+                <div className={`notice ${isCompatible ? 'notice--safe' : 'notice--stop'}`}>
+                  {isCompatible ? <CheckCircle2 className="notice-icon" size={15} /> : <AlertOctagon className="notice-icon" size={15} />}
+                  <span>
+                    <strong>{isCompatible ? 'ABO/Rh rule: compatible' : 'ABO/Rh rule: incompatible'}</strong>{' '}
+                    {selectedUnit.bloodType} donor red cells against a {patientBloodType} recipient.
                     {isCompatible
-                      ? `Donor Red Cells (${selectedUnit.bloodType}) are safe for transfusion into Patient (${patientBloodType}).`
-                      : `PROHIBITED: Donor Red Cells (${selectedUnit.bloodType}) will trigger acute hemolytic reaction if given to Patient (${patientBloodType})! Line locked.`}
-                  </p>
-                </div>
-              </div>
-
-              {/* Crossmatch Feedback Output */}
-              {verificationFeedback && (
-                <div className={`p-4 rounded-xl text-xs border font-mono ${
-                  verificationFeedback.success
-                    ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200'
-                    : 'bg-red-950/80 border-red-500 text-red-200'
-                }`}>
-                  <div className="font-bold">{verificationFeedback.message}</div>
-                  {verificationFeedback.blockSig && (
-                    <div className="text-[10px] text-emerald-400 mt-1">
-                      Fabric Notarization Signature: {verificationFeedback.blockSig}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                <div className="text-[11px] font-mono text-slate-400">
-                  Dual-Signature Cryptographic Interlock Active
+                      ? ' Compatible under the red-cell rule.'
+                      : ' This combination must not be transfused; the line stays locked.'}
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleRunVerification}
-                    disabled={isVerifying || !isCompatible}
-                    className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                      !isCompatible
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'
-                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-600/30'
-                    }`}
-                  >
-                    <UserCheck className="w-4 h-4" />
-                    <span>{isVerifying ? 'Notarizing...' : 'Verify Bedside & Sign Block'}</span>
+                {feedback && (
+                  <div className={`notice ${feedback.success ? 'notice--safe' : 'notice--stop'}`}>
+                    {feedback.success ? <CheckCircle2 className="notice-icon" size={15} /> : <AlertCircle className="notice-icon" size={15} />}
+                    <span>{feedback.message}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button className="btn btn--primary" onClick={run} disabled={isVerifying || !isCompatible}>
+                    <UserCheck size={15} />
+                    {isVerifying ? 'Recording\u2026' : 'Verify and record witnesses'}
                   </button>
-
                   {selectedUnit.status === 'BEDSIDE_CROSSMATCHED' && (
-                    <button
-                      onClick={() => onProceedToMonitor(selectedUnit.din)}
-                      className="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-lg shadow-teal-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>Proceed to Monitor</span>
-                      <ArrowRight className="w-4 h-4" />
+                    <button className="btn btn--outline" onClick={() => onProceedToMonitor(selectedUnit.din)}>
+                      Proceed to infusion monitor
+                      <ArrowRight size={15} />
                     </button>
                   )}
+                  <span className="hint" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <ShieldCheck size={14} /> Two different witnesses are required.
+                  </span>
                 </div>
               </div>
-
             </div>
           </div>
         ) : (
-          <div className="lg:col-span-2 p-12 text-center rounded-2xl border border-white/10 bg-slate-900/60 text-slate-400 text-xs italic">
-            Select a delivered unit from the left panel to begin verification.
+          <div className="card">
+            <div className="card-bd tbl-empty">Select a delivered unit from the left to begin verification.</div>
           </div>
         )}
-
       </div>
     </div>
   );

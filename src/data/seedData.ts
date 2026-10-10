@@ -160,7 +160,7 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
   {
     id: 'STAFF-CLIN-01',
     email: 'dr.nkomo@botswanahealth.gov',
-    fullName: 'Dr. Thabo Nkomo',
+    fullName: 'Thabo Nkomo',
     role: 'CLINICAL_STAFF',
     facility: 'Example Referral Hospital',
     badgeNumber: 'MD-GAB-8491',
@@ -174,7 +174,7 @@ export const INITIAL_STAFF_ACCOUNTS: StaffAccount[] = [
   {
     id: 'STAFF-CLIN-02',
     email: 'dr.sharma@hospital.org',
-    fullName: 'Dr. Ananya Sharma',
+    fullName: 'Ananya Sharma',
     role: 'CLINICAL_STAFF',
     facility: 'Example Referral Centre Trauma Ward',
     badgeNumber: 'MD-GAB-9102',
@@ -406,7 +406,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       aboRhConfirmatory: 'O-',
       hemoglobinG_dL: 14.1,
       testedAt: '2026-10-04T16:00:00Z',
-      testedBy: 'Dr. Michael Chen (Lead Serologist)',
+      testedBy: 'Michael Chen (Lead Serologist)',
       qcReleaseApproval: true
     },
     storageTempRange: { min: 2, max: 6 },
@@ -488,7 +488,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       aboRhConfirmatory: 'O-',
       hemoglobinG_dL: 14.5,
       testedAt: '2026-10-03T15:00:00Z',
-      testedBy: 'Dr. Michael Chen',
+      testedBy: 'Michael Chen',
       qcReleaseApproval: true
     },
     storageTempRange: { min: 2, max: 6 },
@@ -527,7 +527,7 @@ export const INITIAL_UNITS: BloodUnit[] = [
       aboRhConfirmatory: 'O-',
       hemoglobinG_dL: 14.9,
       testedAt: '2026-10-01T16:00:00Z',
-      testedBy: 'Dr. Michael Chen',
+      testedBy: 'Michael Chen',
       qcReleaseApproval: true
     },
     storageTempRange: { min: 2, max: 6 },
@@ -647,8 +647,8 @@ export const INITIAL_BLOCKS: BlockchainBlock[] = [
       recipientBloodType: 'A+',
       donorUnitBloodType: 'O-',
       compatibilityCheck: 'PASSED (Universal RBC to A+)',
-      verifyingNurse1: 'Nurse Specialist J. Doe (PIN-819)',
-      verifyingNurse2: 'Attending Dr. K. Martinez (GMC-9942)'
+      verifyingNurse1: 'Nurse Specialist Demonstration nurse (PIN-819)',
+      verifyingNurse2: 'Attending K. Martinez (GMC-9942)'
     },
     previousHash: '77ea102938471029384710293847102938471029384710293847102938471029',
     hash: '4d10293847102938471029384710293847102938471029384710293847102938'
