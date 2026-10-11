@@ -1,19 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   auth,
-  db,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   fbSignOut,
   onAuthStateChanged,
-  doc,
-  setDoc,
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
   type FirebaseUser
-} from '@shared/lib/firebase';
+} from '@shared/lib/firebase-auth';
 import {
   BloodUnit,
   BloodType,
@@ -142,44 +135,6 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => unsub();
   }, []);
 
-  useEffect(() => {
-    const unsubUnits = onSnapshot(
-      collection(db, 'bloodUnits'),
-      snap => {
-        if (!snap.empty) setUnits(snap.docs.map(d => d.data() as BloodUnit));
-      },
-      err => console.warn('Ward units sync:', err.message)
-    );
-    const unsubReqs = onSnapshot(
-      collection(db, 'hospitalRequests'),
-      snap => {
-        if (!snap.empty) setRequests(snap.docs.map(d => d.data() as HospitalRequest));
-      },
-      err => console.warn('Ward requests sync:', err.message)
-    );
-    const unsubIssues = onSnapshot(
-      collection(db, 'systemIssues'),
-      snap => {
-        if (!snap.empty) setIssuesList(snap.docs.map(d => d.data() as SystemIssue));
-      },
-      err => console.warn('Ward issues sync:', err.message)
-    );
-    const qBlocks = query(collection(db, 'blockchainBlocks'), orderBy('index', 'asc'));
-    const unsubBlocks = onSnapshot(
-      qBlocks,
-      snap => {
-        if (!snap.empty) setBlockchain(snap.docs.map(d => d.data() as BlockchainBlock));
-      },
-      err => console.warn('Ward audit log sync:', err.message)
-    );
-    return () => {
-      unsubUnits();
-      unsubReqs();
-      unsubIssues();
-      unsubBlocks();
-    };
-  }, []);
-
   const persistClinician = (c: StaffAccount | null) => {
     if (c) localStorage.setItem(CLINICIAN_KEY, JSON.stringify(c));
     else localStorage.removeItem(CLINICIAN_KEY);
@@ -195,27 +150,12 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.warn('Shared-state unit write refused, falling back to local write:', err.message);
       }
     }
-    try {
-      await setDoc(doc(db, 'bloodUnits', u.din), u, { merge: true });
-    } catch (err: any) {
-      console.warn('Persist unit:', err.message);
-    }
   };
 
   const persistRequest = async (r: HospitalRequest) => {
-    try {
-      await setDoc(doc(db, 'hospitalRequests', r.id), r, { merge: true });
-    } catch (err: any) {
-      console.warn('Persist request:', err.message);
-    }
   };
 
   const persistIssue = async (iss: SystemIssue) => {
-    try {
-      await setDoc(doc(db, 'systemIssues', iss.id), iss, { merge: true });
-    } catch (err: any) {
-      console.warn('Persist issue:', err.message);
-    }
   };
 
   /**
@@ -250,11 +190,6 @@ export const AegisProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setBlockchain(prev => [...prev, newBlock]);
-    try {
-      await setDoc(doc(db, 'blockchainBlocks', `block-${newBlock.index}`), newBlock);
-    } catch (err: any) {
-      console.warn('Audit log write:', err.message);
-    }
 
     try {
       await fetch('/donations/record', {

@@ -1,3 +1,4 @@
+import { putLocal } from '../lib/localStore';
 import React, { useState, useEffect } from 'react';
 import { useBloodchain } from '../context/BloodchainContext';
 import { PublicDonationEntry, LedgerStatsResult } from '../lib/fabric/types';
@@ -22,8 +23,6 @@ import {
   FlaskConical,
   Stethoscope
 } from 'lucide-react';
-import { db } from '../lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 
 export const LuxrayeLiveSync: React.FC = () => {
   const { currentUser } = useBloodchain();
@@ -108,7 +107,7 @@ export const LuxrayeLiveSync: React.FC = () => {
 
       // Also persist to Firestore
       try {
-        await setDoc(doc(db, 'fabricLedger', txId), {
+        await putLocal('fabricLedger', txId, {
           ...payload,
           blockHeight: data.blockHeight,
           ledgerTimestamp: data.ledgerTimestamp,

@@ -1,18 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   auth,
-  db,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   fbSignOut,
   signInAnonymously,
   onAuthStateChanged,
-  doc,
-  setDoc,
-  collection,
-  onSnapshot,
   type FirebaseUser
-} from '@shared/lib/firebase';
+} from '@shared/lib/firebase-auth';
 import {
   BloodUnit,
   BloodType,
@@ -138,51 +133,6 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const unsubUnits = onSnapshot(
-      collection(db, 'bloodUnits'),
-      snap => {
-        if (!snap.empty) setUnits(snap.docs.map(d => d.data() as BloodUnit));
-      },
-      err => console.warn('Operations units sync:', err.message)
-    );
-    const unsubReqs = onSnapshot(
-      collection(db, 'hospitalRequests'),
-      snap => {
-        if (!snap.empty) setRequests(snap.docs.map(d => d.data() as HospitalRequest));
-      },
-      err => console.warn('Operations requests sync:', err.message)
-    );
-    const unsubStaff = onSnapshot(
-      collection(db, 'staffAccounts'),
-      snap => {
-        if (!snap.empty) setStaffList(snap.docs.map(d => d.data() as StaffAccount));
-      },
-      err => console.warn('Operations staff sync:', err.message)
-    );
-    const unsubDonors = onSnapshot(
-      collection(db, 'donorProfiles'),
-      snap => {
-        if (!snap.empty) setDonorsList(snap.docs.map(d => d.data() as DonorProfile));
-      },
-      err => console.warn('Operations donors sync:', err.message)
-    );
-    const unsubIssues = onSnapshot(
-      collection(db, 'systemIssues'),
-      snap => {
-        if (!snap.empty) setIssuesList(snap.docs.map(d => d.data() as SystemIssue));
-      },
-      err => console.warn('Operations issues sync:', err.message)
-    );
-    return () => {
-      unsubUnits();
-      unsubReqs();
-      unsubStaff();
-      unsubDonors();
-      unsubIssues();
-    };
-  }, []);
-
   /**
    * Inventory position by group.
    * Burn rates are ILLUSTRATIVE planning assumptions, not measured consumption.
@@ -227,7 +177,7 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       await signInWithEmailAndPassword(auth, cleanEmail, password);
     } catch {
-      await signInAnonymously(auth);
+      /* the shared register already authorised this account; a Firebase session is optional */
     }
 
     const updated = { ...account, lastLoginAt: new Date().toISOString() };
@@ -254,11 +204,6 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const updatedReq: HospitalRequest = { ...req, status: 'DISPATCHED', fulfilledUnitDins: unitDins };
     setRequests(prev => prev.map(r => (r.id === requestId ? updatedReq : r)));
     if (spine.mode === 'shared') spine.client.updateRequest(requestId, { status: 'DISPATCHED', fulfilledUnitDins: unitDins }).catch(() => {});
-    try {
-      await setDoc(doc(db, 'hospitalRequests', requestId), updatedReq, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore fulfill request sync:', err.message);
-    }
   };
 
   const provisionStaff = async (data: {
@@ -299,11 +244,6 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setStaffList(prev => [newAccount, ...prev]);
     if (spine.mode === 'shared') spine.client.addStaff(newAccount as any).catch(() => {});
-    try {
-      await setDoc(doc(db, 'staffAccounts', newAccount.id), newAccount, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore provision staff sync:', err.message);
-    }
     return newAccount;
   };
 
@@ -312,11 +252,6 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (spine.mode === 'shared') spine.client.updateStaff(id, { status }).catch(() => {});
     const target = staffList.find(s => s.id === id);
     if (target) {
-      try {
-        await setDoc(doc(db, 'staffAccounts', id), { ...target, status }, { merge: true });
-      } catch (err: any) {
-        console.warn('Firestore toggle staff sync:', err.message);
-      }
     }
   };
 
@@ -339,11 +274,6 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         mustChangePassword: true
       };
       setStaffList(prev => prev.map(s => (s.id === id ? updated : s)));
-      try {
-        await setDoc(doc(db, 'staffAccounts', id), updated, { merge: true });
-      } catch (err: any) {
-        console.warn('Firestore reset password sync:', err.message);
-      }
     }
     return newTemp;
   };
@@ -375,11 +305,6 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     setDonorsList(prev => prev.map(d => (d.id === donorId ? updatedDonor : d)));
-    try {
-      await setDoc(doc(db, 'donorProfiles', donorId), updatedDonor, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore review document sync:', err.message);
-    }
   };
 
   const updateDonorTier = async (donorId: string, tier: DonorVerificationTier): Promise<void> => {
@@ -387,11 +312,6 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!target) return;
     const updated = { ...target, tier, tierUpdatedAt: new Date().toISOString() };
     setDonorsList(prev => prev.map(d => (d.id === donorId ? updated : d)));
-    try {
-      await setDoc(doc(db, 'donorProfiles', donorId), updated, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore update donor tier sync:', err.message);
-    }
   };
 
   const resolveIssue = async (issueId: string, notes: string): Promise<void> => {
@@ -405,11 +325,6 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       resolvedAt: new Date().toISOString()
     };
     setIssuesList(prev => prev.map(i => (i.id === issueId ? updated : i)));
-    try {
-      await setDoc(doc(db, 'systemIssues', issueId), updated, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore resolve issue sync:', err.message);
-    }
   };
 
   const publishEmergencyAppeal = async (data: {
@@ -432,11 +347,6 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
     setIssuesList(prev => [newAppeal, ...prev]);
     if (spine.mode === 'shared') spine.client.createIssue(newAppeal as any).catch(() => {});
-    try {
-      await setDoc(doc(db, 'systemIssues', issueId), newAppeal, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore emergency appeal save:', err.message);
-    }
   };
 
   return (

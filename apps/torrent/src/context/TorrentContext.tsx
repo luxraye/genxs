@@ -1,19 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   auth,
-  db,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   fbSignOut,
   onAuthStateChanged,
-  doc,
-  setDoc,
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
   type FirebaseUser
-} from '@shared/lib/firebase';
+} from '@shared/lib/firebase-auth';
 import { BloodUnit, StaffAccount, SystemIssue, BlockchainBlock } from '@shared/types/bloodchain';
 import { INITIAL_UNITS, INITIAL_STAFF_ACCOUNTS, INITIAL_SYSTEM_ISSUES, INITIAL_BLOCKS } from '@shared/data/seedData';
 import { useSpine } from '@shared/lib/spine/react';
@@ -113,36 +106,6 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => unsub();
   }, []);
 
-  useEffect(() => {
-    const unsubUnits = onSnapshot(
-      collection(db, 'bloodUnits'),
-      snap => {
-        if (!snap.empty) setUnits(snap.docs.map(d => d.data() as BloodUnit));
-      },
-      err => console.warn('Cold-chain units sync:', err.message)
-    );
-    const unsubIssues = onSnapshot(
-      collection(db, 'systemIssues'),
-      snap => {
-        if (!snap.empty) setIssuesList(snap.docs.map(d => d.data() as SystemIssue));
-      },
-      err => console.warn('Cold-chain issues sync:', err.message)
-    );
-    const qBlocks = query(collection(db, 'blockchainBlocks'), orderBy('index', 'asc'));
-    const unsubBlocks = onSnapshot(
-      qBlocks,
-      snap => {
-        if (!snap.empty) setBlockchain(snap.docs.map(d => d.data() as BlockchainBlock));
-      },
-      err => console.warn('Cold-chain audit log sync:', err.message)
-    );
-    return () => {
-      unsubUnits();
-      unsubIssues();
-      unsubBlocks();
-    };
-  }, []);
-
   const persistCourier = (c: StaffAccount | null) => {
     if (c) localStorage.setItem(COURIER_KEY, JSON.stringify(c));
     else localStorage.removeItem(COURIER_KEY);
@@ -158,19 +121,9 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.warn('Shared-state unit write refused, falling back to local write:', err.message);
       }
     }
-    try {
-      await setDoc(doc(db, 'bloodUnits', u.din), u, { merge: true });
-    } catch (err: any) {
-      console.warn('Persist unit:', err.message);
-    }
   };
 
   const persistIssue = async (iss: SystemIssue) => {
-    try {
-      await setDoc(doc(db, 'systemIssues', iss.id), iss, { merge: true });
-    } catch (err: any) {
-      console.warn('Persist issue:', err.message);
-    }
   };
 
   /**
@@ -204,11 +157,6 @@ export const TorrentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     setBlockchain(prev => [...prev, newBlock]);
-    try {
-      await setDoc(doc(db, 'blockchainBlocks', `block-${newBlock.index}`), newBlock);
-    } catch (err: any) {
-      console.warn('Audit log write:', err.message);
-    }
 
     try {
       await fetch('/donations/record', {

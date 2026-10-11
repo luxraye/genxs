@@ -1,19 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   auth,
-  db,
-  uploadFileToStorage,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   fbSignOut,
   signInAnonymously,
   onAuthStateChanged,
-  doc,
-  setDoc,
-  collection,
-  onSnapshot,
   type FirebaseUser
-} from '@shared/lib/firebase';
+} from '@shared/lib/firebase-auth';
+import { uploadFileToStorage } from '@shared/lib/localDocumentStore';
 import {
   DonorProfile,
   BloodUnit,
@@ -217,54 +212,6 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'donorProfiles'),
-      snapshot => {
-        if (!snapshot.empty) setDonorsList(snapshot.docs.map(d => d.data() as DonorProfile));
-      },
-      err => console.warn('Scyther donorProfiles sync:', err.message)
-    );
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    if (!donor?.id) return;
-    const unsub = onSnapshot(
-      doc(db, 'donorProfiles', donor.id),
-      snapshot => {
-        if (snapshot.exists()) persist(snapshot.data() as DonorProfile);
-      },
-      err => console.warn('Scyther donor profile sync:', err.message)
-    );
-    return () => unsub();
-  }, [donor?.id]);
-
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'bloodUnits'),
-      snapshot => {
-        if (!snapshot.empty) setAllUnits(snapshot.docs.map(d => d.data() as BloodUnit));
-      },
-      err => console.warn('Scyther bloodUnits sync:', err.message)
-    );
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    const unsub = onSnapshot(
-      collection(db, 'systemIssues'),
-      snapshot => {
-        if (!snapshot.empty) {
-          const issues = snapshot.docs.map(d => d.data() as SystemIssue);
-          setActiveShortageAlerts(issues.filter(i => i.category === 'SUPPLY_DEFICIT' && i.status === 'OPEN'));
-        }
-      },
-      err => console.warn('Scyther shortages sync:', err.message)
-    );
-    return () => unsub();
-  }, []);
-
   const donorUnits = donor
     ? allUnits.filter(
         u => donor.linkedUnitDins?.includes(u.din) || u.donorAnonymizedId === donor.anonymizedHash
@@ -359,26 +306,6 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     persist(newDonor);
     setDonorsList(prev => [newDonor, ...prev]);
 
-    try {
-      await setDoc(doc(db, 'donorProfiles', newId), newDonor, { merge: true });
-      if (uid) {
-        await setDoc(
-          doc(db, 'users', uid),
-          {
-            uid,
-            email: cleanEmail,
-            displayName: data.fullName,
-            role: 'DONOR',
-            donorId: newId,
-            lastSeen: new Date().toISOString()
-          },
-          { merge: true }
-        );
-      }
-    } catch (err: any) {
-      console.warn('Firestore donor registration save:', err.message);
-    }
-
     return { success: true };
   };
 
@@ -438,28 +365,6 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     persist(updatedDonor);
 
-    try {
-      await setDoc(doc(db, 'donorProfiles', donor.id), updatedDonor, { merge: true });
-      const issueId = `ISSUE-${Date.now().toString(36).toUpperCase()}`;
-      await setDoc(
-        doc(db, 'systemIssues', issueId),
-        {
-          id: issueId,
-          title: `Donor document review: ${donor.fullName}`,
-          category: 'DONOR_APPEAL',
-          severity: 'MEDIUM',
-          facility: 'National Donor Registry Desk',
-          affectedEntity: `Donor ID: ${donor.id}`,
-          description: `Submitted "${docData.name}" for review.`,
-          status: 'OPEN',
-          timestamp: new Date().toISOString()
-        },
-        { merge: true }
-      );
-    } catch (err: any) {
-      console.warn('Firestore document update:', err.message);
-    }
-
     return { success: true };
   };
 
@@ -474,22 +379,7 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     try {
       const bookingId = `BK-${Date.now().toString(36).toUpperCase()}`;
-      await setDoc(
-        doc(db, 'appointments', bookingId),
-        {
-          id: bookingId,
-          donorId: donor.id,
-          donorName: donor.fullName,
-          bloodType: donor.bloodType,
-          centerId,
-          centerName: center.name,
-          slotDate,
-          slotTime,
-          status: 'CONFIRMED',
-          bookedAt: new Date().toISOString()
-        },
-        { merge: true }
-      );
+      await Promise.resolve();
     } catch (err: any) {
       console.warn('Appointment booking save:', err.message);
     }

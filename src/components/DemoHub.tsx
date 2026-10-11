@@ -1,3 +1,4 @@
+import { putLocal } from '../lib/localStore';
 import React, { useState, useEffect } from 'react';
 import { useBloodchain } from '../context/BloodchainContext';
 import { 
@@ -40,8 +41,6 @@ import {
   Eye
 } from 'lucide-react';
 import { PublicDonationEntry, LedgerStatsResult } from '../lib/fabric/types';
-import { db } from '../lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 
 // Mission-relevant HD visual assets
 const HERO_IMAGE = '/images/hero_audit_blood_grid_1791309472035.jpg';
@@ -112,7 +111,7 @@ export const DemoHub: React.FC = () => {
     setGeneratedSandboxToken(token);
     try {
       const requestId = `req-${Date.now().toString(36)}`;
-      await setDoc(doc(db, 'accessRequests', requestId), {
+      await putLocal('accessRequests', requestId, {
         ...accessForm,
         sandboxToken: token,
         submittedAt: new Date().toISOString(),

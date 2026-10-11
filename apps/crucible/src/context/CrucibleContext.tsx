@@ -1,19 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   auth,
-  db,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   fbSignOut,
   onAuthStateChanged,
-  doc,
-  setDoc,
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
   type FirebaseUser
-} from '@shared/lib/firebase';
+} from '@shared/lib/firebase-auth';
 import {
   BloodUnit,
   BloodType,
@@ -103,36 +96,6 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => unsub();
   }, []);
 
-  useEffect(() => {
-    const unsubUnits = onSnapshot(
-      collection(db, 'bloodUnits'),
-      snap => {
-        if (!snap.empty) setUnits(snap.docs.map(d => d.data() as BloodUnit));
-      },
-      err => console.warn('Laboratory units sync:', err.message)
-    );
-    const unsubIssues = onSnapshot(
-      collection(db, 'systemIssues'),
-      snap => {
-        if (!snap.empty) setIssuesList(snap.docs.map(d => d.data() as SystemIssue));
-      },
-      err => console.warn('Laboratory issues sync:', err.message)
-    );
-    const qBlocks = query(collection(db, 'blockchainBlocks'), orderBy('index', 'asc'));
-    const unsubBlocks = onSnapshot(
-      qBlocks,
-      snap => {
-        if (!snap.empty) setAuditLog(snap.docs.map(d => d.data() as BlockchainBlock));
-      },
-      err => console.warn('Laboratory audit log sync:', err.message)
-    );
-    return () => {
-      unsubUnits();
-      unsubIssues();
-      unsubBlocks();
-    };
-  }, []);
-
   const persistUnit = async (u: BloodUnit) => {
     if (spine.mode === 'shared') {
       try {
@@ -142,19 +105,9 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.warn('Shared-state unit write refused, falling back to local write:', err.message);
       }
     }
-    try {
-      await setDoc(doc(db, 'bloodUnits', u.din), u, { merge: true });
-    } catch (err: any) {
-      console.warn('Persist unit:', err.message);
-    }
   };
 
   const persistIssue = async (iss: SystemIssue) => {
-    try {
-      await setDoc(doc(db, 'systemIssues', iss.id), iss, { merge: true });
-    } catch (err: any) {
-      console.warn('Persist issue:', err.message);
-    }
   };
 
   /**
@@ -188,11 +141,6 @@ export const CrucibleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     setAuditLog(prev => [...prev, newBlock]);
-    try {
-      await setDoc(doc(db, 'blockchainBlocks', `block-${newBlock.index}`), newBlock);
-    } catch (err: any) {
-      console.warn('Audit log write:', err.message);
-    }
 
     try {
       await fetch('/donations/record', {

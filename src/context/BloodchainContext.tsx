@@ -25,27 +25,19 @@ import {
 } from '../data/seedData';
 import { calculateBlockHash, verifyChainIntegrity, sha256 } from '../lib/crypto';
 import { isRbcCompatible } from '../lib/bloodCompatibility';
-import { 
-  auth, 
-  googleProvider, 
-  signInWithPopup, 
-  fbSignOut, 
+import {
+  auth,
+  googleProvider,
+  signInWithPopup,
+  fbSignOut,
   signInAnonymously,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updatePassword,
   onAuthStateChanged,
-  db,
-  uploadFileToStorage,
-  collection,
-  doc,
-  setDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  orderBy,
   FirebaseUser
-} from '../lib/firebase';
+} from '../lib/firebase-auth';
+import { uploadFileToStorage } from '../lib/localDocumentStore';
 
 export type ActiveViewType = 
   | 'DEMO_HUB'
@@ -207,75 +199,10 @@ export const BloodchainProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return saved ? JSON.parse(saved) : INITIAL_DONOR;
   });
 
-  const isInitialSeedAttempted = useRef(false);
 
   // ─── 1. Real-time Firestore Subscriptions ─────────────────────────────────
 
-  useEffect(() => {
-    // 1. Blood Units
-    const unsubUnits = onSnapshot(collection(db, 'bloodUnits'), (snapshot) => {
-      if (!snapshot.empty) {
-        const list = snapshot.docs.map(d => d.data() as BloodUnit);
-        setUnits(list);
-        localStorage.setItem('bloodchain_units', JSON.stringify(list));
-      }
-    }, (err) => console.warn('Firestore bloodUnits sync:', err.message));
-
-    // 2. Blockchain Blocks
-    const qBlocks = query(collection(db, 'blockchainBlocks'), orderBy('index', 'asc'));
-    const unsubBlocks = onSnapshot(qBlocks, (snapshot) => {
-      if (!snapshot.empty) {
-        const list = snapshot.docs.map(d => d.data() as BlockchainBlock);
-        setBlockchain(list);
-        localStorage.setItem('bloodchain_blocks', JSON.stringify(list));
-      }
-    }, (err) => console.warn('Firestore blockchainBlocks sync:', err.message));
-
-    // 3. Hospital Requests
-    const unsubReqs = onSnapshot(collection(db, 'hospitalRequests'), (snapshot) => {
-      if (!snapshot.empty) {
-        const list = snapshot.docs.map(d => d.data() as HospitalRequest);
-        setRequests(list);
-        localStorage.setItem('bloodchain_requests', JSON.stringify(list));
-      }
-    }, (err) => console.warn('Firestore hospitalRequests sync:', err.message));
-
-    // 4. Staff Accounts
-    const unsubStaff = onSnapshot(collection(db, 'staffAccounts'), (snapshot) => {
-      if (!snapshot.empty) {
-        const list = snapshot.docs.map(d => d.data() as StaffAccount);
-        setStaffAccounts(list);
-        localStorage.setItem('bloodchain_staff_accounts', JSON.stringify(list));
-      }
-    }, (err) => console.warn('Firestore staffAccounts sync:', err.message));
-
-    // 5. Donor Profiles
-    const unsubDonors = onSnapshot(collection(db, 'donorProfiles'), (snapshot) => {
-      if (!snapshot.empty) {
-        const list = snapshot.docs.map(d => d.data() as DonorProfile);
-        setDonorsList(list);
-        localStorage.setItem('bloodchain_donors_list', JSON.stringify(list));
-      }
-    }, (err) => console.warn('Firestore donorProfiles sync:', err.message));
-
-    // 6. System Issues
-    const unsubIssues = onSnapshot(collection(db, 'systemIssues'), (snapshot) => {
-      if (!snapshot.empty) {
-        const list = snapshot.docs.map(d => d.data() as SystemIssue);
-        setSystemIssues(list);
-        localStorage.setItem('bloodchain_system_issues', JSON.stringify(list));
-      }
-    }, (err) => console.warn('Firestore systemIssues sync:', err.message));
-
-    return () => {
-      unsubUnits();
-      unsubBlocks();
-      unsubReqs();
-      unsubStaff();
-      unsubDonors();
-      unsubIssues();
-    };
-  }, []);
+  
 
   // Sync currentStaff and currentDonor when live lists update
   useEffect(() => {
@@ -297,89 +224,24 @@ export const BloodchainProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [donorsList]);
 
-  // Firestore Persistence Helpers
-  const persistUnit = async (u: BloodUnit) => {
-    try {
-      await setDoc(doc(db, 'bloodUnits', u.din), u, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore persistUnit sync:', err.message);
-    }
-  };
+  // ── Persistence ──────────────────────────────────────────────────────────
+  // State is persisted to the device by the effects below. In shared mode the
+  // spine service is the source of truth for what the surfaces exchange, so
+  // nothing here writes to a third-party store.
 
-  const persistBlock = async (b: BlockchainBlock) => {
-    try {
-      await setDoc(doc(db, 'blockchainBlocks', `block-${b.index}`), b, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore persistBlock sync:', err.message);
-    }
-  };
+  const persistUnit = async (_u: BloodUnit) => {};
+  const persistBlock = async (_b: BlockchainBlock) => {};
+  const persistRequest = async (_r: HospitalRequest) => {};
+  const persistStaff = async (_s: StaffAccount) => {};
+  const persistDonor = async (_d: DonorProfile) => {};
+  const persistIssue = async (_iss: SystemIssue) => {};
 
-  const persistRequest = async (r: HospitalRequest) => {
-    try {
-      await setDoc(doc(db, 'hospitalRequests', r.id), r, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore persistRequest sync:', err.message);
-    }
-  };
-
-  const persistStaff = async (s: StaffAccount) => {
-    try {
-      await setDoc(doc(db, 'staffAccounts', s.id), s, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore persistStaff sync:', err.message);
-    }
-  };
-
-  const persistDonor = async (d: DonorProfile) => {
-    try {
-      await setDoc(doc(db, 'donorProfiles', d.id), d, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore persistDonor sync:', err.message);
-    }
-  };
-
-  const persistIssue = async (iss: SystemIssue) => {
-    try {
-      await setDoc(doc(db, 'systemIssues', iss.id), iss, { merge: true });
-    } catch (err: any) {
-      console.warn('Firestore persistIssue sync:', err.message);
-    }
-  };
-
-  // Listen to Firebase Auth state
+  // Identity only. Clinical and donor records are never written to Firebase.
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      setCurrentUser(user);
-      if (user) {
-        setDoc(doc(db, 'users', user.uid), {
-          uid: user.uid,
-          email: user.email || 'authorized@bloodchain.gov',
-          displayName: user.displayName || (currentStaff ? currentStaff.fullName : 'Authorized User'),
-          photoURL: user.photoURL || '',
-          role: activeRole,
-          lastSeen: new Date().toISOString()
-        }, { merge: true }).catch(err => {
-          console.warn('Firestore user profile sync notice:', err.message);
-        });
-
-        // Seed initial collections to Firestore once authenticated if database is empty
-        if (!isInitialSeedAttempted.current) {
-          isInitialSeedAttempted.current = true;
-          getDocs(collection(db, 'bloodUnits')).then(snap => {
-            if (snap.empty) {
-              INITIAL_UNITS.forEach(u => setDoc(doc(db, 'bloodUnits', u.din), u, { merge: true }).catch(() => {}));
-              INITIAL_BLOCKS.forEach(b => setDoc(doc(db, 'blockchainBlocks', `block-${b.index}`), b, { merge: true }).catch(() => {}));
-              INITIAL_HOSPITAL_REQUESTS.forEach(r => setDoc(doc(db, 'hospitalRequests', r.id), r, { merge: true }).catch(() => {}));
-              INITIAL_STAFF_ACCOUNTS.forEach(s => setDoc(doc(db, 'staffAccounts', s.id), s, { merge: true }).catch(() => {}));
-              INITIAL_DONORS.forEach(d => setDoc(doc(db, 'donorProfiles', d.id), d, { merge: true }).catch(() => {}));
-              INITIAL_SYSTEM_ISSUES.forEach(iss => setDoc(doc(db, 'systemIssues', iss.id), iss, { merge: true }).catch(() => {}));
-            }
-          }).catch(() => {});
-        }
-      }
-    });
+    const unsubscribe = onAuthStateChanged(auth, user => setCurrentUser(user));
     return () => unsubscribe();
-  }, [activeRole, currentStaff]);
+  }, []);
+
 
   // Blockchain integrity verification
   useEffect(() => {
