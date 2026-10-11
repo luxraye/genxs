@@ -86,6 +86,7 @@ export const Portal: React.FC = () => {
     { id: 'overview', label: 'Overview' },
     { id: 'platform', label: 'Platform' },
     { id: 'impact', label: 'Impact' },
+    { id: 'sdgs', label: 'SDGs' },
     { id: 'roadmap', label: 'Roadmap' },
     { id: 'contact', label: 'Contact' }
   ];
@@ -256,6 +257,41 @@ export const Portal: React.FC = () => {
       title: 'Continental Health Infrastructure',
       desc: 'Scaling the proven operating blueprint across emerging healthcare markets to establish an open, sovereign digital standard for national blood safety.',
       focus: 'Eliminating maternal & trauma mortality from shortages'
+    }
+  ];
+
+  const sdgs = [
+    {
+      goal: 'SDG 03',
+      title: 'Good Health & Well-Being',
+      tagline: 'Target 3.1, 3.6 & 3.8',
+      color: '#4C9F38',
+      bg: 'hsl(108 45% 96%)',
+      summary: 'Combats maternal mortality from postpartum hemorrhage and trauma deaths by ensuring rapid, verified blood availability across regional referral hospitals.'
+    },
+    {
+      goal: 'SDG 09',
+      title: 'Industry, Innovation & Infrastructure',
+      tagline: 'Target 9.1 & 9.5',
+      color: '#FD6925',
+      bg: 'hsl(20 85% 96.5%)',
+      summary: 'Upgrades legacy paper systems to sovereign, cloud-resilient digital infrastructure with continuous IoT cold-chain telemetry and cryptographic provenance.'
+    },
+    {
+      goal: 'SDG 12',
+      title: 'Responsible Consumption & Production',
+      tagline: 'Target 12.5',
+      color: '#BF8B2E',
+      bg: 'hsl(42 65% 95.5%)',
+      summary: 'Eliminates preventable cold-chain spoilage and reduces blood discard rates toward zero through algorithmic inventory balancing and predictive demand dispatch.'
+    },
+    {
+      goal: 'SDG 17',
+      title: 'Partnerships for the Goals',
+      tagline: 'Target 17.6 & 17.16',
+      color: '#19486A',
+      bg: 'hsl(205 60% 96%)',
+      summary: 'Catalyzes multi-sector collaboration across national health ministries, regional cross-border medical corridors, hospitals, and voluntary donor networks.'
     }
   ];
 
@@ -498,6 +534,59 @@ export const Portal: React.FC = () => {
         </div>
       </section>
 
+      {/* ── UNDP Sustainable Development Goals ──────────────────────────────── */}
+      <section id="sdgs" className="bcp-anchor bcp-hair py-24" style={{ background: 'hsl(38 42% 98%)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mb-14">
+            <p className="bcp-mono text-[11.5px] uppercase tracking-[0.16em] bcp-crimson font-semibold mb-3">
+              Global Impact Alignment
+            </p>
+            <h2 className="bcp-serif text-[36.0px] sm:text-[44.0px] font-semibold leading-tight tracking-[-0.015em]">
+              Advancing the UN Sustainable Development Goals.
+            </h2>
+            <p className="mt-4 text-[16.5px] leading-relaxed" style={{ color: 'hsl(202 15.5% 38%)' }}>
+              Bloodchain directly contributes to the United Nations 2030 Agenda by transforming fragile, fragmented blood supply lines into resilient, equitable, and transparent health infrastructure.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {sdgs.map(item => (
+              <div key={item.goal} className="bcp-card rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span
+                      className="px-2.5 py-1 rounded bcp-mono text-[11.5px] font-bold tracking-wider"
+                      style={{ background: item.bg, color: item.color, border: `1px solid ${item.color}33` }}
+                    >
+                      {item.goal}
+                    </span>
+                    <span className="bcp-mono text-[10.5px] font-medium" style={{ color: 'hsl(202 15.5% 38%)' }}>
+                      {item.tagline}
+                    </span>
+                  </div>
+
+                  <h3 className="bcp-serif text-[19.0px] font-semibold mb-2.5 leading-snug">
+                    {item.title}
+                  </h3>
+
+                  <p className="text-[13.0px] leading-relaxed" style={{ color: 'hsl(202 15.5% 38%)' }}>
+                    {item.summary}
+                  </p>
+                </div>
+
+                <div
+                  className="mt-6 pt-3.5 bcp-hair flex items-center gap-2 text-[11.5px] font-medium"
+                  style={{ color: item.color }}
+                >
+                  <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
+                  <span>UNDP 2030 Target Aligned</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Horizontal Checkpoint Timeline Roadmap ─────────────────────────── */}
       <section id="roadmap" className="bcp-anchor bcp-hair py-24" style={{ background: 'hsl(40 100% 99.4%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -623,6 +712,7 @@ export const Portal: React.FC = () => {
             <a href="#overview" className="hover:underline">Overview</a>
             <a href="#platform" className="hover:underline">Platform</a>
             <a href="#impact" className="hover:underline">Impact</a>
+            <a href="#sdgs" className="hover:underline">SDGs</a>
             <a href="#roadmap" className="hover:underline">Roadmap</a>
             <a href="#contact" className="hover:underline">Contact</a>
           </div>
