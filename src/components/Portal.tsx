@@ -51,18 +51,7 @@ const MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
   'Organisation:\nRole:\nCountry / mandate:\n\nWhat I would like to discuss:\n'
 )}`;
 
-export type PortalView =
-  | 'DONOR'
-  | 'LAB'
-  | 'TRANSIT'
-  | 'CLINICAL'
-  | 'OPERATIONS'
-  | 'LEDGER';
 
-interface PortalProps {
-  /** Enter one of the working surfaces. */
-  onLaunch?: (view: PortalView, role: string) => void;
-}
 
 /* ── design tokens ───────────────────────────────────────────────────────── */
 /* Values lifted from the portal that ran at default-portal.web.app:
@@ -129,8 +118,7 @@ const css = `
   }
 `;
 
-export const Portal: React.FC<PortalProps> = ({ onLaunch }) => {
-  const launch = (view: PortalView, role: string) => onLaunch?.(view, role);
+export const Portal: React.FC = () => {
 
   const nav = [
     { id: 'overview', label: 'Overview' },
@@ -543,28 +531,7 @@ export const Portal: React.FC<PortalProps> = ({ onLaunch }) => {
                   </ul>
                 </div>
 
-                <div className="px-6 pb-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const map: Record<string, [PortalView, string]> = {
-                        Scyther: ['DONOR', 'DONOR'],
-                        Crucible: ['LAB', 'LAB_TECH'],
-                        Torrent: ['TRANSIT', 'LOGISTICS_COURIER'],
-                        Aegis: ['CLINICAL', 'CLINICAL_STAFF'],
-                        Rubric: ['OPERATIONS', 'NATIONAL_OPERATOR'],
-                        'Ledger Explorer': ['LEDGER', 'AUDITOR']
-                      };
-                      const [view, role] = map[s.n];
-                      launch(view, role);
-                    }}
-                    className="w-full py-2.5 rounded-lg text-[12.5px] font-semibold transition-colors inline-flex items-center justify-center gap-2"
-                    style={{ background: 'hsl(36 45.5% 97.8%)', border: '1px solid hsl(192 16.7% 88.2%)', color: 'hsl(203 21.6% 19%)' }}
-                  >
-                    Open {s.n}
-                    <span aria-hidden="true">→</span>
-                  </button>
-                </div>
+
               </article>
             ))}
           </div>
