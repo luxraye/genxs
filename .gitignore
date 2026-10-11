@@ -37,3 +37,6 @@ _luxraye_repo/
 
 # Shared-state service runtime data
 .spine-data/
+
+# Firebase deploy cache
+.firebase/
