@@ -63,7 +63,8 @@ const Shell: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className="shell">
-        <main className="main">
+      <a className="skip-link" href="#main">Skip to content</a>
+        <main id="main" className="main">
           <div className="container">
             <AuthPage onSuccess={() => setTab('HOME')} />
           </div>
@@ -75,9 +76,10 @@ const Shell: React.FC = () => {
 
   return (
     <div className="shell">
+      <a className="skip-link" href="#main">Skip to content</a>
       <Header activeTab={view} setActiveTab={setTab} onOpenAuth={() => setTab('SIGNIN')} />
 
-      <main className="main">
+      <main id="main" className="main">
         <div className="container stack">
           {view !== 'SIGNIN' && <DemoNotice />}
 

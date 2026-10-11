@@ -19,14 +19,15 @@
     "build": "vite build",
     "build:all": "npm run build && npm run build:scyther && npm run build:rubric && npm run build:aegis && npm run build:crucible && npm run build:torrent",
     "deploy:hosting": "npx -p firebase-tools firebase deploy --project genxs-staging --only hosting",
-    "deploy:staging": "npx -p firebase-tools firebase deploy --project genxs-staging --only hosting",
+    "deploy:staging": "bash scripts/deploy.sh staging",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js apps/*/dist",
     "lint": "tsc --noEmit",
     "test": "tsx --test tests/*.test.mts",
     "typecheck": "tsc --noEmit",
     "spine": "tsx services/spine/smoke.mts",
-    "dev:gateway": "tsx server.ts"
+    "dev:gateway": "tsx server.ts",
+    "deploy:production": "bash scripts/deploy.sh production"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
