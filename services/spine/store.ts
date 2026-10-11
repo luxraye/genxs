@@ -14,6 +14,13 @@ import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { canTransition, isUnitStatus, type UnitStatus } from '../../packages/domain/stateMachine.js';
+import {
+  canReviewDonorDocuments,
+  donorRegistrationProblems,
+  normaliseEmail,
+  tierJustifiedBy,
+  type DonorVerificationTier
+} from '../../packages/domain/donor.js';
 import { summariseExcursions } from '../../packages/domain/telemetry.js';
 import {
   INITIAL_UNITS,
@@ -23,7 +30,16 @@ import {
   INITIAL_BLOCKS,
   INITIAL_DONORS
 } from '../../src/data/seedData.js';
-import type { BloodUnit, BlockchainBlock, HospitalRequest, StaffAccount, SystemIssue, DonorProfile } from '../../src/types/bloodchain';
+import type {
+  BloodUnit,
+  BlockchainBlock,
+  HospitalRequest,
+  StaffAccount,
+  SystemIssue,
+  DonorProfile,
+  DonorDocument,
+  BloodType
+} from '../../src/types/bloodchain';
 
 export type SpineEventType =
   | 'unit.updated'
@@ -33,6 +49,8 @@ export type SpineEventType =
   | 'issue.created'
   | 'issue.updated'
   | 'staff.updated'
+  | 'donor.registered'
+  | 'donor.updated'
   | 'block.appended'
   | 'snapshot';
 
@@ -64,6 +82,10 @@ export interface SpineState {
 export type PatchResult =
   | { ok: true; unit: UnitRecord }
   | { ok: false; status: 404 | 409 | 422; error: string; unit?: UnitRecord };
+
+export type DonorResult =
+  | { ok: true; donor: DonorProfile; document?: DonorDocument }
+  | { ok: false; status: 403 | 404 | 409 | 422; error: string; donor?: DonorProfile };
 
 const sha256Hex = (message: string): string => createHash('sha256').update(message, 'utf8').digest('hex');
 
@@ -235,7 +257,7 @@ export class SpineStore {
     din: string,
     reading: { temperatureCelsius: number; locationName?: string; timestamp?: string },
     opts: { source?: string } = {}
-  ): { ok: boolean; error?: string; breach?: boolean; unit?: UnitRecord } {
+  ): { ok: boolean; error?: string; breach?: boolean; compromised?: boolean; quarantined?: boolean; unit?: UnitRecord } {
     const unit = this.getUnit(din);
     if (!unit) return { ok: false, error: `No unit with DIN ${din}.` };
 
@@ -247,8 +269,12 @@ export class SpineStore {
     };
 
     const verdict = summariseExcursions([...unit.telemetryLogs, point], unit.storageTempRange);
-    point.breachDetected =
+    // Two different facts, kept apart: whether THIS reading breached the unit's
+    // stored range, and whether the unit as a whole is compromised. A normal
+    // reading on a unit that already logged an excursion is a normal reading.
+    const thisReadingOutOfRange =
       reading.temperatureCelsius < unit.storageTempRange.min || reading.temperatureCelsius > unit.storageTempRange.max;
+    point.breachDetected = thisReadingOutOfRange;
 
     const logs = [...unit.telemetryLogs, point];
     let status = unit.status;
@@ -278,7 +304,13 @@ export class SpineStore {
 
     this.save();
     this.emit({ type: 'unit.updated', din, source: opts.source, summary: `telemetry ${reading.temperatureCelsius}°C` });
-    return { ok: true, breach: verdict.compromised, unit: updated };
+    return {
+      ok: true,
+      breach: thisReadingOutOfRange,
+      compromised: verdict.compromised,
+      quarantined: status !== unit.status,
+      unit: updated
+    };
   }
 
   /** Append to the audit chain, computing the digest server-side. */
@@ -359,6 +391,208 @@ export class SpineStore {
     this.save();
     this.emit({ type: 'staff.updated', summary: id });
     return updated;
+  }
+
+  // ── donors ─────────────────────────────────────────────────────────────────
+  //
+  // The donor register is the origin of the whole chain, so it belongs here with
+  // everything else. Two rules are enforced in the service and cannot be
+  // delegated to a caller:
+  //   · the identity hash, the tier and the eligibility defaults are decided
+  //     here — so nobody can register themselves as a verified donor;
+  //   · a document is adjudicated only by a reviewing role, and a tier never
+  //     exceeds the documents that justify it (packages/domain/donor.ts).
+
+  getDonor(id: string): DonorProfile | undefined {
+    return this.state.donors.find(d => d.id === id);
+  }
+
+  findDonorByEmail(email: string): DonorProfile | undefined {
+    const wanted = normaliseEmail(email);
+    return this.state.donors.find(d => normaliseEmail(d.email) === wanted);
+  }
+
+  /** Register a donor. 422 for a malformed form, 409 for a duplicate address. */
+  registerDonor(
+    input: {
+      fullName?: string;
+      email?: string;
+      bloodType?: string;
+      nationalIdNumber?: string;
+      phone?: string;
+      cityDistrict?: string;
+    },
+    opts: { source?: string } = {}
+  ): DonorResult {
+    const problems = donorRegistrationProblems(input);
+    if (problems.length > 0) return { ok: false, status: 422, error: problems.join(' ') };
+
+    const email = normaliseEmail(String(input.email));
+    if (this.findDonorByEmail(email)) {
+      return { ok: false, status: 409, error: 'A donor with this email address is already registered.' };
+    }
+
+    const id = `DONOR-BW-${Date.now().toString(36).toUpperCase()}${Math.floor(100 + Math.random() * 900)}`;
+    const today = new Date().toISOString().split('T')[0];
+
+    const donor: DonorProfile = {
+      id,
+      // Computed here. A caller-supplied hash would make anonymisation a claim
+      // rather than a fact.
+      anonymizedHash: sha256Hex(`donor:${id}:${email}:${randomUUID()}`),
+      fullName: String(input.fullName).trim().slice(0, 120),
+      email,
+      phone: input.phone ? String(input.phone).trim().slice(0, 40) : undefined,
+      nationalIdNumber: input.nationalIdNumber
+        ? String(input.nationalIdNumber).trim().toUpperCase().slice(0, 40)
+        : undefined,
+      cityDistrict: input.cityDistrict ? String(input.cityDistrict).trim().slice(0, 80) : undefined,
+      bloodType: input.bloodType as BloodType,
+      totalDonations: 0,
+      lastDonationDate: '',
+      // Registration is not a clinical judgement. Eligibility is recorded as the
+      // neutral default and is the national service's to change, not the platform's.
+      eligibilityStatus: 'ELIGIBLE',
+      nextEligibleDate: today,
+      linkedUnitDins: [],
+      tier: 1,
+      uploadedDocuments: [],
+      tierUpdatedAt: new Date().toISOString()
+    };
+
+    this.state.donors = [donor, ...this.state.donors];
+    this.state.rev += 1;
+    this.save();
+    this.emit({ type: 'donor.registered', source: opts.source, summary: `${donor.id} (tier ${donor.tier})` });
+    return { ok: true, donor };
+  }
+
+  /**
+   * Self-service profile update. A whitelist, not a blacklist: tier, hash,
+   * unit linkage, donation counts and eligibility are fields a donor has no
+   * route to write, so they are not copied across at all.
+   */
+  updateDonor(id: string, patch: Record<string, unknown>, opts: { source?: string } = {}): DonorResult {
+    const donor = this.getDonor(id);
+    if (!donor) return { ok: false, status: 404, error: `No donor ${id}.` };
+
+    const next: DonorProfile = { ...donor };
+    if (typeof patch.fullName === 'string' && patch.fullName.trim()) next.fullName = patch.fullName.trim().slice(0, 120);
+    if (typeof patch.phone === 'string') next.phone = patch.phone.trim().slice(0, 40);
+    if (typeof patch.cityDistrict === 'string') next.cityDistrict = patch.cityDistrict.trim().slice(0, 80);
+    if (typeof patch.nationalIdNumber === 'string' && patch.nationalIdNumber.trim()) {
+      next.nationalIdNumber = patch.nationalIdNumber.trim().toUpperCase().slice(0, 40);
+    }
+
+    // Tier is not recomputed here and never copied from the caller: a profile
+    // edit is not an event that changes a verification decision.
+
+    this.state.donors = this.state.donors.map(d => (d.id === id ? next : d));
+    this.state.rev += 1;
+    this.save();
+    this.emit({ type: 'donor.updated', source: opts.source, summary: `${id} profile` });
+    return { ok: true, donor: next };
+  }
+
+  /** Submit evidence. Submission is not verification — nothing here moves a tier. */
+  submitDonorDocument(id: string, document: DonorDocument, opts: { source?: string } = {}): DonorResult {
+    const donor = this.getDonor(id);
+    if (!donor) return { ok: false, status: 404, error: `No donor ${id}.` };
+
+    const recorded: DonorDocument = {
+      ...document,
+      status: 'PENDING',
+      reviewedBy: undefined,
+      reviewNotes: 'Submitted for review. Verification is performed by the national blood service.'
+    };
+
+    const next: DonorProfile = {
+      ...donor,
+      uploadedDocuments: [...donor.uploadedDocuments, recorded],
+      tierUpdatedAt: new Date().toISOString()
+    };
+
+    this.state.donors = this.state.donors.map(d => (d.id === id ? next : d));
+    this.state.rev += 1;
+    this.save();
+    this.emit({ type: 'donor.updated', source: opts.source, summary: `${id} submitted ${recorded.type}` });
+    return { ok: true, donor: next, document: recorded };
+  }
+
+  /**
+   * Adjudicate a submitted document. Refused with 403 unless the actor holds a
+   * reviewing role; the tier only moves as far as the evidence justifies.
+   */
+  reviewDonorDocument(
+    donorId: string,
+    docId: string,
+    decision: 'APPROVED' | 'REJECTED',
+    review: { notes?: string; actor: { id: string; role: string } },
+    opts: { source?: string } = {}
+  ): DonorResult {
+    if (!review.actor?.id) return { ok: false, status: 422, error: 'actor.id is required.' };
+    if (!canReviewDonorDocuments(review.actor.role)) {
+      return {
+        ok: false,
+        status: 403,
+        error: `A ${review.actor.role || 'UNKNOWN'} account may not adjudicate donor documents. This is an operations decision.`
+      };
+    }
+
+    const donor = this.getDonor(donorId);
+    if (!donor) return { ok: false, status: 404, error: `No donor ${donorId}.` };
+
+    const document = donor.uploadedDocuments.find(d => d.id === docId);
+    if (!document) return { ok: false, status: 404, error: `No document ${docId} on donor ${donorId}.` };
+
+    const documents: DonorDocument[] = donor.uploadedDocuments.map(d =>
+      d.id === docId
+        ? { ...d, status: decision, reviewedBy: review.actor.id, reviewNotes: review.notes ?? d.reviewNotes ?? '' }
+        : d
+    );
+
+    const tier = tierJustifiedBy(documents);
+    const next: DonorProfile = { ...donor, uploadedDocuments: documents, tier, tierUpdatedAt: new Date().toISOString() };
+
+    this.state.donors = this.state.donors.map(d => (d.id === donorId ? next : d));
+    this.state.rev += 1;
+    this.save();
+    this.emit({
+      type: 'donor.updated',
+      source: opts.source,
+      summary: `${document.type} ${decision} by ${review.actor.id} (tier ${donor.tier} → ${tier})`
+    });
+    return { ok: true, donor: next, document: documents.find(d => d.id === docId) };
+  }
+
+  /** A reviewer may lower a tier, or raise it only as far as the evidence allows. */
+  setDonorTier(
+    id: string,
+    tier: DonorVerificationTier,
+    actor: { id: string; role: string },
+    opts: { source?: string } = {}
+  ): DonorResult {
+    if (!actor?.id) return { ok: false, status: 422, error: 'actor.id is required.' };
+    if (!canReviewDonorDocuments(actor.role)) {
+      return { ok: false, status: 403, error: `A ${actor.role || 'UNKNOWN'} account may not set a verification tier.` };
+    }
+
+    const donor = this.getDonor(id);
+    if (!donor) return { ok: false, status: 404, error: `No donor ${id}.` };
+
+    const ceiling = tierJustifiedBy(donor.uploadedDocuments);
+    const applied = (tier <= ceiling ? tier : ceiling) as DonorVerificationTier;
+    const next: DonorProfile = { ...donor, tier: applied, tierUpdatedAt: new Date().toISOString() };
+
+    this.state.donors = this.state.donors.map(d => (d.id === id ? next : d));
+    this.state.rev += 1;
+    this.save();
+    this.emit({
+      type: 'donor.updated',
+      source: opts.source,
+      summary: `tier ${donor.tier} → ${applied}${applied < tier ? ` (evidence ceiling ${ceiling})` : ''}`
+    });
+    return { ok: true, donor: next };
   }
 
   /** Verify every digest and link in the audit chain. */

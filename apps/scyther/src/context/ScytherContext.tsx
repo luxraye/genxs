@@ -18,6 +18,7 @@ import {
 } from '@shared/types/bloodchain';
 import { INITIAL_DONORS } from '@shared/data/seedData';
 import { sha256 } from '@shared/lib/crypto';
+import { useSpine } from '@shared/lib/spine/react';
 
 const AUTH_KEY = 'scyther_active_donor';
 
@@ -212,6 +213,40 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => unsubscribe();
   }, []);
 
+  /**
+   * The donor register lives in the shared service, so once it is reachable this
+   * surface shows the service's donors rather than its own copy of them. In
+   * `local` mode the bundled sample data below is what is shown, and the status
+   * chip says so. See services/spine.
+   */
+  const spine = useSpine();
+  useEffect(() => {
+    if (spine.mode !== 'shared') return;
+    let cancelled = false;
+
+    // Prime once, in case the shared snapshot was delivered before this effect
+    // subscribed; then follow every later change.
+    spine.client
+      .donors()
+      .then(res => {
+        if (!cancelled && Array.isArray(res.donors) && res.donors.length > 0) {
+          setDonorsList(res.donors as DonorProfile[]);
+        }
+      })
+      .catch(() => {
+        /* the subscription below is the primary path */
+      });
+
+    const unsubscribe = spine.onSnapshot(snap => {
+      if (Array.isArray(snap.donors) && snap.donors.length > 0) setDonorsList(snap.donors as DonorProfile[]);
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [spine.mode]);
+
   const donorUnits = donor
     ? allUnits.filter(
         u => donor.linkedUnitDins?.includes(u.din) || u.donorAnonymizedId === donor.anonymizedHash
@@ -303,6 +338,31 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       tierUpdatedAt: new Date().toISOString()
     };
 
+    // The register belongs to the shared service. When it is reachable the donor
+    // is created there, and the service — not this surface — decides the identity
+    // hash, the tier and the eligibility defaults.
+    if (spine.mode === 'shared') {
+      try {
+        const { donor: created } = await spine.client.registerDonor({
+          fullName: newDonor.fullName,
+          email: newDonor.email,
+          phone: newDonor.phone,
+          nationalIdNumber: newDonor.nationalIdNumber,
+          bloodType: newDonor.bloodType,
+          cityDistrict: newDonor.cityDistrict
+        });
+        const shared = created as DonorProfile;
+        persist(shared);
+        setDonorsList(prev => [shared, ...prev.filter(d => d.id !== shared.id)]);
+        return { success: true };
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.body?.error || 'The shared register did not accept this registration. Please try again.'
+        };
+      }
+    }
+
     persist(newDonor);
     setDonorsList(prev => [newDonor, ...prev]);
 
@@ -357,9 +417,31 @@ export const ScytherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       reviewNotes: 'Submitted for review. Verification is performed by the national blood service.'
     };
 
+    // A submitted document is the reviewer's to see. When the shared service is
+    // reachable the submission is recorded there, so the operations desk reviews
+    // the same document the donor uploaded rather than a private copy of it.
+    let submittedDocId = newDoc.id;
+    if (spine.mode === 'shared') {
+      try {
+        const res = await spine.client.submitDonorDocument(donor.id, {
+          name: newDoc.name,
+          type: newDoc.type,
+          sizeKb: newDoc.sizeKb,
+          fileDataUrl: newDoc.fileDataUrl
+        });
+        submittedDocId = res?.document?.id || newDoc.id;
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.body?.error || 'The shared register did not accept this document. Please try again.'
+        };
+      }
+    }
+
+    const recorded: DonorDocument = { ...newDoc, id: submittedDocId };
     const updatedDonor: DonorProfile = {
       ...donor,
-      uploadedDocuments: [...donor.uploadedDocuments, newDoc],
+      uploadedDocuments: [...donor.uploadedDocuments, recorded],
       tierUpdatedAt: new Date().toISOString()
     };
 

@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import * as fabricMock from './src/lib/fabric/mock';
 import { spineRouter } from './services/spine/server';
+import { store } from './services/spine/store';
 import type { InterAppEvent, EventType, BloodchainAppId, TelemetryPingPayload } from './src/types/events';
 
 dotenv.config();
@@ -236,8 +237,26 @@ app.post('/api/telemetry/pings', (req, res) => {
   if (existing.length > 100) existing.pop();
   telemetryStore.set(ping.din, existing);
 
-  // Check cold-chain thermal thresholds (PRBC safe range: 2.0°C - 6.0°C)
-  const isThermalExcursion = typeof ping.tempC === 'number' && (ping.tempC < 2.0 || ping.tempC > 6.0);
+  // The unit's own state has ONE writer: the spine. When the DIN is known there,
+  // the reading is recorded there, and the service — not this route — decides the
+  // excursion verdict, quarantines the unit and raises the incident. That verdict
+  // uses the unit's own stored range; the threshold below is only the fallback for
+  // a DIN the register does not hold.
+  const tracked = store.getUnit(ping.din);
+  const spineVerdict =
+    tracked && typeof ping.tempC === 'number'
+      ? store.recordTelemetry(
+          ping.din,
+          { temperatureCelsius: ping.tempC, locationName: ping.locationName },
+          { source: 'torrent' }
+        )
+      : null;
+
+  // Cold-chain thermal thresholds (PRBC safe range: 2.0°C - 6.0°C)
+  const isThermalExcursion =
+    spineVerdict && spineVerdict.ok
+      ? Boolean(spineVerdict.breach)
+      : typeof ping.tempC === 'number' && (ping.tempC < 2.0 || ping.tempC > 6.0);
 
   if (isThermalExcursion) {
     // Broadcast instant alarm to Rubric Incident Command and Aegis bedside bay
@@ -275,7 +294,8 @@ app.post('/api/telemetry/pings', (req, res) => {
     ok: true,
     din: ping.din,
     storedPoints: existing.length,
-    isThermalExcursion
+    isThermalExcursion,
+    verdictSource: spineVerdict?.ok ? 'spine' : 'legacy-fallback'
   });
 });
 

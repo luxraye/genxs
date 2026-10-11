@@ -113,6 +113,9 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (Array.isArray(snap.requests) && snap.requests.length > 0) setRequests(snap.requests as any[]);
       if (Array.isArray(snap.issues) && snap.issues.length > 0) setIssuesList(snap.issues as any[]);
       if (Array.isArray(snap.staff) && snap.staff.length > 0) setStaffList(snap.staff as any[]);
+      // The donor register is shared as well: this desk adjudicates the same
+      // records the donor surface writes. See services/spine.
+      if (Array.isArray(snap.donors) && snap.donors.length > 0) setDonorsList(snap.donors as DonorProfile[]);
     });
   }, [spine.mode]);
   const [requests, setRequests] = useState<HospitalRequest[]>(INITIAL_HOSPITAL_REQUESTS);
@@ -305,6 +308,23 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     setDonorsList(prev => prev.map(d => (d.id === donorId ? updatedDonor : d)));
+
+    // The decision is the service's record of the fact, not this desk's. The
+    // service refuses it unless this session holds a reviewing role.
+    if (spine.mode === 'shared') {
+      spine.client
+        .reviewDonorDocument(donorId, {
+          docId,
+          decision: status,
+          notes,
+          actor: {
+            id: currentOperator?.id || 'operations',
+            role: currentOperator?.role || 'UNKNOWN',
+            name: actingName
+          }
+        })
+        .catch(() => {});
+    }
   };
 
   const updateDonorTier = async (donorId: string, tier: DonorVerificationTier): Promise<void> => {
@@ -312,6 +332,17 @@ export const RubricProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!target) return;
     const updated = { ...target, tier, tierUpdatedAt: new Date().toISOString() };
     setDonorsList(prev => prev.map(d => (d.id === donorId ? updated : d)));
+
+    // A tier may never exceed the documents that justify it; the service applies
+    // that ceiling, so a raised tier that outruns the evidence is refused there.
+    if (spine.mode === 'shared') {
+      spine.client
+        .setDonorTier(donorId, tier, {
+          id: currentOperator?.id || 'operations',
+          role: currentOperator?.role || 'UNKNOWN'
+        })
+        .catch(() => {});
+    }
   };
 
   const resolveIssue = async (issueId: string, notes: string): Promise<void> => {

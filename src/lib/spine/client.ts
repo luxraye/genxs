@@ -109,7 +109,9 @@ export class SpineClient {
   }
 
   async recordTelemetry(din: string, temperatureCelsius: number, locationName?: string) {
-    return this.request<{ unit: any; breachDetected: boolean }>(`/units/${encodeURIComponent(din)}/telemetry`, {
+    return this.request<{ unit: any; breachDetected: boolean; unitCompromised: boolean; quarantined: boolean }>(
+      `/units/${encodeURIComponent(din)}/telemetry`,
+      {
       method: 'POST',
       body: JSON.stringify({ temperatureCelsius, locationName })
     });
@@ -152,6 +154,45 @@ export class SpineClient {
     return this.request<{ staff: any }>(`/staff/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: JSON.stringify(patch)
+    });
+  }
+
+  // ── donors ────────────────────────────────────────────────────────────────
+
+  async donors() {
+    return this.request<{ donors: any[] }>('/donors', { method: 'GET' });
+  }
+
+  async registerDonor(payload: Record<string, unknown>) {
+    return this.request<{ donor: any }>('/donors', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async updateDonor(id: string, patch: Record<string, unknown>) {
+    return this.request<{ donor: any }>(`/donors/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch)
+    });
+  }
+
+  async submitDonorDocument(id: string, document: Record<string, unknown>) {
+    return this.request<{ donor: any; document: any }>(`/donors/${encodeURIComponent(id)}/documents`, {
+      method: 'POST',
+      body: JSON.stringify(document)
+    });
+  }
+
+  /** Adjudication. The service refuses this unless the actor holds a reviewing role. */
+  async reviewDonorDocument(id: string, payload: Record<string, unknown>) {
+    return this.request<{ donor: any; document: any }>(`/donors/${encodeURIComponent(id)}/review`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async setDonorTier(id: string, tier: number, actor: Record<string, unknown>) {
+    return this.request<{ donor: any }>(`/donors/${encodeURIComponent(id)}/tier`, {
+      method: 'PATCH',
+      body: JSON.stringify({ tier, actor })
     });
   }
 

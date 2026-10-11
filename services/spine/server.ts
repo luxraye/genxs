@@ -17,6 +17,7 @@ import { Router, type Request, type Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import { store, type SpineEvent } from './store.js';
 import { isUnitStatus } from '../../packages/domain/stateMachine.js';
+import { isDocumentType, isDonorTier, isReviewDecision } from '../../packages/domain/donor.js';
 import type { BloodUnit, UserRole } from '../../src/types/bloodchain.js';
 
 export const spineRouter = Router();
@@ -37,6 +38,7 @@ spineRouter.get('/health', (_req, res) => {
       requests: s.requests.length,
       issues: s.issues.length,
       staff: s.staff.length,
+      donors: s.donors.length,
       blocks: s.blocks.length
     },
     at: nowIso()
@@ -90,7 +92,12 @@ spineRouter.post('/units/:din/telemetry', (req, res) => {
   );
 
   if (!result.ok) return res.status(404).json({ error: result.error });
-  res.json({ unit: result.unit, breachDetected: result.breach });
+  res.json({
+    unit: result.unit,
+    breachDetected: result.breach,
+    unitCompromised: result.compromised,
+    quarantined: result.quarantined
+  });
 });
 
 /** Append an audit entry. The digest is computed by the service, not the client. */
@@ -228,6 +235,117 @@ spineRouter.post('/auth/login', (req, res) => {
     return res.status(403).json({ error: 'That account is suspended.' });
   }
   res.json({ staff: account, session: { id: randomUUID(), at: nowIso() } });
+});
+
+// ── donors ───────────────────────────────────────────────────────────────────
+//
+// The donor surface registers; only an operations role adjudicates. Registration
+// and review are separate verbs for a reason: submitting evidence is not
+// verification, and the endpoint that records a document never advances a tier.
+
+spineRouter.get('/donors', (_req, res) => res.json({ donors: store.snapshot().donors }));
+
+spineRouter.get('/donors/:id', (req, res) => {
+  const donor = store.getDonor(req.params.id);
+  if (!donor) return res.status(404).json({ error: `No donor ${req.params.id}.` });
+  res.json({ donor });
+});
+
+spineRouter.post('/donors', (req, res) => {
+  const body = req.body || {};
+  const result = store.registerDonor(
+    {
+      fullName: body.fullName,
+      email: body.email,
+      bloodType: body.bloodType,
+      nationalIdNumber: body.nationalIdNumber,
+      phone: body.phone,
+      cityDistrict: body.cityDistrict
+    },
+    { source: clientId(req) }
+  );
+
+  if (!result.ok) return res.status(result.status).json({ error: result.error });
+  res.status(201).json({ donor: result.donor });
+});
+
+/** Profile fields only. Tier, hash and eligibility are not on this route. */
+spineRouter.patch('/donors/:id', (req, res) => {
+  const result = store.updateDonor(req.params.id, req.body || {}, { source: clientId(req) });
+  if (!result.ok) return res.status(result.status).json({ error: result.error });
+  res.json({ donor: result.donor });
+});
+
+/** A donor submits evidence. Submission is not verification. */
+spineRouter.post('/donors/:id/documents', (req, res) => {
+  const body = req.body || {};
+  if (!body.name || !isDocumentType(body.type)) {
+    return res.status(422).json({ error: 'name and a known document type are required.' });
+  }
+
+  const result = store.submitDonorDocument(
+    req.params.id,
+    {
+      id: String(body.id || `DOC-${Date.now().toString(36).toUpperCase()}`).slice(0, 60),
+      name: String(body.name).slice(0, 120),
+      type: body.type,
+      sizeKb: Number(body.sizeKb) || 0,
+      uploadedAt: nowIso(),
+      fileDataUrl: body.fileDataUrl ? String(body.fileDataUrl).slice(0, 500) : undefined,
+      status: 'PENDING'
+    } as any,
+    { source: clientId(req) }
+  );
+
+  if (!result.ok) return res.status(result.status).json({ error: result.error });
+  res.status(201).json({ donor: result.donor, document: result.document });
+});
+
+/** Adjudication. Refused unless the actor holds a reviewing role. */
+spineRouter.post('/donors/:id/review', (req, res) => {
+  const { docId, decision, notes, actor } = (req.body || {}) as {
+    docId?: string;
+    decision?: string;
+    notes?: string;
+    actor?: { id?: string; role?: string };
+  };
+
+  if (!docId) return res.status(422).json({ error: 'docId is required.' });
+  if (!isReviewDecision(decision)) {
+    return res.status(422).json({ error: 'decision must be APPROVED or REJECTED.' });
+  }
+  if (!actor?.id) return res.status(422).json({ error: 'actor.id is required.' });
+
+  const result = store.reviewDonorDocument(
+    req.params.id,
+    docId,
+    decision,
+    {
+      notes,
+      actor: { id: String(actor.id).slice(0, 80), role: String(actor.role || 'UNKNOWN').slice(0, 40) }
+    },
+    { source: clientId(req) }
+  );
+
+  if (!result.ok) return res.status(result.status).json({ error: result.error });
+  res.json({ donor: result.donor, document: result.document });
+});
+
+spineRouter.patch('/donors/:id/tier', (req, res) => {
+  const { tier, actor } = (req.body || {}) as { tier?: unknown; actor?: { id?: string; role?: string } };
+
+  if (!isDonorTier(tier)) return res.status(422).json({ error: 'tier must be 1, 2, 3 or 4.' });
+  if (!actor?.id) return res.status(422).json({ error: 'actor.id is required.' });
+
+  const result = store.setDonorTier(
+    req.params.id,
+    tier,
+    { id: String(actor.id).slice(0, 80), role: String(actor.role || 'UNKNOWN').slice(0, 40) },
+    { source: clientId(req) }
+  );
+
+  if (!result.ok) return res.status(result.status).json({ error: result.error });
+  res.json({ donor: result.donor });
 });
 
 // ── audit chain ──────────────────────────────────────────────────────────────
