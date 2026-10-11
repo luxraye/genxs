@@ -9,7 +9,7 @@ import { ClinicalBedside } from './components/ClinicalBedside';
 import { AdminCommandCentre } from './components/AdminCommandCentre';
 import { LedgerExplorer } from './components/LedgerExplorer';
 import { LuxrayeLiveSync } from './components/LuxrayeLiveSync';
-import { DemoHub } from './components/DemoHub';
+import { Portal } from './components/Portal';
 import { AppAuthGate } from './components/auth/AppAuthGate';
 import { 
   Heart, 
@@ -21,14 +21,30 @@ import {
 } from 'lucide-react';
 
 function BloodchainAppContent() {
-  const { activeView } = useBloodchain();
+  const { activeView, setActiveView, setActiveRole } = useBloodchain();
+
+  /**
+   * The portal is the face of the platform and carries its own chrome — its own
+   * header, its own footer, its own disclosure. It is deliberately NOT wrapped in
+   * the operations console's header, because that header belongs to the tools a
+   * signed-in operator uses, not to the page a ministry officer or funder sees.
+   */
+  if (activeView === 'DEMO_HUB') {
+    return (
+      <Portal
+        onLaunch={(view, role) => {
+          setActiveRole(role as never);
+          setActiveView(view as never);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100/60 text-slate-900 flex flex-col font-sans selection:bg-red-500 selection:text-white">
       <Header />
 
       <main className="flex-1 pb-16">
-        {activeView === 'DEMO_HUB' && <DemoHub />}
         {activeView === 'ARCHITECTURE' && <ArchitectureView />}
         {activeView === 'BOTSWANA_LIVE' && <LuxrayeLiveSync />}
 
