@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAegis } from './context/AegisContext';
+import { AegisProvider, useAegis } from './context/AegisContext';
 import { Header, type AegisTab } from './components/Header';
 import { BedsideScanner } from './components/BedsideScanner';
 import { TransfusionMonitor } from './components/TransfusionMonitor';
@@ -116,5 +116,9 @@ const Shell: React.FC = () => {
 };
 
 export default function App() {
-  return <Shell />;
+  return (
+    <AegisProvider>
+      <Shell />
+    </AegisProvider>
+  );
 }

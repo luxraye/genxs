@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTorrent } from './context/TorrentContext';
+import { TorrentProvider, useTorrent } from './context/TorrentContext';
 import { Header, type TorrentTab } from './components/Header';
 import { TelemetryConsole } from './components/TelemetryConsole';
 import { DispatchConsole } from './components/DispatchConsole';
@@ -96,5 +96,9 @@ const Shell: React.FC = () => {
 };
 
 export default function App() {
-  return <Shell />;
+  return (
+    <TorrentProvider>
+      <Shell />
+    </TorrentProvider>
+  );
 }
