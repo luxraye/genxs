@@ -7,7 +7,6 @@ const LOGISTICS_IMAGE = '/images/iot_cold_chain_transit_1791309495139.jpg';
 const BEDSIDE_IMAGE = '/images/bedside_clinical_transfusion_1791309482591.jpg';
 const OPS_IMAGE = '/images/situation_room_ops_1791309668046.jpg';
 const LEDGER_IMAGE = '/images/ledger_security_vault_1791309692752.jpg';
-const CORRIDOR_IMAGE = '/images/health_corridor_hospital_1791309705818.jpg';
 
 const CONTACT_EMAIL = 'giftjrnakedi@gmail.com';
 
@@ -87,7 +86,7 @@ export const Portal: React.FC = () => {
     { id: 'overview', label: 'Overview' },
     { id: 'platform', label: 'Platform' },
     { id: 'impact', label: 'Impact' },
-    { id: 'investors', label: 'Market & Vision' },
+    { id: 'roadmap', label: 'Roadmap' },
     { id: 'contact', label: 'Contact' }
   ];
 
@@ -225,6 +224,41 @@ export const Portal: React.FC = () => {
     }
   ];
 
+  const timelineSteps = [
+    {
+      num: '01',
+      phase: 'Phase 1',
+      status: 'Pilot',
+      title: 'Pilot in 4 Flagship Institutions',
+      desc: 'Initial clinical deployment across 4 premier referral and trauma hospitals to validate end-to-end cold chain, digital crossmatching, and donor mobilization.',
+      focus: 'Clinical safety verification & workflow calibration'
+    },
+    {
+      num: '02',
+      phase: 'Phase 2',
+      status: 'National',
+      title: 'National Corridor Rollout',
+      desc: 'Full countrywide expansion linking regional blood banks, district trauma depots, and courier transport routes into one synchronized operating network.',
+      focus: 'Nationwide inventory balancing & zero cold-chain waste'
+    },
+    {
+      num: '03',
+      phase: 'Phase 3',
+      status: 'Regional',
+      title: 'Regional Corridor Integration',
+      desc: 'Harmonizing cross-border medical supply corridors across SADC to enable mutual aid, emergency deficit sharing, and standardized ISBT 128 provenance.',
+      focus: 'Inter-state emergency resilience & shared stockpiles'
+    },
+    {
+      num: '04',
+      phase: 'Phase 4',
+      status: 'Scale',
+      title: 'Continental Health Infrastructure',
+      desc: 'Scaling the proven operating blueprint across emerging healthcare markets to establish an open, sovereign digital standard for national blood safety.',
+      focus: 'Eliminating maternal & trauma mortality from shortages'
+    }
+  ];
+
   return (
     <div className="bcp min-h-screen">
       <style>{css}</style>
@@ -318,10 +352,10 @@ export const Portal: React.FC = () => {
                   </svg>
                 </a>
                 <a
-                  href="#investors"
+                  href="#roadmap"
                   className="bcp-btn-ghost px-6 py-3.5 rounded-xl text-[14.0px] font-semibold"
                 >
-                  Market & Vision
+                  View Strategic Roadmap
                 </a>
               </div>
             </div>
@@ -464,73 +498,70 @@ export const Portal: React.FC = () => {
         </div>
       </section>
 
-      {/* ── Market Opportunity & Strategic Vision ──────────────────────────── */}
-      <section id="investors" className="bcp-anchor bcp-hair py-24" style={{ background: 'hsl(40 100% 99.4%)' }}>
+      {/* ── Horizontal Checkpoint Timeline Roadmap ─────────────────────────── */}
+      <section id="roadmap" className="bcp-anchor bcp-hair py-24" style={{ background: 'hsl(40 100% 99.4%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-6 space-y-6">
-              <p className="bcp-mono text-[11.5px] uppercase tracking-[0.16em] bcp-crimson font-semibold">Strategic Expansion</p>
-              <h2 className="bcp-serif text-[36.0px] sm:text-[44.0px] font-semibold leading-tight tracking-[-0.015em]">
-                From national launchpad to continental scale.
-              </h2>
-              <p className="text-[16.5px] leading-relaxed" style={{ color: 'hsl(202 15.5% 38%)' }}>
-                Blood supply is one of the highest-stakes coordination problems in global healthcare. Bloodchain's modular, standards-aligned platform creates a high-defensibility moat and a repeatable deployment playbook across emerging healthcare economies.
-              </p>
+          <div className="max-w-3xl mb-16">
+            <p className="bcp-mono text-[11.5px] uppercase tracking-[0.16em] bcp-crimson font-semibold mb-3">Strategic Roadmap</p>
+            <h2 className="bcp-serif text-[36.0px] sm:text-[44.0px] font-semibold leading-tight tracking-[-0.015em]">
+              Our Rollout Plan
+            </h2>
+            <p className="mt-4 text-[16.5px] leading-relaxed" style={{ color: 'hsl(202 15.5% 38%)' }}>
+              A disciplined, phased deployment strategy scaling from verified clinical pilot validation to national and continental health infrastructure.
+            </p>
+          </div>
 
-              <div className="space-y-4 pt-2">
-                <div className="bcp-card rounded-xl p-4 flex items-start gap-3.5">
-                  <div className="w-8 h-8 rounded-lg grid place-items-center shrink-0" style={{ background: 'hsl(351 60% 96.5%)', color: 'hsl(351 68.2% 39.4%)' }}>
-                    <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M10 2a8 8 0 1 0 8 8 8 8 0 0 0-8-8Zm1 4v4h4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+          {/* Horizontal Checkpoint Timeline */}
+          <div className="relative">
+            {/* Horizontal timeline bar for desktop */}
+            <div
+              className="hidden lg:block absolute top-[28px] left-[5%] right-[5%] h-[2px]"
+              style={{ background: 'hsl(192 16.7% 85%)', zIndex: 0 }}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+              {timelineSteps.map((step, idx) => (
+                <div key={step.phase} className="bcp-card rounded-2xl p-6 flex flex-col justify-between">
                   <div>
-                    <h4 className="text-[14.5px] font-semibold text-slate-900">Proven Blueprint in Botswana</h4>
-                    <p className="text-[12.8px] mt-0.5" style={{ color: 'hsl(202 15.5% 38%)' }}>
-                      Designed alongside the country’s high-traffic trauma corridor, linking national referral and regional trauma centres into an integrated network.
-                    </p>
-                  </div>
-                </div>
+                    {/* Checkpoint Badge & Number */}
+                    <div className="flex items-center justify-between mb-5">
+                      <span
+                        className="w-12 h-12 rounded-full grid place-items-center bcp-serif text-[18px] font-bold shadow-sm"
+                        style={{
+                          background: idx === 0 ? 'hsl(351 68.2% 39.4%)' : 'hsl(40 100% 99.4%)',
+                          color: idx === 0 ? '#fff' : 'hsl(351 68.2% 39.4%)',
+                          border: '2px solid hsl(351 68.2% 39.4%)'
+                        }}
+                      >
+                        {step.num}
+                      </span>
+                      <span
+                        className="bcp-mono text-[10.5px] font-semibold uppercase tracking-[0.12em] px-2.5 py-1 rounded"
+                        style={{
+                          background: idx === 0 ? 'hsl(351 60% 96.5%)' : 'hsl(192 16.7% 92%)',
+                          color: idx === 0 ? 'hsl(351 68.2% 39.4%)' : 'hsl(202 15.5% 38%)'
+                        }}
+                      >
+                        {step.status}
+                      </span>
+                    </div>
 
-                <div className="bcp-card rounded-xl p-4 flex items-start gap-3.5">
-                  <div className="w-8 h-8 rounded-lg grid place-items-center shrink-0" style={{ background: 'hsl(351 60% 96.5%)', color: 'hsl(351 68.2% 39.4%)' }}>
-                    <svg viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 10h14M10 3l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="text-[14.5px] font-semibold text-slate-900">Multi-Country Scalability</h4>
-                    <p className="text-[12.8px] mt-0.5" style={{ color: 'hsl(202 15.5% 38%)' }}>
-                      Built on international ISBT-128 labeling conventions and sovereign cloud architecture, enabling rapid replication across SADC and international markets.
+                    <p className="bcp-mono text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'hsl(351 68.2% 39.4%)' }}>
+                      {step.phase}
+                    </p>
+                    <h3 className="bcp-serif text-[20px] font-semibold mt-1 mb-2.5 leading-snug">
+                      {step.title}
+                    </h3>
+                    <p className="text-[13.0px] leading-relaxed" style={{ color: 'hsl(202 15.5% 38%)' }}>
+                      {step.desc}
                     </p>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            <div className="lg:col-span-6">
-              <div className="bcp-card rounded-3xl overflow-hidden p-2.5 shadow-xl">
-                <div className="aspect-[16/10] relative rounded-2xl overflow-hidden">
-                  <img
-                    src={CORRIDOR_IMAGE}
-                    alt="National emergency trauma network corridor"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{ background: 'linear-gradient(to top, hsl(203 21.6% 19% / 0.85) 0%, transparent 65%)' }}
-                  />
-                  <div className="absolute bottom-5 left-6 right-6 text-white">
-                    <p className="bcp-mono text-[11.0px] uppercase tracking-[0.14em]" style={{ color: 'hsl(351 75% 72%)' }}>
-                      Sovereign Health Infrastructure
-                    </p>
-                    <p className="bcp-serif text-[22.0px] font-semibold mt-1">
-                      A modern, zero-compromise platform saving lives at scale.
-                    </p>
+                  <div className="mt-5 pt-4 bcp-hair text-[12.0px] font-medium" style={{ color: 'hsl(202 15.5% 38%)' }}>
+                    <span className="font-semibold text-slate-800">Target Focus:</span> {step.focus}
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -555,22 +586,13 @@ export const Portal: React.FC = () => {
               We are actively collaborating with national healthcare leaders, hospital administrators, and healthcare investors to revolutionize blood safety and availability.
             </p>
 
-            <div className="pt-4 flex flex-wrap justify-center items-center gap-4">
+            <div className="pt-4 flex justify-center items-center">
               <a
                 href={`mailto:${CONTACT_EMAIL}?subject=Bloodchain%20Inquiry`}
-                className="px-8 py-4 rounded-xl text-[14.5px] font-semibold transition-all shadow-lg"
+                className="px-9 py-4 rounded-xl text-[14.5px] font-semibold transition-all shadow-lg hover:opacity-95"
                 style={{ background: 'hsl(351 68.2% 39.4%)', color: '#fff' }}
               >
                 Contact the Leadership Team
-              </a>
-              <a
-                href="https://genxs-scyther.web.app"
-                target="_blank"
-                rel="noreferrer"
-                className="px-8 py-4 rounded-xl text-[14.5px] font-semibold transition-all"
-                style={{ background: 'hsl(40 21.4% 94.5% / 0.08)', color: '#fff', border: '1px solid hsl(40 21.4% 94.5% / 0.2)' }}
-              >
-                View Donor Portal App →
               </a>
             </div>
           </div>
@@ -601,7 +623,7 @@ export const Portal: React.FC = () => {
             <a href="#overview" className="hover:underline">Overview</a>
             <a href="#platform" className="hover:underline">Platform</a>
             <a href="#impact" className="hover:underline">Impact</a>
-            <a href="#investors" className="hover:underline">Market</a>
+            <a href="#roadmap" className="hover:underline">Roadmap</a>
             <a href="#contact" className="hover:underline">Contact</a>
           </div>
 
