@@ -34,6 +34,163 @@ app.use(express.json());
 // Single source of truth for every surface.
 app.use('/api/spine', spineRouter);
 
+// ─── Tier 2 AI Operations Copilot (Gemini 3.8 Flash) ─────────────────────────
+app.post('/api/ai/copilot', async (req, res) => {
+  const { query = '', history = [], context = {}, apiKey: reqApiKey } = req.body || {};
+  const apiKey = reqApiKey || process.env.GEMINI_API_KEY || '';
+
+  const systemInstruction = `You are Bloodchain AI Copilot, a Tier 2 assistive operational intelligence engine for the National Blood Operations Console (Rubric) in Botswana, operating strictly under the Bloodchain AI Governance Framework (companion to WHO AI-for-health guidance and Botswana Data Protection Act 18 of 2024).
+
+CORE DOCTRINE:
+- "AI proposes. A human decides. The clinical path stays deterministic."
+- No AI output is ever a clinical fact. Everything you state is an advisory proposal for a qualified human operator.
+
+THE RED LINES & CLINICAL SAFETY (CS-13, CS-14, CS-15, CS-16):
+- You must NEVER determine or interpret a blood group typing result.
+- You must NEVER alter the electronic compatibility matrix or a verify-screen outcome.
+- You must NEVER set, clear, or alter a unit's state (including THERMALLY_COMPROMISED, CLEARED, RELEASED, or DISPOSED).
+- You must NEVER authorize a release, a discard, or an emergency override.
+- If asked to perform any of these prohibited actions, explicitly refuse and cite Clinical Safety Rule CS-13: "Under CS-13, AI may only advise; the clinical path stays deterministic and requires a human clinician's verified action."
+
+GROUNDING OVER GENERATION (Control 1):
+- You are grounded directly in the live operational dataset provided.
+- Always cite specific DINs (e.g. W0423-26-894101), deficit statistics (days of supply, burn rate), hospital request IDs, and facilities (SKMTH, Princess Marina Hospital, NBTS Gaborone).
+- Never invent ungrounded data.
+
+HEMATOLOGY & BLOOD BANKING EXPERTISE:
+- When asked clinical or educational questions about blood logistics and hematology:
+  * PRBC storage: +2°C to +6°C in temperature-controlled refrigerators, 35-42 day shelf life.
+  * Platelets: +20°C to +24°C with continuous gentle agitation; 5-7 day shelf life maximum.
+  * Fresh Frozen Plasma (FFP): <= -18°C, 1-year shelf life.
+  * Universal donor rules: O-negative red cells lack A, B, and Rh(D) antigens and can be given to all ABO/Rh groups in emergency resuscitation before crossmatch (Emergency Code Crimson / maternal postpartum hemorrhage). Conversely, AB plasma is the universal plasma donor (lacks anti-A and anti-B antibodies).
+  * Traceability: Aligned to ISBT 128 barcode standards and Botswana Data Protection Act 18 of 2024.
+
+OUTPUT FORMAT:
+Provide clean, concise markdown formatting. 
+At the bottom, include:
+**Grounded Evidence & Cited Records:** [List specific DINs, request IDs, or deficit stats referenced]
+**Tier 2 Advisory Proposal • Human confirmation required under CS-16.**`;
+
+  const operationalContext = `
+LIVE OPERATIONAL DATA (SEEDED / SPINE CORE):
+- Critical Deficits: ${JSON.stringify(context.deficitMatrix || [])}
+- Units in Inventory: ${JSON.stringify((context.units || []).map(u => ({
+    din: u.din,
+    bloodType: u.bloodType,
+    status: u.status,
+    location: u.currentLocation,
+    storageTemp: u.storageTempRange,
+    expiry: u.expiryDate
+  })))}
+- Pending Hospital Requisitions: ${JSON.stringify((context.requests || []).map(r => ({
+    id: r.id,
+    facility: r.requestingFacility,
+    department: r.department,
+    bloodType: r.bloodType,
+    unitsRequested: r.unitsRequested,
+    urgency: r.urgency,
+    status: r.status,
+    fulfilledUnitDins: r.fulfilledUnitDins
+  })))}
+- Active System & Cold-Chain Incidents: ${JSON.stringify((context.issues || []).map(i => ({
+    id: i.id,
+    title: i.title,
+    severity: i.severity,
+    status: i.status,
+    facility: i.facility,
+    description: i.description
+  })))}
+`;
+
+  if (apiKey) {
+    const candidateModels = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-latest'];
+    let lastApiError: any = null;
+
+    for (const modelName of candidateModels) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: {
+                parts: [{ text: systemInstruction }]
+              },
+              contents: [
+                ...history.map(h => ({
+                  role: h.role === 'model' ? 'model' : 'user',
+                  parts: [{ text: h.text }]
+                })),
+                {
+                  role: 'user',
+                  parts: [{ text: operationalContext + '\n\nOperator Question: ' + query }]
+                }
+              ],
+              generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 1200
+              }
+            })
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const parts = data.candidates?.[0]?.content?.parts || [];
+          const textPart = parts.find((p: any) => typeof p.text === 'string' && p.text.trim().length > 0);
+          const text = textPart ? textPart.text : (parts[0]?.text || '');
+          if (text) {
+            const citedRecords = [];
+            if (text.includes('W0423-26-894101')) citedRecords.push({ type: 'UNIT', id: 'W0423-26-894101', label: 'Unit W0423-26-894101' });
+            if (text.includes('REQ-EMERG-2026-091')) citedRecords.push({ type: 'REQUEST', id: 'REQ-EMERG-2026-091', label: 'REQ-EMERG-2026-091' });
+            if (text.includes('O-')) citedRecords.push({ type: 'DEFICIT', id: 'O-', label: 'O- Negative Supply' });
+            if (text.includes('CB-409') || text.includes('ISSUE-2026-01')) citedRecords.push({ type: 'ISSUE', id: 'ISSUE-2026-01', label: 'Cold-chain Alert' });
+
+            return res.json({
+              text,
+              model: modelName,
+              tier: 'TIER_2_ADVISORY',
+              isGrounded: true,
+              citedRecords,
+              safetyNotice: 'Tier 2 Advisory Proposal • Human Review Required • Aligned to Botswana DPA 2024 & WHO Guidance'
+            });
+          }
+        } else {
+          const errText = await response.text();
+          let parsedErr: any = null;
+          try { parsedErr = JSON.parse(errText); } catch {}
+          lastApiError = {
+            status: response.status,
+            message: parsedErr?.error?.message || errText,
+            reason: parsedErr?.error?.details?.[0]?.reason || 'API_CALL_FAILED'
+          };
+          console.warn(`[Gemini API] ${modelName} error (${response.status}):`, lastApiError.reason || lastApiError.message);
+          // Only abort loop on 403 (blocked key)
+          if (response.status === 403) break;
+        }
+      } catch (err: any) {
+        lastApiError = { status: 500, message: err.message, reason: 'FETCH_FAILED' };
+        console.warn(`[Gemini API] ${modelName} fetch exception:`, err.message);
+      }
+    }
+
+    // If API key was provided but failed, communicate this back so the UI can inform the user
+    return res.status(200).json({
+      text: '',
+      useLocalFallback: true,
+      apiError: lastApiError
+    });
+  }
+
+  // Graceful local engine trigger when no API key is set
+  return res.status(200).json({
+    text: '',
+    useLocalFallback: true
+  });
+});
+
+
 // ─── Inter-App Real-Time Event Bus & State ──────────────────────────────────
 const sseClients = new Set<express.Response>();
 const eventHistory: InterAppEvent[] = [];

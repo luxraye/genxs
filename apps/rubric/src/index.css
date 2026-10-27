@@ -150,13 +150,16 @@ p {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
+  flex-wrap: nowrap;
 }
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 0;
+  flex-shrink: 0;
+  min-width: max-content;
+  margin-right: 12px;
 }
 .brand-mark {
   width: 28px;
@@ -170,12 +173,16 @@ p {
   flex-shrink: 0;
 }
 .brand-name {
+  white-space: nowrap;
+  flex-shrink: 0;
   font-family: "Instrument Sans", sans-serif;
   font-weight: 700;
   font-size: 17px;
   letter-spacing: -0.02em;
 }
 .brand-tag {
+  white-space: nowrap;
+  flex-shrink: 0;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -190,7 +197,9 @@ p {
 .nav {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .navlink {
   appearance: none;
@@ -960,4 +969,628 @@ p, li { text-wrap: pretty; }
   .footer-inner { flex-direction: column; gap: 6px; align-items: flex-start; }
   table { display: block; overflow-x: auto; white-space: nowrap; }
   .grid, .grid-2, .grid-3, .cards { grid-template-columns: 1fr !important; }
+}
+
+
+/* ── Tier 2 AI Copilot Drawer (Vessel Scoped) ────────────────────────────── */
+.copilot-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99999;
+  display: flex;
+  justify-content: flex-end;
+}
+.copilot-drawer {
+  width: 640px;
+  max-width: 95vw;
+  height: 100%;
+  background: #faf8f5;
+  border-left: 1px solid #dcd7ce;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  color: #14181f;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  z-index: 100000;
+  box-sizing: border-box;
+}
+.copilot-header {
+  background: #191d24;
+  color: #ffffff;
+  padding: 14px 20px;
+  border-bottom: 1px solid #2d333f;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.copilot-doctrine-bar {
+  background: #eef2f6;
+  border-bottom: 1px solid #d4dae2;
+  padding: 9px 20px;
+  font-size: 11.5px;
+  color: #3b4252;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.copilot-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.copilot-msg-user-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.copilot-msg-user {
+  background: #1e222a;
+  color: #ffffff;
+  padding: 10px 15px;
+  border-radius: 12px 12px 2px 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  max-width: 85%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.copilot-msg-ai-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+}
+.copilot-msg-ai {
+  background: #ffffff;
+  color: #14181f;
+  border: 1px solid #e0ded9;
+  border-radius: 2px 12px 12px 12px;
+  padding: 16px 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 95%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+.copilot-evidence-box {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #eae6e0;
+}
+.copilot-evidence-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f4f1eb;
+  border: 1px solid #dcd7ce;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #2b303a;
+  margin: 3px 5px 3px 0;
+}
+.copilot-chips-bar {
+  background: #ffffff;
+  border-top: 1px solid #e5e1db;
+  padding: 10px 18px;
+  flex-shrink: 0;
+}
+.copilot-chip-btn {
+  background: #f7f5f2;
+  border: 1px solid #dcd7ce;
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #1e222a;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.copilot-chip-btn:hover {
+  background: #f1eee9;
+  border-color: #8e1b2e;
+  color: #8e1b2e;
+}
+.copilot-input-area {
+  background: #ffffff;
+  border-top: 1px solid #e0ded9;
+  padding: 12px 18px;
+  flex-shrink: 0;
+}
+.copilot-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  border: 1px solid #cfc9c2;
+  border-radius: 8px;
+  background: #faf8f5;
+  color: #14181f;
+  outline: none;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+.copilot-input:focus {
+  background: #ffffff;
+  border-color: #8e1b2e;
+  box-shadow: 0 0 0 2px rgba(142, 27, 46, 0.12);
+}
+
+/* ── Command Sidebar & Workspace Layout (Vessel Operations Deck) ─────────────── */
+
+.rubric-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--canvas);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Sidebar Container: Fixed & Locked to Viewport */
+.rubric-sidebar {
+  width: 256px;
+  min-width: 256px;
+  max-width: 256px;
+  background: #181c24; /* Vessel dark command surface */
+  color: #c9ced8;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #282f3c;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100vh;
+  z-index: 60;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Top brand box inside sidebar */
+.sidebar-brand-box {
+  padding: 16px 14px 12px;
+  border-bottom: 1px solid #262c38;
+}
+.sidebar-brand-title {
+  font-family: "Instrument Sans", sans-serif;
+  font-weight: 700;
+  font-size: 16.5px;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+.sidebar-brand-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  font-family: monospace;
+  background: #8e1b2e;
+  color: #ffffff;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+}
+.sidebar-brand-sub {
+  font-size: 10.5px;
+  color: #8a94a6;
+  margin-top: 2px;
+}
+.sidebar-close-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #8a94a6;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.sidebar-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-live-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding: 5px 8px;
+  background: #12151b;
+  border-radius: 6px;
+  border: 1px solid #242a36;
+}
+.sidebar-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
+  flex-shrink: 0;
+}
+
+/* AI Copilot Card Trigger in Sidebar */
+.sidebar-copilot-wrap {
+  padding: 12px 12px 4px;
+}
+.sidebar-copilot-card {
+  width: 100%;
+  appearance: none;
+  border: 1px solid #8e1b2e;
+  background: linear-gradient(135deg, #8e1b2e 0%, #6e1523 100%);
+  border-radius: 8px;
+  padding: 9px 11px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(142, 27, 46, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: block;
+}
+.sidebar-copilot-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(142, 27, 46, 0.35);
+}
+.sidebar-copilot-icon-wrap {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+.sidebar-copilot-tag {
+  font-size: 9px;
+  font-family: monospace;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* Navigation items */
+.sidebar-nav-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #2b3342 transparent;
+}
+.sidebar-nav-container::-webkit-scrollbar {
+  width: 5px;
+}
+.sidebar-nav-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-nav-container::-webkit-scrollbar-thumb {
+  background: #2b3342;
+  border-radius: 4px;
+}
+.sidebar-nav-container::-webkit-scrollbar-thumb:hover {
+  background: #3e485c;
+}
+.sidebar-section-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #717d91;
+  padding: 6px 8px;
+  margin-bottom: 2px;
+}
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-nav-item {
+  width: 100%;
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #a0aab8;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sidebar-nav-item:hover {
+  color: #ffffff;
+  background: #232935;
+}
+.sidebar-nav-item--active {
+  color: #ffffff !important;
+  background: #2b3342 !important;
+  border-color: #3e485c !important;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.sidebar-nav-icon {
+  flex-shrink: 0;
+  color: #828e9f;
+}
+.sidebar-nav-item--active .sidebar-nav-icon {
+  color: #e5a4af;
+}
+.sidebar-nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Trust indicators */
+.sidebar-trust-box {
+  background: #12151b;
+  border-radius: 6px;
+  border: 1px solid #242a36;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 2px;
+}
+.sidebar-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  color: #9aa4b2;
+}
+
+/* Operator card at bottom */
+.sidebar-footer {
+  padding: 10px 12px;
+  border-top: 1px solid #262c38;
+  background: #14171e;
+}
+.sidebar-operator-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sidebar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: #2b3342;
+  border: 1px solid #3e485c;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 11.5px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.sidebar-op-info {
+  flex: 1;
+  min-width: 0;
+}
+.sidebar-op-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.sidebar-op-badge {
+  font-size: 10px;
+  font-family: monospace;
+  color: #8a94a6;
+}
+.sidebar-logout-btn {
+  background: transparent;
+  border: 1px solid #2e3646;
+  color: #9aa4b2;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.15s ease;
+}
+.sidebar-logout-btn:hover {
+  background: #2e3646;
+  color: #f87171;
+  border-color: #4a5568;
+}
+
+/* ── Main Operations Pane ────────────────────────────────────────────────────── */
+
+.rubric-main-pane {
+  flex: 1;
+  min-width: 0; /* Critical: Prevents wide children from causing layout blowout */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin-left: 256px; /* Offset for locked fixed sidebar */
+  width: calc(100% - 256px);
+}
+
+.rubric-pane-header {
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.rubric-pane-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+}
+.rubric-tab-crumb {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.rubric-crumb-sep {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.rubric-tab-active-name {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14.5px;
+}
+
+.rubric-pane-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rubric-header-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rubric-audit-pill {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.rubric-header-copilot-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #8e1b2e;
+  color: #8e1b2e;
+  background: #fbf2f4;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.rubric-header-copilot-btn:hover {
+  background: #f5e1e5;
+}
+.rubric-t2-tag {
+  font-size: 9px;
+  background: #8e1b2e;
+  color: #fff;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.rubric-workspace-content {
+  flex: 1;
+  padding: 24px 28px 48px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* Mobile top bar */
+.rubric-mobile-bar {
+  display: none;
+  height: 52px;
+  background: #181c24;
+  border-bottom: 1px solid #282f3c;
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+}
+.mobile-menu-trigger,
+.mobile-copilot-trigger {
+  background: transparent;
+  border: none;
+  color: #c9ced8;
+  cursor: pointer;
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+}
+.mobile-menu-trigger:hover,
+.mobile-copilot-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.rubric-mobile-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 55;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 960px) {
+  .rubric-mobile-bar {
+    display: flex;
+  }
+  .rubric-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.4);
+  }
+  .rubric-sidebar--open {
+    transform: translateX(0);
+  }
+  .sidebar-close-btn {
+    display: block;
+  }
+  .rubric-mobile-backdrop {
+    display: block;
+  }
+  .rubric-pane-header {
+    display: none;
+  }
+  .rubric-main-pane {
+    margin-left: 0;
+    width: 100%;
+  }
+  .rubric-workspace-content {
+    padding: 16px 16px 40px;
+  }
+}
+
+@media (max-width: 600px) {
+  .rubric-header-pills {
+    display: none;
+  }
 }

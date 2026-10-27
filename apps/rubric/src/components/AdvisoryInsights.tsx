@@ -12,7 +12,7 @@ import {
   evaluateAnomalyDetection,
   type AnomalyFlag
 } from '@shared/lib/ai';
-import { Info, ShieldCheck, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, FlaskConical } from 'lucide-react';
+import { Info, ShieldCheck, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, FlaskConical, Sparkles } from 'lucide-react';
 
 /**
  * Tier 1 advisory surface.
@@ -41,7 +41,11 @@ const reasonLabel: Record<AnomalyFlag['reason'], string> = {
   APPROACHING_LIMIT: 'Approaching limit'
 };
 
-export const AdvisoryInsights: React.FC = () => {
+interface AdvisoryInsightsProps {
+  onOpenCopilot?: () => void;
+}
+
+export const AdvisoryInsights: React.FC<AdvisoryInsightsProps> = ({ onOpenCopilot }) => {
   const { deficitMatrix, units } = useRubric();
   const [reviewed, setReviewed] = useState<string[]>([]);
   const [shadow, setShadow] = useState<{ id: string; recommendation: string; decision: 'AGREED' | 'DISMISSED' }[]>([]);
@@ -148,6 +152,37 @@ export const AdvisoryInsights: React.FC = () => {
           running in the browser, evaluated on <strong>illustrative sample data</strong>. There is no inference
           endpoint, no third-party service, and no personal data. Output is advisory only.
         </span>
+      </div>
+
+      <div className="card" style={{ border: '1px solid #8e1b2e', background: 'linear-gradient(to right, #fbf7f8, #ffffff)', padding: '18px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-sm)', background: '#8e1b2e', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>Tier 2 Operational Query &middot; Bloodchain AI Copilot</h3>
+                <span className="status status--info" style={{ background: '#f8edef', color: '#8e1b2e', borderColor: '#f2d4d9', fontSize: 11, fontWeight: 600 }}>
+                  Active Model: gemini-3.8-flash
+                </span>
+              </div>
+              <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-2)' }}>
+                Conversational natural-language query over aggregate operational records, cold-chain telemetry, and clinical blood banking rules.
+              </p>
+            </div>
+          </div>
+          {onOpenCopilot && (
+            <button
+              className="btn btn--primary"
+              onClick={onOpenCopilot}
+              style={{ background: '#8e1b2e', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 600, padding: '9px 18px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer' }}
+            >
+              <Sparkles size={15} />
+              <span>Launch Live Copilot &rarr;</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="card">

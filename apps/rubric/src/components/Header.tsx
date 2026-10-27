@@ -1,15 +1,16 @@
 import React from 'react';
 import { useRubric } from '../context/RubricContext';
-import { Plus, Activity, Building2, Users, UserCheck, AlertTriangle, LogOut, TrendingUp } from 'lucide-react';
+import { Plus, Activity, Building2, Users, UserCheck, AlertTriangle, LogOut, TrendingUp, Sparkles } from 'lucide-react';
 
 export type Tab = 'MATRIX' | 'REQUISITIONS' | 'STAFF' | 'DONORS' | 'INCIDENTS' | 'ADVISORY';
 
 interface HeaderProps {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  onOpenCopilot?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onOpenCopilot }) => {
   const { currentOperator, logoutOperator, criticalDeficitCount, requests, issuesList } = useRubric();
 
   if (!currentOperator) return null;
@@ -74,7 +75,36 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           })}
         </nav>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          {onOpenCopilot && (
+            <button
+              type="button"
+              onClick={onOpenCopilot}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid #8e1b2e',
+                color: '#8e1b2e',
+                background: '#f8edef',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease'
+              }}
+              title="Launch Bloodchain AI Copilot (Tier 2 Operational Query)"
+            >
+              <Sparkles size={14} />
+              <span>AI Copilot</span>
+              <span style={{ fontSize: 9, background: '#8e1b2e', color: '#fff', padding: '1px 4px', borderRadius: 3, fontFamily: 'monospace' }}>
+                T2
+              </span>
+            </button>
+          )}
+
           <div style={{ textAlign: 'right' }} className="op-id">
             <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>{currentOperator.fullName}</div>
             <div className="mono dim" style={{ fontSize: 11 }}>
