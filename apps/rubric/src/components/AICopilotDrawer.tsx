@@ -274,7 +274,7 @@ I am grounded directly in Botswana's live **National Blood Operations Core**.
                 </span>
               </div>
               <div style={{ fontSize: 11, color: '#9aa2af', marginTop: 1 }}>
-                Model: <strong style={{ color: '#fff' }}>gemini-3.8-flash</strong> &middot; Grounded in Core
+                Model: <strong style={{ color: '#fff' }}>gemini-3.5-flash</strong> &middot; Grounded in Core
               </div>
             </div>
           </div>
@@ -420,7 +420,7 @@ I am grounded directly in Botswana's live **National Blood Operations Core**.
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: '#fff', borderRadius: 8, border: '1px solid #e0ded9' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#8e1b2e' }} />
               <span style={{ fontSize: 12.5, color: '#5b6470' }}>
-                Consulting Core database and running <strong>gemini-3.8-flash</strong>...
+                Consulting Core database and running <strong>gemini-3.5-flash</strong>...
               </span>
             </div>
           )}

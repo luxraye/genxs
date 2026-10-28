@@ -581,7 +581,8 @@ export async function callGeminiDirect(
   context: CopilotContextData,
   apiKey: string
 ): Promise<{ text: string; model: string; citedRecords: CitedRecord[] } | { error: any }> {
-  const candidateModels = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-latest'];
+  // gemini-3.5-flash is prioritized due to high availability and low latency; gemini-3.8-flash has intermittent 503 overloads
+  const candidateModels = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
   let lastError: any = null;
 
   const systemInstruction = `You are Bloodchain AI Copilot, a Tier 2 assistive operational intelligence engine for the National Blood Operations Console (Rubric) in Botswana, operating strictly under the Bloodchain AI Governance Framework (companion to WHO AI-for-health guidance and Botswana Data Protection Act 18 of 2024).
@@ -654,6 +655,7 @@ LIVE OPERATIONAL DATA (SEEDED / SPINE CORE):
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(8000),
           body: JSON.stringify({
             systemInstruction: {
               parts: [{ text: systemInstruction }]
@@ -701,15 +703,16 @@ LIVE OPERATIONAL DATA (SEEDED / SPINE CORE):
           reason: errJson?.error?.status || errJson?.error?.message || 'API_CALL_FAILED',
           message: errJson?.error?.message || `HTTP ${response.status}`
         };
-        // If 403 (blocked key or permission error) or 400 (bad key), don't keep polling with a bad key
+        // If 403 (blocked key) or 400 (malformed key), don't keep polling with a bad key
         if (response.status === 403 || response.status === 400) {
           break;
         }
+        // If 503 (Google service unavailable/overloaded), loop will try the next candidate model immediately
       }
     } catch (err: any) {
       lastError = {
         status: 0,
-        reason: 'NETWORK_ERROR',
+        reason: err.name === 'TimeoutError' ? 'REQUEST_TIMEOUT' : 'NETWORK_ERROR',
         message: err.message
       };
     }
@@ -827,21 +830,34 @@ export async function sendCopilotQuery(
   // 3. Graceful local deterministic engine execution
   const fallback = generateLocalGroundedResponse(query, context);
   const isKeyBlocked = apiError?.status === 403 || apiError?.reason === 'API_KEY_SERVICE_BLOCKED';
+  const isServerOverloaded = apiError?.status === 503;
+
+  let modelLabel = 'gemini-3.5-flash (Sovereign Demonstration Engine)';
+  let notice = 'Tier 2 Advisory Proposal • Grounded in Core Seed Registry • CS-16 Verified';
+
+  if (activeKey) {
+    if (isKeyBlocked) {
+      modelLabel = 'gemini-3.5-flash (Key Blocked 403 - Sovereign Grounded)';
+      notice = 'Notice: Google Cloud rejected this API key (403: Generative Language API blocked on project). Running locally grounded Sovereign Intelligence • CS-16 Verified';
+    } else if (isServerOverloaded) {
+      modelLabel = 'gemini-3.5-flash (Cloud 503 Overloaded - Sovereign Grounded)';
+      notice = 'Notice: Google Cloud upstream servers returned 503 (Model Overloaded). Seamlessly running locally grounded Sovereign Intelligence • CS-16 Verified';
+    } else {
+      modelLabel = 'gemini-3.5-flash (Offline Grounded)';
+      notice = 'Tier 2 Advisory Proposal • Grounded in Core Seed Registry • CS-16 Verified';
+    }
+  }
 
   return {
     id: 'msg-' + Date.now(),
     role: 'model',
     text: fallback.text,
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    model: activeKey
-      ? (isKeyBlocked ? 'gemini-3.8-flash (Key Blocked 403 - Sovereign Grounded)' : 'gemini-3.8-flash (Offline Grounded)')
-      : 'gemini-3.8-flash (Sovereign Demonstration Engine)',
+    model: modelLabel,
     tier: 'TIER_2_ADVISORY',
     isGrounded: true,
     citedRecords: fallback.citedRecords,
-    safetyNotice: isKeyBlocked
-      ? 'Notice: Google Cloud rejected this API key (403: Generative Language API blocked on project). Running locally grounded Sovereign Intelligence • CS-16 Verified'
-      : 'Tier 2 Advisory Proposal • Grounded in Core Seed Registry • CS-16 Verified',
+    safetyNotice: notice,
     apiError: apiError || undefined
   };
 }

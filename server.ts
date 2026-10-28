@@ -103,7 +103,7 @@ LIVE OPERATIONAL DATA (SEEDED / SPINE CORE):
 `;
 
   if (apiKey) {
-    const candidateModels = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-latest'];
+    const candidateModels = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
     let lastApiError: any = null;
 
     for (const modelName of candidateModels) {
