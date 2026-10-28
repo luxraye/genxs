@@ -35,9 +35,22 @@ export interface CopilotContextData {
 
 const LOCAL_STORAGE_KEY = 'bloodchain_gemini_api_key';
 
+// Pattern identifying the decommissioned Google Cloud project 214507466206 key (403 blocked)
+export function isBlockedKey(key: string): boolean {
+  const trimmed = (key || '').trim();
+  return trimmed.endsWith('tVHjxPnF-Q') || trimmed.includes('3jUWeiQD3en');
+}
+
+export const DEFAULT_AI_STUDIO_KEY = (import.meta.env.VITE_GEMINI_API_KEY as string) || '';
+
 export function getStoredGeminiKey(): string {
   try {
-    return localStorage.getItem(LOCAL_STORAGE_KEY) || '';
+    const key = localStorage.getItem(LOCAL_STORAGE_KEY) || '';
+    if (isBlockedKey(key)) {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      return '';
+    }
+    return key;
   } catch {
     return '';
   }
@@ -53,6 +66,16 @@ export function setStoredGeminiKey(key: string): void {
   } catch {
     // ignore
   }
+}
+
+export function getActiveGeminiKey(): string {
+  const stored = getStoredGeminiKey();
+  if (stored && !isBlockedKey(stored)) return stored;
+  const envKey = (import.meta.env.VITE_GEMINI_API_KEY as string) || '';
+  if (envKey && !isBlockedKey(envKey)) {
+    return envKey;
+  }
+  return '';
 }
 
 /**
@@ -548,86 +571,260 @@ I am the **Bloodchain AI Copilot** (Tier 2 Advisory), grounded directly in the l
 }
 
 /**
- * Primary dispatch function: Calls backend /api/ai/copilot (Gemini 3.8 Flash)
- * with graceful fallback to local deterministic grounding engine.
+ * Direct browser cloud reasoning via Google Generative Language API.
+ * Ensures the live static deployment (Firebase Hosting) executes live inference
+ * directly without depending on a local server.
+ */
+export async function callGeminiDirect(
+  query: string,
+  history: CopilotMessage[],
+  context: CopilotContextData,
+  apiKey: string
+): Promise<{ text: string; model: string; citedRecords: CitedRecord[] } | { error: any }> {
+  const candidateModels = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-latest'];
+  let lastError: any = null;
+
+  const systemInstruction = `You are Bloodchain AI Copilot, a Tier 2 assistive operational intelligence engine for the National Blood Operations Console (Rubric) in Botswana, operating strictly under the Bloodchain AI Governance Framework (companion to WHO AI-for-health guidance and Botswana Data Protection Act 18 of 2024).
+
+CORE DOCTRINE:
+- "AI proposes. A human decides. The clinical path stays deterministic."
+- No AI output is ever a clinical fact. Everything you state is an advisory proposal for a qualified human operator.
+
+THE RED LINES & CLINICAL SAFETY (CS-13, CS-14, CS-15, CS-16):
+- You must NEVER determine or interpret a blood group typing result.
+- You must NEVER alter the electronic compatibility matrix or a verify-screen outcome.
+- You must NEVER set, clear, or alter a unit's state (including THERMALLY_COMPROMISED, CLEARED, RELEASED, or DISPOSED).
+- You must NEVER authorize a release, a discard, or an emergency override.
+- If asked to perform any of these prohibited actions, explicitly refuse and cite Clinical Safety Rule CS-13: "Under CS-13, AI may only advise; the clinical path stays deterministic and requires a human clinician's verified action."
+
+GROUNDING OVER GENERATION (Control 1):
+- You are grounded directly in the live operational dataset provided.
+- Always cite specific DINs (e.g. W0423-26-894101), deficit statistics (days of supply, burn rate), hospital request IDs, and facilities (SKMTH, Princess Marina Hospital, NBTS Gaborone).
+- Never invent ungrounded data.
+
+HEMATOLOGY & BLOOD BANKING EXPERTISE:
+- When asked clinical or educational questions about blood logistics and hematology:
+  * PRBC storage: +2°C to +6°C in temperature-controlled refrigerators, 35-42 day shelf life.
+  * Platelets: +20°C to +24°C with continuous gentle agitation; 5-7 day shelf life maximum.
+  * Fresh Frozen Plasma (FFP): <= -18°C, 1-year shelf life.
+  * Universal donor rules: O-negative red cells lack A, B, and Rh(D) antigens and can be given to all ABO/Rh groups in emergency resuscitation before crossmatch (Emergency Code Crimson / maternal postpartum hemorrhage). Conversely, AB plasma is the universal plasma donor (lacks anti-A and anti-B antibodies).
+  * Traceability: Aligned to ISBT 128 barcode standards and Botswana Data Protection Act 18 of 2024.
+
+OUTPUT FORMAT:
+Provide clean, concise markdown formatting. 
+At the bottom, include:
+**Grounded Evidence & Cited Records:** [List specific DINs, request IDs, or deficit stats referenced]
+**Tier 2 Advisory Proposal • Human confirmation required under CS-16.**`;
+
+  const operationalContext = `
+LIVE OPERATIONAL DATA (SEEDED / SPINE CORE):
+- Critical Deficits: ${JSON.stringify(context.deficitMatrix || [])}
+- Units in Inventory: ${JSON.stringify((context.units || []).map(u => ({
+    din: u.din,
+    bloodType: u.bloodType,
+    status: u.status,
+    location: u.currentFacility,
+    storageTemp: u.storageTempRange,
+    expiry: u.expiresAt
+  })))}
+- Pending Hospital Requisitions: ${JSON.stringify((context.requests || []).map(r => ({
+    id: r.id,
+    facility: r.hospitalName,
+    department: r.department,
+    bloodType: r.bloodType,
+    unitsRequested: r.unitsNeeded,
+    urgency: r.urgency,
+    status: r.status,
+    fulfilledUnitDins: r.fulfilledUnitDins
+  })))}
+- Active System & Cold-Chain Incidents: ${JSON.stringify((context.issues || []).map(i => ({
+    id: i.id,
+    title: i.title,
+    severity: i.severity,
+    status: i.status,
+    facility: i.facility,
+    description: i.description
+  })))}
+`;
+
+  for (const modelName of candidateModels) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey.trim()}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: systemInstruction }]
+            },
+            contents: [
+              ...history.slice(-6).map(h => ({
+                role: h.role === 'model' ? 'model' : 'user',
+                parts: [{ text: h.text }]
+              })),
+              {
+                role: 'user',
+                parts: [{ text: operationalContext + '\n\nOperator Question: ' + query }]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 1200
+            }
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        const textPart = parts.find((p: any) => typeof p.text === 'string' && p.text.trim().length > 0);
+        const text = textPart ? textPart.text : (parts[0]?.text || '');
+        if (text) {
+          const citedRecords: CitedRecord[] = [];
+          if (text.includes('W0423-26-894101')) citedRecords.push({ type: 'UNIT', id: 'W0423-26-894101', label: 'Unit W0423-26-894101' });
+          if (text.includes('REQ-EMERG-2026-091')) citedRecords.push({ type: 'REQUEST', id: 'REQ-EMERG-2026-091', label: 'REQ-EMERG-2026-091' });
+          if (text.includes('O-')) citedRecords.push({ type: 'DEFICIT', id: 'O-', label: 'O- Negative Supply' });
+          if (text.includes('CB-409') || text.includes('ISSUE-2026-01')) citedRecords.push({ type: 'ISSUE', id: 'ISSUE-2026-01', label: 'Cold-chain Alert' });
+
+          return {
+            text,
+            model: modelName,
+            citedRecords
+          };
+        }
+      } else {
+        const errJson = await response.json().catch(() => null);
+        lastError = {
+          status: response.status,
+          reason: errJson?.error?.status || errJson?.error?.message || 'API_CALL_FAILED',
+          message: errJson?.error?.message || `HTTP ${response.status}`
+        };
+        // If 403 (blocked key or permission error) or 400 (bad key), don't keep polling with a bad key
+        if (response.status === 403 || response.status === 400) {
+          break;
+        }
+      }
+    } catch (err: any) {
+      lastError = {
+        status: 0,
+        reason: 'NETWORK_ERROR',
+        message: err.message
+      };
+    }
+  }
+
+  return { error: lastError };
+}
+
+/**
+ * Primary dispatch function:
+ * 1. Executes direct cloud inference via Google Generative Language API (works live on Firebase Hosting).
+ * 2. Attempts local /api/ai/copilot gateway if running with dev server.
+ * 3. Gracefully falls back to local deterministic grounding engine if offline or key is blocked.
  */
 export async function sendCopilotQuery(
   query: string,
   history: CopilotMessage[],
   context: CopilotContextData
 ): Promise<CopilotMessage> {
-  const userKey = getStoredGeminiKey();
+  const activeKey = getActiveGeminiKey();
   let apiError: any = null;
 
-  try {
-    const res = await fetch('/api/ai/copilot', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(userKey ? { 'x-gemini-key': userKey } : {})
-      },
-      body: JSON.stringify({
-        query,
-        history: history.slice(-6).map(m => ({ role: m.role, text: m.text })),
-        context: {
-          units: context.units.map(u => ({
-            din: u.din,
-            bloodType: u.bloodType,
-            status: u.status,
-            currentLocation: u.currentFacility,
-            storageTempRange: u.storageTempRange,
-            expiryDate: u.expiresAt,
-            componentType: u.componentType
-          })),
-          deficitMatrix: context.deficitMatrix,
-          requests: context.requests.map(r => ({
-            id: r.id,
-            requestingFacility: r.hospitalName,
-            department: r.department,
-            bloodType: r.bloodType,
-            unitsRequested: r.unitsNeeded,
-            urgency: r.urgency,
-            status: r.status,
-            fulfilledUnitDins: r.fulfilledUnitDins
-          })),
-          issues: context.issues.map(i => ({
-            id: i.id,
-            title: i.title,
-            category: i.category,
-            severity: i.severity,
-            status: i.status,
-            facility: i.facility,
-            description: i.description
-          }))
-        },
-        apiKey: userKey || undefined
-      })
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data && typeof data.text === 'string' && data.text.trim().length > 0) {
-        return {
-          id: 'msg-' + Date.now(),
-          role: 'model',
-          text: data.text,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          model: data.model || 'gemini-3.8-flash',
-          tier: 'TIER_2_ADVISORY',
-          isGrounded: true,
-          citedRecords: data.citedRecords || [],
-          safetyNotice: 'Tier 2 Advisory Proposal • Human Review Required • Aligned to Botswana DPA 2024 & WHO Guidance'
-        };
-      }
-      if (data?.apiError) {
-        apiError = data.apiError;
-      }
+  // 1. Direct Cloud API reasoning (Primary for live Firebase Hosting & direct browser execution)
+  if (activeKey) {
+    const directResult = await callGeminiDirect(query, history, context, activeKey);
+    if ('text' in directResult && directResult.text) {
+      return {
+        id: 'msg-' + Date.now(),
+        role: 'model',
+        text: directResult.text,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        model: directResult.model,
+        tier: 'TIER_2_ADVISORY',
+        isGrounded: true,
+        citedRecords: directResult.citedRecords,
+        safetyNotice: 'Tier 2 Advisory Proposal • Human Review Required • Aligned to Botswana DPA 2024 & WHO Guidance'
+      };
+    } else if ('error' in directResult && directResult.error) {
+      apiError = directResult.error;
     }
-  } catch (err) {
-    console.warn('[Copilot] Backend API error, utilizing local grounding engine:', err);
   }
 
-  // Graceful local engine execution
+  // 2. Gateway API proxy call (for local dev server /api/ai/copilot)
+  if (!apiError) {
+    try {
+      const res = await fetch('/api/ai/copilot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeKey ? { 'x-gemini-key': activeKey } : {})
+        },
+        body: JSON.stringify({
+          query,
+          history: history.slice(-6).map(m => ({ role: m.role, text: m.text })),
+          context: {
+            units: context.units.map(u => ({
+              din: u.din,
+              bloodType: u.bloodType,
+              status: u.status,
+              currentLocation: u.currentFacility,
+              storageTempRange: u.storageTempRange,
+              expiryDate: u.expiresAt,
+              componentType: u.componentType
+            })),
+            deficitMatrix: context.deficitMatrix,
+            requests: context.requests.map(r => ({
+              id: r.id,
+              requestingFacility: r.hospitalName,
+              department: r.department,
+              bloodType: r.bloodType,
+              unitsRequested: r.unitsNeeded,
+              urgency: r.urgency,
+              status: r.status,
+              fulfilledUnitDins: r.fulfilledUnitDins
+            })),
+            issues: context.issues.map(i => ({
+              id: i.id,
+              title: i.title,
+              category: i.category,
+              severity: i.severity,
+              status: i.status,
+              facility: i.facility,
+              description: i.description
+            }))
+          },
+          apiKey: activeKey || undefined
+        })
+      });
+
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
+        if (data && typeof data.text === 'string' && data.text.trim().length > 0) {
+          return {
+            id: 'msg-' + Date.now(),
+            role: 'model',
+            text: data.text,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            model: data.model || 'gemini-3.8-flash',
+            tier: 'TIER_2_ADVISORY',
+            isGrounded: true,
+            citedRecords: data.citedRecords || [],
+            safetyNotice: 'Tier 2 Advisory Proposal • Human Review Required • Aligned to Botswana DPA 2024 & WHO Guidance'
+          };
+        }
+        if (data?.apiError) {
+          apiError = data.apiError;
+        }
+      }
+    } catch (err) {
+      console.warn('[Copilot] Backend API error, utilizing local grounding engine:', err);
+    }
+  }
+
+  // 3. Graceful local deterministic engine execution
   const fallback = generateLocalGroundedResponse(query, context);
   const isKeyBlocked = apiError?.status === 403 || apiError?.reason === 'API_KEY_SERVICE_BLOCKED';
 
@@ -636,14 +833,14 @@ export async function sendCopilotQuery(
     role: 'model',
     text: fallback.text,
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    model: userKey
-      ? (isKeyBlocked ? 'gemini-3.8-flash (Offline Grounded)' : 'gemini-3.8-flash')
+    model: activeKey
+      ? (isKeyBlocked ? 'gemini-3.8-flash (Key Blocked 403 - Sovereign Grounded)' : 'gemini-3.8-flash (Offline Grounded)')
       : 'gemini-3.8-flash (Sovereign Demonstration Engine)',
     tier: 'TIER_2_ADVISORY',
     isGrounded: true,
     citedRecords: fallback.citedRecords,
     safetyNotice: isKeyBlocked
-      ? 'Notice: Cloud API Key restricted in Google Cloud (403: Generative Language API blocked). Running locally grounded Sovereign Intelligence • CS-16 Verified'
+      ? 'Notice: Google Cloud rejected this API key (403: Generative Language API blocked on project). Running locally grounded Sovereign Intelligence • CS-16 Verified'
       : 'Tier 2 Advisory Proposal • Grounded in Core Seed Registry • CS-16 Verified',
     apiError: apiError || undefined
   };

@@ -5,6 +5,7 @@ import path from 'path';
 
 export default defineConfig({
   base: './',
+  envDir: path.resolve(import.meta.dirname, '../../'),
   plugins: [react(), tailwindcss()],
   server: {
     port: 3003,

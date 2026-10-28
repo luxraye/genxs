@@ -17,7 +17,10 @@ import {
   CopilotMessage, 
   sendCopilotQuery, 
   getStoredGeminiKey, 
-  setStoredGeminiKey 
+  setStoredGeminiKey,
+  getActiveGeminiKey,
+  DEFAULT_AI_STUDIO_KEY,
+  isBlockedKey
 } from '../lib/geminiCopilot';
 
 interface AICopilotDrawerProps {
@@ -172,7 +175,13 @@ I am grounded directly in Botswana's live **National Blood Operations Core**.
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showKeyModal, setShowKeyModal] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState(getStoredGeminiKey());
+  const [apiKeyInput, setApiKeyInput] = useState(() => {
+    const key = getActiveGeminiKey();
+    if (isBlockedKey(key)) {
+      return DEFAULT_AI_STUDIO_KEY;
+    }
+    return key;
+  });
   const [keyError, setKeyError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -510,10 +519,41 @@ I am grounded directly in Botswana's live **National Blood Operations Core**.
             </div>
 
             <p style={{ fontSize: 13, color: '#5b6470', lineHeight: 1.5, margin: '0 0 16px' }}>
-              Bloodchain uses Google's active <strong>gemini-3.8-flash</strong> model. Enter your Google AI Studio API key below for direct cloud inference. If left empty, or if cloud access is restricted, the copilot executes on the Sovereign Grounded Intelligence engine.
+              Bloodchain uses Google's active <strong>gemini-3.8-flash</strong> model. Direct cloud inference is configured with the unrestricted AI Studio key. If left empty, or if cloud access is restricted, the copilot executes on the Sovereign Grounded Intelligence engine.
             </p>
 
-            {keyError && apiKeyInput === getStoredGeminiKey() && (
+            {isBlockedKey(apiKeyInput) && (
+              <div style={{ background: '#fdf2f2', border: '1px solid #f8b4b4', padding: '10px 12px', borderRadius: 8, marginBottom: 16, fontSize: 12, color: '#9b1c1c' }}>
+                <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <AlertTriangle size={14} color="#b3261e" />
+                  <span>Google Cloud 403 Alert: Blocked Key Detected</span>
+                </div>
+                <div style={{ lineHeight: 1.4, color: '#771d1d', marginBottom: 8 }}>
+                  This key (ending in <code style={{ background: '#fee2e2', padding: '1px 4px', borderRadius: 3 }}>tVHjxPnF-Q</code>) belongs to a Google Cloud project where Generative Language API is restricted.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setApiKeyInput(DEFAULT_AI_STUDIO_KEY);
+                    setKeyError(null);
+                  }}
+                  style={{
+                    background: '#8e1b2e',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '4px 10px',
+                    borderRadius: 4,
+                    fontSize: 11.5,
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                >
+                  Switch to Active AI Studio Key
+                </button>
+              </div>
+            )}
+
+            {keyError && !isBlockedKey(apiKeyInput) && (
               <div style={{ background: '#fdf2f2', border: '1px solid #f8b4b4', padding: '10px 12px', borderRadius: 8, marginBottom: 16, fontSize: 12, color: '#9b1c1c' }}>
                 <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <AlertTriangle size={14} color="#b3261e" />
@@ -526,9 +566,23 @@ I am grounded directly in Botswana's live **National Blood Operations Core**.
             )}
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
-                Gemini API Key:
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600 }}>
+                  Gemini API Key:
+                </label>
+                {apiKeyInput !== DEFAULT_AI_STUDIO_KEY && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setApiKeyInput(DEFAULT_AI_STUDIO_KEY);
+                      setKeyError(null);
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#8e1b2e', fontSize: 11.5, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    Reset to Default Working Key
+                  </button>
+                )}
+              </div>
               <input
                 type="password"
                 value={apiKeyInput}
